@@ -106,11 +106,11 @@ export default function RideScreen() {
                 return (
                   <Pressable key={sv} onPress={() => setService(sv)} style={[s.vehicle, active && { borderColor: colors.primary, backgroundColor: colors.primaryLight }]}>
                     <Ionicons name={sv === 'ride_car' ? 'car-sport' : 'bicycle'} size={22} color={sv === 'ride_car' ? colors.car : colors.ride} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '700', color: colors.text }}>{sv === 'ride_car' ? 'AntarCar' : 'AntarRide'}</Text>
-                      <Text style={font.tiny}>{sv === 'ride_car' ? 'Mobil, s.d. 4 orang' : 'Motor, 1 orang'}</Text>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontWeight: '700', color: colors.text, fontSize: 14 }} numberOfLines={1}>{sv === 'ride_car' ? 'AntarCar' : 'AntarRide'}</Text>
+                      <Text style={font.tiny} numberOfLines={1}>{sv === 'ride_car' ? 'Mobil, 4 orang' : 'Motor, 1 orang'}</Text>
+                      {est[sv] ? <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{rupiah(est[sv]!.fare + est[sv]!.platform_fee)}</Text> : null}
                     </View>
-                    {est[sv] ? <Text style={{ fontWeight: '800', color: colors.text }}>{rupiah(est[sv]!.fare + est[sv]!.platform_fee)}</Text> : null}
                   </Pressable>
                 );
               })}

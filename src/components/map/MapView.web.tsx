@@ -25,19 +25,25 @@ function Controller({ center, zoom, fitTo, paddingBottom, onCenterChange, onPres
   const map = useMap();
   const programmatic = useRef(false);
   const lastCenter = useRef(center);
+  const applyFit = useRef<() => void>(() => {});
 
   useEffect(() => {
-    programmatic.current = true;
-    if (fitTo && fitTo.length > 0) {
-      const b = L.latLngBounds(fitTo.map((p) => [p.lat, p.lng] as [number, number]));
-      if (fitTo.length === 1) map.setView(b.getCenter(), zoom ?? 16);
-      else map.fitBounds(b, { paddingTopLeft: [40, 80], paddingBottomRight: [40, (paddingBottom ?? 0) + 40], maxZoom: 17 });
-    } else if (center.lat !== lastCenter.current.lat || center.lng !== lastCenter.current.lng) {
+    applyFit.current = () => {
+      programmatic.current = true;
+      if (fitTo && fitTo.length > 0) {
+        const b = L.latLngBounds(fitTo.map((p) => [p.lat, p.lng] as [number, number]));
+        if (fitTo.length === 1) map.setView(b.getCenter(), zoom ?? 16);
+        else map.fitBounds(b, { paddingTopLeft: [40, 80], paddingBottomRight: [40, (paddingBottom ?? 0) + 40], maxZoom: 17 });
+      }
+      setTimeout(() => { programmatic.current = false; }, 300);
+    };
+    if (fitTo && fitTo.length > 0) applyFit.current();
+    else if (center.lat !== lastCenter.current.lat || center.lng !== lastCenter.current.lng) {
+      programmatic.current = true;
       map.setView([center.lat, center.lng], zoom ?? map.getZoom());
+      setTimeout(() => { programmatic.current = false; }, 300);
     }
     lastCenter.current = center;
-    const t = setTimeout(() => { programmatic.current = false; }, 300);
-    return () => clearTimeout(t);
   }, [map, center, zoom, fitTo, paddingBottom]);
 
   useEffect(() => {
@@ -47,8 +53,15 @@ function Controller({ center, zoom, fitTo, paddingBottom, onCenterChange, onPres
   }, [map, interactive]);
 
   useEffect(() => {
-    const t = setTimeout(() => map.invalidateSize(), 100);
-    const ro = new ResizeObserver(() => map.invalidateSize());
+    const t = setTimeout(() => { map.invalidateSize(); applyFit.current(); }, 100);
+    let lastW = 0, lastH = 0;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0]?.contentRect; if (!r) return;
+      const grew = (lastW === 0 || lastH === 0) && r.width > 0 && r.height > 0;
+      lastW = r.width; lastH = r.height;
+      map.invalidateSize();
+      if (grew) applyFit.current();  // container tadinya tersembunyi (0x0) → terapkan ulang fitBounds
+    });
     ro.observe(map.getContainer());
     return () => { clearTimeout(t); ro.disconnect(); };
   }, [map]);
