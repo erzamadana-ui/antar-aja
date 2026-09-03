@@ -44,15 +44,16 @@ export function DraggableSheet({ children, minHeight = 220, maxHeight, header, i
       const target = e.velocityY < -300 ? maxHeight : e.velocityY > 300 ? minHeight : h.value > mid ? maxHeight : minHeight;
       settle(target);
     })
+    .activeOffsetY([-6, 6])
     .runOnJS(true);
-  const tap = Gesture.Tap().onEnd(() => { settle(h.value > (minHeight + maxHeight) / 2 ? minHeight : maxHeight); }).runOnJS(true);
+  const tap = Gesture.Tap().hitSlop({ horizontal: 40, vertical: 12 }).onEnd(() => { settle(h.value > (minHeight + maxHeight) / 2 ? minHeight : maxHeight); }).runOnJS(true);
 
   const a = useAnimatedStyle(() => ({ height: h.value }));
 
   if (staticPanel) {
     return (
       <View style={[s.panel, style]}>
-        {header ? <View style={s.headerWrap}>{header}</View> : null}
+        {header ? <View style={[s.headerWrap, s.panelHeader]}>{header}</View> : null}
         <ScrollView contentContainerStyle={[{ padding: 16, paddingBottom: 24 + bottomSpace }, contentStyle]} keyboardShouldPersistTaps="handled">{children}</ScrollView>
       </View>
     );
@@ -62,9 +63,9 @@ export function DraggableSheet({ children, minHeight = 220, maxHeight, header, i
     <Animated.View style={[s.sheet, a, style]}>
       {!isWeb && Platform.OS === 'ios' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
       {isWeb && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
-      <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
+      <GestureDetector gesture={pan}>
         <View style={s.grab}>
-          <View style={s.handle} />
+          <GestureDetector gesture={tap}><View style={s.handleHit}><View style={s.handle} /></View></GestureDetector>
           {header ? <View style={s.headerWrap}>{header}</View> : null}
         </View>
       </GestureDetector>
@@ -77,8 +78,10 @@ export function DraggableSheet({ children, minHeight = 220, maxHeight, header, i
 
 const s = StyleSheet.create({
   sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.72)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
-  panel: { backgroundColor: colors.surface, borderLeftWidth: 1, borderLeftColor: colors.border },
+  panel: { backgroundColor: colors.bg, borderLeftWidth: 1, borderLeftColor: colors.border },
+  panelHeader: { padding: 16, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.7)', borderBottomWidth: 1, borderBottomColor: colors.border },
   grab: { paddingTop: 10, paddingHorizontal: 16, paddingBottom: 6, ...(Platform.OS === 'web' ? ({ cursor: 'grab' } as object) : {}) },
-  handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.18)', alignSelf: 'center', marginBottom: 8 },
+  handleHit: { alignSelf: 'center', paddingHorizontal: 40, paddingVertical: 4, marginBottom: 4, ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : {}) },
+  handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.18)' },
   headerWrap: { paddingBottom: 6 },
 });

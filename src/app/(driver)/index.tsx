@@ -96,7 +96,7 @@ export default function DriverHome() {
       topLeft={topLeft}
       floatingRight={<FloatingButton icon="locate" color={colors.info} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} />}
       header={header}
-      minHeight={190}
+      minHeight={170 + TAB_BAR_SPACE}
       maxRatio={0.58}
       bottomSpace={TAB_BAR_SPACE - 24}
       initiallyExpanded={!!selected || !!active}

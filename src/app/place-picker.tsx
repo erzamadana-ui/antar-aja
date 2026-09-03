@@ -83,7 +83,7 @@ export default function PlacePicker() {
 
         {mode === 'search' ? (
           <Animated.View entering={FadeIn.duration(motion.base)} style={{ flex: 1 }}>
-            <View style={{ padding: 16, paddingBottom: 8 }}>
+            <View style={{ padding: 16, paddingBottom: 8, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
               <Input icon="search" placeholder="Cari nama jalan, tempat, gedung…" value={q} onChangeText={setQ} autoFocus={Platform.OS !== 'web'}
                 right={searching ? <ActivityIndicator size="small" color={colors.primary} /> : q ? <Pressable onPress={() => setQ('')}><Ionicons name="close-circle" size={18} color={colors.textMuted} /></Pressable> : null} />
             </View>
