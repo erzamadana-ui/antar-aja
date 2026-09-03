@@ -29,6 +29,7 @@ export default function PlacePicker() {
   const [mode, setMode] = useState<'search' | 'map'>('search');
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initial = useRef<LatLng>((target === 'pickup' && booking.pickup) || (target === 'dropoff' && booking.dropoff) || location);
+  const [mapCenter, setMapCenter] = useState<LatLng>(initial.current);
 
   useEffect(() => { if (target) booking.openPicker(target as never); }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (uid) supabase.from('saved_places').select('*').eq('user_id', uid).then(({ data }) => setSaved((data as SavedPlace[]) ?? [])); }, [uid]);
@@ -38,9 +39,10 @@ export default function PlacePicker() {
     if (q.trim().length < 3) { setResults([]); return; }
     debounce.current = setTimeout(async () => {
       setSearching(true);
-      setResults(await searchPlaces(q, location));
+      try { setResults(await searchPlaces(q, location)); } catch { setResults([]); }
       setSearching(false);
     }, 400);
+    return () => { if (debounce.current) clearTimeout(debounce.current); };
   }, [q, location]);
 
   const onCenterChange = async (c: LatLng) => {
@@ -88,9 +90,9 @@ export default function PlacePicker() {
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          <MapView center={initial.current} zoom={16} onCenterChange={onCenterChange} />
+          <MapView center={mapCenter} zoom={16} onCenterChange={onCenterChange} />
           <CenterPin lifted={resolving} />
-          <MapFab icon="locate" onPress={async () => { const p = (await refresh()) ?? location; initial.current = p; setCenter({ ...p }); onCenterChange(p); }} style={{ right: 16, top: 16 }} color={colors.info} />
+          <MapFab icon="locate" onPress={async () => { const p = (await refresh()) ?? location; setMapCenter({ ...p }); onCenterChange(p); }} style={{ right: 16, top: 16 }} color={colors.info} />
           <View style={s.sheet}>
             <Row gap={10}>
               <IconCircle name="location" color={colors.primary} size={40} />

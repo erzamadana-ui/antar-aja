@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Platform, Alert } from 'react-native';
+import { View, Text, Modal, StyleSheet } from 'react-native';
 import { AdminPage, Table, FilterBar } from '@/components/admin';
 import { Row, Badge, Button, toast, Input } from '@/components/ui';
 import { rpc, supabase } from '@/lib/supabase';
@@ -21,10 +21,15 @@ export default function AdminUsers() {
   useEffect(() => { load(); }, [load]);
 
   const setUser = async (id: string, patch: { role?: UserRole; active?: boolean }) => { try { await rpc('admin_set_user', { p_user: id, p_role: patch.role ?? null, p_active: patch.active ?? null }); toast.success('Diperbarui'); load(); } catch (e) { toast.error((e as Error).message); } };
-  const adjust = (u: Row_) => {
-    const run = async (v: string | null) => { const n = Number(v); if (!v || !n) return; try { await rpc('admin_adjust_wallet', { p_user: u.id, p_amount: n, p_note: 'Penyesuaian admin' }); toast.success('Saldo disesuaikan'); load(); } catch (e) { toast.error((e as Error).message); } };
-    if (Platform.OS === 'web') return run(prompt(`Penyesuaian saldo ${u.full_name} (angka, negatif untuk mengurangi):`));
-    Alert.prompt?.('Penyesuaian saldo', 'Masukkan nominal (negatif untuk mengurangi)', run, 'plain-text', '', 'numeric');
+  const [adjusting, setAdjusting] = useState<Row_ | null>(null);
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
+  const adjust = (u: Row_) => { setAdjusting(u); setAmount(''); setNote(''); };
+  const runAdjust = async () => {
+    const n = Number(amount.replace(/[^\d-]/g, ''));
+    if (!adjusting || !n) return toast.error('Masukkan nominal (negatif untuk mengurangi)');
+    try { await rpc('admin_adjust_wallet', { p_user: adjusting.id, p_amount: n, p_note: note || 'Penyesuaian admin' }); toast.success('Saldo disesuaikan'); setAdjusting(null); load(); }
+    catch (e) { toast.error((e as Error).message); }
   };
   const shown = rows.filter((r) => (filter === 'all' || r.role === filter) && (!q || r.full_name.toLowerCase().includes(q.toLowerCase()) || (r.email ?? '').toLowerCase().includes(q.toLowerCase()) || (r.phone ?? '').includes(q)));
   const roleColor: Record<UserRole, string> = { customer: colors.info, driver: colors.ride, merchant: colors.food, admin: colors.accent };
@@ -48,6 +53,24 @@ export default function AdminUsers() {
             {u.role !== 'admin' ? <Button size="sm" title="Jadikan admin" variant="ghost" onPress={() => setUser(u.id, { role: 'admin' })} /> : <Button size="sm" title="Cabut admin" variant="ghost" color={colors.danger} onPress={() => setUser(u.id, { role: 'customer' })} />}
           </Row>); } },
       ]} />
+      <Modal visible={!!adjusting} transparent animationType="fade" onRequestClose={() => setAdjusting(null)}>
+        <View style={st.bg}>
+          <View style={st.box}>
+            <Text style={font.h3}>Penyesuaian saldo · {adjusting?.full_name}</Text>
+            <Text style={font.small}>Saldo saat ini {rupiah(adjusting?.balance ?? 0)}. Nominal negatif untuk mengurangi.</Text>
+            <Input label="Nominal (Rp)" keyboardType="numbers-and-punctuation" value={amount} onChangeText={setAmount} placeholder="50000 atau -25000" />
+            <Input label="Catatan" value={note} onChangeText={setNote} placeholder="Alasan penyesuaian" />
+            <Row gap={8} style={{ justifyContent: 'flex-end' }}>
+              <Button title="Batal" variant="ghost" onPress={() => setAdjusting(null)} />
+              <Button title="Terapkan" onPress={runAdjust} />
+            </Row>
+          </View>
+        </View>
+      </Modal>
     </AdminPage>
   );
 }
+const st = StyleSheet.create({
+  bg: { flex: 1, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  box: { backgroundColor: colors.surface, borderRadius: 16, padding: 20, gap: 12, width: '100%', maxWidth: 440 },
+});

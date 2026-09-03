@@ -28,11 +28,12 @@ export interface WithdrawalRequest {
 }
 export interface Driver {
   id: string; vehicle_type: VehicleType; vehicle_brand: string | null; vehicle_plate: string; vehicle_color: string | null;
-  license_number: string | null; status: ApprovalStatus; is_online: boolean; lat: number | null; lng: number | null;
+  status: ApprovalStatus; is_online: boolean; lat: number | null; lng: number | null;
   heading: number | null; last_seen_at: string | null; rating_avg: number; rating_count: number; total_trips: number;
-  photo_id_url?: string | null; photo_vehicle_url?: string | null; id_card_number?: string | null; created_at: string;
+  created_at: string;
   profile?: Profile | null;
 }
+export interface DriverDocuments { driver_id: string; license_number: string | null; id_card_number: string | null; photo_id_url: string | null; photo_vehicle_url: string | null }
 export interface Merchant {
   id: string; owner_id: string | null; name: string; description: string | null; category: string; address: string | null;
   lat: number | null; lng: number | null; image_url: string | null; is_open: boolean; status: ApprovalStatus;

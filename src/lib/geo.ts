@@ -40,7 +40,7 @@ export function bearing(a: LatLng, b: LatLng): number {
 export async function searchPlaces(q: string, near?: LatLng): Promise<Place[]> {
   const query = q.trim();
   if (query.length < 3) return [];
-  if (GOOGLE_KEY) return googleSearch(query, near);
+  if (GOOGLE_KEY) { try { return await googleSearch(query, near); } catch { /* CORS di web → fallback OSM */ } }
   try {
     return await photonSearch(query, near);
   } catch {

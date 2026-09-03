@@ -74,7 +74,7 @@ export default function RideScreen() {
     ...(dropoff ? [{ id: 'dropoff', lat: dropoff.lat, lng: dropoff.lng, kind: 'dropoff' as const }] : []),
     ...(!pickup && hasFix ? [{ id: 'me', lat: location.lat, lng: location.lng, kind: 'me' as const }] : []),
   ], [nearby, pickup, dropoff, hasFix, location]);
-  const fitTo = pickup && dropoff ? [pickup, dropoff] : pickup ? [pickup] : null;
+  const fitTo = useMemo(() => (pickup && dropoff ? [pickup, dropoff] : pickup ? [pickup] : null), [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const order = async () => {
     if (!pickup || !dropoff || !fare) return;

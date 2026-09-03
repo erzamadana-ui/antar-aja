@@ -6,9 +6,9 @@ import { rpc, supabase } from '@/lib/supabase';
 import { signedUrl } from '@/lib/upload';
 import { colors, font } from '@/lib/theme';
 import { formatDate, phoneDisplay } from '@/lib/format';
-import type { ApprovalStatus, Driver, Profile } from '@/lib/types';
+import type { ApprovalStatus, Driver, DriverDocuments, Profile } from '@/lib/types';
 
-type Row_ = Driver & { profile: Profile | null };
+type Row_ = Driver & { profile: Profile | null; docs: DriverDocuments | null };
 const statusColor: Record<ApprovalStatus, string> = { pending: colors.warning, approved: colors.success, suspended: colors.danger, rejected: colors.textMuted };
 
 export default function AdminDrivers() {
@@ -19,9 +19,12 @@ export default function AdminDrivers() {
     const { data } = await supabase.from('drivers').select('*').order('created_at', { ascending: false }).limit(300);
     const drivers = (data as Driver[]) ?? [];
     const ids = drivers.map((d) => d.id);
-    const { data: profiles } = ids.length ? await supabase.from('profiles').select('*').in('id', ids) : { data: [] };
+    const [{ data: profiles }, { data: docs }] = ids.length
+      ? await Promise.all([supabase.from('profiles').select('*').in('id', ids), supabase.from('driver_documents').select('*').in('driver_id', ids)])
+      : [{ data: [] }, { data: [] }];
     const pm = new Map(((profiles as Profile[]) ?? []).map((p) => [p.id, p]));
-    setRows(drivers.map((d) => ({ ...d, profile: pm.get(d.id) ?? null })));
+    const dm = new Map(((docs as DriverDocuments[]) ?? []).map((x) => [x.driver_id, x]));
+    setRows(drivers.map((d) => ({ ...d, profile: pm.get(d.id) ?? null, docs: dm.get(d.id) ?? null })));
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -40,7 +43,7 @@ export default function AdminDrivers() {
       <Table rows={shown as unknown as Record<string, unknown>[]} columns={[
         { key: 'name', label: 'Driver', width: 200, render: (r) => { const d = r as unknown as Row_; return <View><Text style={{ fontWeight: '700' }}>{d.profile?.full_name}</Text><Text style={font.tiny}>{phoneDisplay(d.profile?.phone)} · {d.profile?.email}</Text></View>; } },
         { key: 'vehicle', label: 'Kendaraan', width: 170, render: (r) => { const d = r as unknown as Row_; return <View><Text style={font.small}>{d.vehicle_type === 'car' ? '🚗' : '🏍️'} {d.vehicle_brand}</Text><Text style={{ fontWeight: '700' }}>{d.vehicle_plate}</Text></View>; } },
-        { key: 'docs', label: 'Dokumen', width: 190, render: (r) => { const d = r as unknown as Row_; return <View><Text style={font.tiny}>SIM {d.license_number ?? '-'} · NIK {d.id_card_number ?? '-'}</Text><Row gap={8}><Pressable onPress={() => openDoc(d.photo_id_url)}><Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>KTP</Text></Pressable><Pressable onPress={() => openDoc(d.photo_vehicle_url)}><Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>Kendaraan</Text></Pressable></Row></View>; } },
+        { key: 'docs', label: 'Dokumen', width: 190, render: (r) => { const d = r as unknown as Row_; return <View><Text style={font.tiny}>SIM {d.docs?.license_number ?? '-'} · NIK {d.docs?.id_card_number ?? '-'}</Text><Row gap={8}><Pressable onPress={() => openDoc(d.docs?.photo_id_url)}><Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>KTP</Text></Pressable><Pressable onPress={() => openDoc(d.docs?.photo_vehicle_url)}><Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>Kendaraan</Text></Pressable></Row></View>; } },
         { key: 'stats', label: 'Performa', width: 130, render: (r) => { const d = r as unknown as Row_; return <Text style={font.small}>⭐ {Number(d.rating_avg).toFixed(1)} · {d.total_trips} trip{d.is_online ? ' · 🟢 online' : ''}</Text>; } },
         { key: 'status', label: 'Status', width: 120, render: (r) => { const d = r as unknown as Row_; return <Badge text={d.status} color={statusColor[d.status]} />; } },
         { key: 'created_at', label: 'Daftar', width: 130, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at), false)}</Text> },

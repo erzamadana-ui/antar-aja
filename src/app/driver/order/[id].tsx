@@ -1,15 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, useWindowDimensions, Linking, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
-import { Button, Row, Badge, Loading, Divider, toast, Card } from '@/components/ui';
+import { Button, Row, Badge, Loading, Divider, toast, Card, Empty } from '@/components/ui';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, customerSubtitle } from '@/components/OrderDetails';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
-import { useCurrentLocation } from '@/hooks/useLocation';
+import { useCurrentLocation, useWatchLocation } from '@/hooks/useLocation';
 import { rpc } from '@/lib/supabase';
 import { colors, font, radius, shadow } from '@/lib/theme';
 import { statusLabel, statusColor, rupiah, serviceLabel, merchantStatusLabel } from '@/lib/format';
@@ -23,13 +23,15 @@ export default function DriverOrder() {
   const { location } = useCurrentLocation();
   const { height, width } = useWindowDimensions();
   const wide = width >= 900;
-  const me = driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location;
+  const [live, setLive] = useState<{ lat: number; lng: number; heading: number | null } | null>(null);
+  useWatchLocation(true, (p) => setLive(p));
+  const me = live ?? (driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location);
 
   const markers = useMemo<MapMarker[]>(() => order ? [
-    { id: 'me', lat: me.lat, lng: me.lng, kind: driver?.vehicle_type === 'car' ? 'car' : 'motor', heading: driver?.heading },
+    { id: 'me', lat: me.lat, lng: me.lng, kind: driver?.vehicle_type === 'car' ? 'car' : 'motor', heading: live?.heading ?? driver?.heading },
     { id: 'pickup', lat: order.pickup_lat, lng: order.pickup_lng, kind: order.service === 'food' ? 'merchant' : 'pickup', label: order.service === 'food' ? 'Merchant' : 'Jemput' },
     { id: 'dropoff', lat: order.dropoff_lat, lng: order.dropoff_lng, kind: 'dropoff', label: 'Tujuan' },
-  ] : [], [order, me.lat, me.lng, driver]);
+  ] : [], [order, me.lat, me.lng, driver, live?.heading]);
   const fitTo = useMemo(() => {
     if (!order) return null;
     const pk = { lat: order.pickup_lat, lng: order.pickup_lng }, dp = { lat: order.dropoff_lat, lng: order.dropoff_lng };
@@ -53,7 +55,8 @@ export default function DriverOrder() {
   };
   const navigate = (lat: number, lng: number) => Linking.openURL(Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
 
-  if (loading || !order) return <SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView>;
+  if (loading) return <SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView>;
+  if (!order) return <SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Order tidak ditemukan" subtitle="Order sudah dilepas atau tidak tersedia." action={<Button title="Kembali" onPress={() => router.replace('/(driver)')} />} /></SafeAreaView>;
   const active = ['accepted', 'arrived', 'in_progress'].includes(order.status);
   const navTarget = order.status === 'in_progress' ? { lat: order.dropoff_lat, lng: order.dropoff_lng } : { lat: order.pickup_lat, lng: order.pickup_lng };
   const foodNotReady = order.service === 'food' && order.merchant_status !== 'ready';

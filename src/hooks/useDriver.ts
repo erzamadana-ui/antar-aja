@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase, rpc } from '@/lib/supabase';
 import { useAuth } from '@/store/auth';
 import { useWatchLocation } from './useLocation';
-import type { AvailableOrder, Driver, Order } from '@/lib/types';
+import type { AvailableOrder, Driver, LatLng, Order } from '@/lib/types';
 
 /** Status online driver + siaran lokasi + daftar order tersedia + order aktif. */
 export function useDriverSession() {
@@ -11,11 +11,13 @@ export function useDriverSession() {
   const [available, setAvailable] = useState<AvailableOrder[]>([]);
   const [active, setActive] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
+  const [myPos, setMyPos] = useState<(LatLng & { heading: number | null }) | null>(driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng, heading: driver.heading } : null);
   const lastSent = useRef(0);
   const online = !!driver?.is_online;
 
   // Siarkan lokasi saat online (maks. tiap 4 dtk)
   useWatchLocation(online, async (p) => {
+    setMyPos(p);
     const now = Date.now();
     if (now - lastSent.current < 4000) return;
     lastSent.current = now;
@@ -38,7 +40,7 @@ export function useDriverSession() {
   useEffect(() => { loadActive(); loadAvailable(); }, [loadActive, loadAvailable]);
   useEffect(() => {
     if (!uid) return;
-    const ch = supabase.channel(`driver-feed-${uid}`)
+    const ch = supabase.channel(`driver-feed-${uid}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { loadAvailable(); loadActive(); })
       .subscribe();
     const t = setInterval(() => { loadAvailable(); loadActive(); }, 7000);
@@ -52,5 +54,5 @@ export function useDriverSession() {
   };
   const accept = async (orderId: string) => { const o = await rpc<Order>('driver_accept_order', { p_order_id: orderId }); await loadActive(); await loadAvailable(); return o; };
 
-  return { driver, online, busy, setOnline, available, active, accept, reloadActive: loadActive, reloadAvailable: loadAvailable };
+  return { driver, online, busy, setOnline, available, active, accept, myPos, setMyPos, reloadActive: loadActive, reloadAvailable: loadAvailable };
 }

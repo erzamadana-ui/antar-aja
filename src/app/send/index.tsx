@@ -60,6 +60,7 @@ export default function SendScreen() {
     ...(pickup ? [{ id: 'pickup', lat: pickup.lat, lng: pickup.lng, kind: 'pickup' as const, label: 'Ambil' }] : []),
     ...(dropoff ? [{ id: 'dropoff', lat: dropoff.lat, lng: dropoff.lng, kind: 'dropoff' as const, label: 'Antar' }] : []),
   ], [pickup, dropoff]);
+  const fitTo = useMemo(() => (pickup && dropoff ? [pickup, dropoff] : pickup ? [pickup] : null), [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
   const valid = pickup && dropoff && fare && recipient.name.trim().length >= 2 && /^(\+62|0)8\d{7,12}$/.test(recipient.phone.replace(/\s|-/g, ''));
 
   const order = async () => {
@@ -80,7 +81,7 @@ export default function SendScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top']}>
       <View style={[{ flex: 1 }, wide && { flexDirection: 'row-reverse' }]}>
         <View style={[{ flex: 1 }, wide && { flex: 1.4 }]}>
-          <MapView center={pickup ?? location} zoom={15} markers={markers} polyline={route?.coords} fitTo={pickup && dropoff ? [pickup, dropoff] : pickup ? [pickup] : null} paddingBottom={wide ? 0 : 40} />
+          <MapView center={pickup ?? location} zoom={15} markers={markers} polyline={route?.coords} fitTo={fitTo} paddingBottom={wide ? 0 : 40} />
           <Pressable onPress={() => router.back()} style={s.back}><Ionicons name="arrow-back" size={22} color={colors.text} /></Pressable>
         </View>
         <View style={[s.sheet, wide ? { width: 420, borderRadius: 0 } : { maxHeight: Math.round(height * 0.66) }]}>

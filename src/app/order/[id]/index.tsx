@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
-import { Button, Row, Badge, Loading, Divider, Stars, toast, Card } from '@/components/ui';
+import { Button, Row, Badge, Loading, Divider, Stars, toast, Card, Empty } from '@/components/ui';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, driverSubtitle } from '@/components/OrderDetails';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
@@ -68,7 +68,8 @@ export default function OrderTracking() {
     catch (e) { toast.error((e as Error).message); }
   };
 
-  if (loading || !order) return <SafeAreaView style={{ flex: 1 }}><Loading text="Memuat pesanan…" /></SafeAreaView>;
+  if (loading) return <SafeAreaView style={{ flex: 1 }}><Loading text="Memuat pesanan…" /></SafeAreaView>;
+  if (!order) return <SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Pesanan tidak ditemukan" subtitle="Pesanan tidak ada atau Anda tidak memiliki akses." action={<Button title="Kembali" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />} /></SafeAreaView>;
   const def = serviceDef(order.service);
   const active = !['completed', 'cancelled'].includes(order.status);
   const canCancel = ['searching', 'accepted', 'arrived'].includes(order.status);

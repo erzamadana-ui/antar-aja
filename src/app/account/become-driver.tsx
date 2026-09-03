@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Input, Button, Row, Chip, Badge, toast } from '@/components/ui';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
-import { rpc } from '@/lib/supabase';
+import { rpc, supabase } from '@/lib/supabase';
 import { pickAndUpload } from '@/lib/upload';
 import { colors, font, radius } from '@/lib/theme';
-import type { VehicleType } from '@/lib/types';
+import type { DriverDocuments, VehicleType } from '@/lib/types';
 
 export default function BecomeDriver() {
   const router = useRouter();
@@ -16,9 +16,15 @@ export default function BecomeDriver() {
   const setMode = useMode((s) => s.setMode);
   const [f, setF] = useState({
     vehicle_type: (driver?.vehicle_type ?? 'motor') as VehicleType, vehicle_brand: driver?.vehicle_brand ?? '', vehicle_plate: driver?.vehicle_plate ?? '',
-    vehicle_color: driver?.vehicle_color ?? '', license_number: driver?.license_number ?? '', id_card_number: driver?.id_card_number ?? '',
-    photo_id_url: driver?.photo_id_url ?? '', photo_vehicle_url: driver?.photo_vehicle_url ?? '',
+    vehicle_color: driver?.vehicle_color ?? '', license_number: '', id_card_number: '', photo_id_url: '', photo_vehicle_url: '',
   });
+  useEffect(() => {
+    if (!driver) return;
+    supabase.from('driver_documents').select('*').eq('driver_id', driver.id).maybeSingle().then(({ data }) => {
+      const d = data as DriverDocuments | null;
+      if (d) setF((p) => ({ ...p, license_number: d.license_number ?? '', id_card_number: d.id_card_number ?? '', photo_id_url: d.photo_id_url ?? '', photo_vehicle_url: d.photo_vehicle_url ?? '' }));
+    });
+  }, [driver]);
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
   const upload = async (k: 'photo_id_url' | 'photo_vehicle_url') => {
     if (!session) return;

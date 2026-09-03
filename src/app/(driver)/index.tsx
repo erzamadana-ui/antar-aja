@@ -17,28 +17,29 @@ import type { AvailableOrder } from '@/lib/types';
 export default function DriverHome() {
   const router = useRouter();
   const { profile } = useAuth();
-  const { driver, online, busy, setOnline, available, active, accept } = useDriverSession();
+  const { driver, online, busy, setOnline, available, active, accept, myPos, setMyPos } = useDriverSession();
   const { location, refresh } = useCurrentLocation();
   const { height, width } = useWindowDimensions();
   const wide = width >= 900;
   const [selected, setSelected] = useState<AvailableOrder | null>(null);
-  const pos = driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location;
+  const pos = myPos ?? (driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location);
 
   const toggle = async (v: boolean) => {
     try {
-      const p = v ? (await refresh()) ?? location : undefined;
+      let p: { lat: number; lng: number } | undefined;
+      if (v) { const fix = await refresh(); if (!fix) { toast.error('Lokasi tidak tersedia. Izinkan akses GPS lalu coba lagi.'); return; } p = fix; setMyPos({ ...fix, heading: null }); }
       await setOnline(v, p);
       toast.show(v ? 'Anda online — siap menerima order' : 'Anda offline');
     } catch (e) { toast.error((e as Error).message); }
   };
 
   const markers = useMemo<MapMarker[]>(() => {
-    const m: MapMarker[] = [{ id: 'me', lat: pos.lat, lng: pos.lng, kind: driver?.vehicle_type === 'car' ? 'car' : 'motor', heading: driver?.heading }];
+    const m: MapMarker[] = [{ id: 'me', lat: pos.lat, lng: pos.lng, kind: driver?.vehicle_type === 'car' ? 'car' : 'motor', heading: myPos?.heading ?? driver?.heading }];
     (selected ? [selected] : available).forEach((o) => m.push({ id: `p-${o.id}`, lat: o.pickup_lat, lng: o.pickup_lng, kind: o.service === 'food' ? 'merchant' : 'pickup', label: selected ? 'Jemput' : undefined }));
     if (selected) m.push({ id: 'd', lat: selected.dropoff_lat, lng: selected.dropoff_lng, kind: 'dropoff', label: 'Tujuan' });
     return m;
-  }, [pos.lat, pos.lng, driver, available, selected]);
-  const fitTo = selected ? [pos, { lat: selected.pickup_lat, lng: selected.pickup_lng }, { lat: selected.dropoff_lat, lng: selected.dropoff_lng }] : [pos];
+  }, [pos.lat, pos.lng, driver, available, selected, myPos?.heading]);
+  const fitTo = useMemo(() => selected ? [pos, { lat: selected.pickup_lat, lng: selected.pickup_lng }, { lat: selected.dropoff_lat, lng: selected.dropoff_lng }] : [pos], [pos.lat, pos.lng, selected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doAccept = async (o: AvailableOrder) => {
     try { const ord = await accept(o.id); setSelected(null); toast.success('Order diterima!'); router.push(`/driver/order/${ord.id}` as never); }
@@ -71,7 +72,7 @@ export default function DriverHome() {
       <View style={[{ flex: 1 }, wide && { flexDirection: 'row-reverse' }]}>
         <View style={[{ flex: 1 }, wide && { flex: 1.4 }]}>
           <MapView center={pos} zoom={14} markers={markers} fitTo={fitTo} paddingBottom={wide ? 0 : 20} />
-          <MapFab icon="locate" style={{ right: 16, top: 16 }} color={colors.info} onPress={() => refresh()} />
+          <MapFab icon="locate" style={{ right: 16, top: 16 }} color={colors.info} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} />
         </View>
         <View style={[s.sheet, wide ? { width: 420, borderRadius: 0 } : { maxHeight: Math.round(height * 0.5) }]}>
           <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
