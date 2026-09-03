@@ -1,0 +1,119 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen, Card, Row, Stepper, Button, Badge, Empty, toast } from '@/components/ui';
+import { PaymentSection, PriceSummary } from '@/components/BookingSheet';
+import { useCart } from '@/store/cart';
+import { useBooking } from '@/store/booking';
+import { useAuth } from '@/store/auth';
+import { useCurrentLocation } from '@/hooks/useLocation';
+import { getRoute, reverseGeocode, type RouteResult } from '@/lib/geo';
+import { rpc } from '@/lib/supabase';
+import { colors, font, radius } from '@/lib/theme';
+import { rupiah, km, minutes } from '@/lib/format';
+import type { FareEstimate, Order, PaymentMethod } from '@/lib/types';
+
+export default function Checkout() {
+  const router = useRouter();
+  const cart = useCart();
+  const { dropoff, setDropoff } = useBooking();
+  const { location, hasFix } = useCurrentLocation();
+  const refreshWallet = useAuth((s) => s.refreshWallet);
+  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [fare, setFare] = useState<FareEstimate | null>(null);
+  const [method, setMethod] = useState<PaymentMethod>('cash');
+  const [promo, setPromo] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [notes, setNotes] = useState('');
+  const m = cart.merchant;
+  const subtotal = cart.subtotal();
+
+  useEffect(() => {
+    if (!dropoff && hasFix) reverseGeocode(location).then((address) => { if (!useBooking.getState().dropoff) setDropoff({ ...location, address, name: 'Lokasi saya' }); });
+  }, [hasFix]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!m || !dropoff || m.lat == null || m.lng == null) return;
+    let cancelled = false;
+    (async () => {
+      const r = await getRoute({ lat: m.lat!, lng: m.lng! }, dropoff);
+      if (cancelled) return;
+      setRoute(r);
+      const f = await rpc<FareEstimate>('estimate_fare', { p_service: 'food', p_pickup_lat: m.lat, p_pickup_lng: m.lng, p_drop_lat: dropoff.lat, p_drop_lng: dropoff.lng, p_route_km: r.distance_km }).catch(() => null);
+      if (!cancelled) setFare(f);
+    })();
+    return () => { cancelled = true; };
+  }, [m?.id, dropoff?.lat, dropoff?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!m || cart.lines.length === 0) {
+    return <Screen title="Keranjang" back><Empty icon="cart-outline" title="Keranjang kosong" subtitle="Pilih menu dari merchant AntarFood." action={<Button title="Cari makanan" onPress={() => router.replace('/food')} />} /></Screen>;
+  }
+  const total = fare ? Math.max(0, subtotal + fare.fare + fare.platform_fee - discount) : 0;
+
+  const order = async () => {
+    if (!dropoff || !fare) return;
+    try {
+      const o = await rpc<Order>('create_order', { p: {
+        service: 'food', merchant_id: m.id, dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: dropoff.address },
+        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method, promo_code: promo || null, notes: notes || null,
+        items: cart.lines.map((l) => ({ menu_item_id: l.item.id, qty: l.qty, notes: l.notes || null })),
+      } });
+      cart.clear(); await refreshWallet(); useBooking.getState().reset();
+      router.replace(`/order/${o.id}` as never);
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
+  return (
+    <Screen title="Checkout" back footer={<Button title={fare ? `Pesan Sekarang · ${rupiah(total)}` : 'Menghitung ongkir…'} size="lg" color={colors.food} disabled={!fare || !dropoff} onPress={order} />}>
+      <View style={{ gap: 16 }}>
+        <Card>
+          <Text style={font.tiny}>ANTAR KE</Text>
+          <Pressable onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} style={s.addr}>
+            <Ionicons name="location" size={22} color={colors.danger} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '700', color: colors.text }}>{dropoff?.name ?? 'Pilih alamat'}</Text>
+              <Text style={font.small} numberOfLines={2}>{dropoff?.address ?? 'Ketuk untuk memilih alamat pengantaran'}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </Pressable>
+          {route && <Row gap={8} style={{ marginTop: 10 }}><Badge text={`${km(route.distance_km)} dari ${m.name}`} color={colors.info} /><Badge text={`Tiba ±${minutes((route.duration_min ?? 0) + m.prep_minutes)}`} color={colors.success} /></Row>}
+        </Card>
+
+        <Card>
+          <Row between style={{ marginBottom: 8 }}>
+            <Text style={font.h3}>{m.name}</Text>
+            <Pressable onPress={() => router.push(`/food/${m.id}` as never)}><Text style={{ color: colors.food, fontWeight: '700' }}>+ Tambah</Text></Pressable>
+          </Row>
+          {cart.lines.map((l) => (
+            <View key={l.item.id} style={s.line}>
+              <Row between>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: '600', color: colors.text }}>{l.item.name}</Text>
+                  <Text style={font.small}>{rupiah(l.item.price)} × {l.qty}</Text>
+                </View>
+                <Stepper value={l.qty} onChange={(v) => cart.setQty(l.item.id, v)} />
+              </Row>
+              <TextInput placeholder="Catatan untuk menu ini (mis. tidak pedas)" placeholderTextColor={colors.textMuted} value={l.notes ?? ''} onChangeText={(v) => cart.setNotes(l.item.id, v)} style={s.noteInput} />
+            </View>
+          ))}
+        </Card>
+
+        <Card>
+          <Text style={[font.h3, { marginBottom: 10 }]}>Rincian pembayaran</Text>
+          <PriceSummary rows={[{ label: 'Harga makanan', value: subtotal }, { label: `Ongkos kirim (${fare ? km(fare.distance_km) : '…'})`, value: fare?.fare ?? 0 }, { label: 'Biaya layanan', value: fare?.platform_fee ?? 0 }, { label: 'Diskon promo', value: discount, minus: true }]} total={total} />
+        </Card>
+
+        <Card>
+          <PaymentSection method={method} onMethod={setMethod} promo={promo} onPromo={setPromo} notes={notes} onNotes={setNotes} subtotal={subtotal + (fare?.fare ?? 0)} service="food" onDiscount={setDiscount} notesPlaceholder="Catatan untuk driver (mis. patokan rumah)" />
+        </Card>
+      </View>
+    </Screen>
+  );
+}
+
+const s = StyleSheet.create({
+  addr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 },
+  line: { borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 10, gap: 6 },
+  noteInput: { backgroundColor: colors.bg, borderRadius: radius.sm, paddingHorizontal: 10, height: 36, fontSize: 13, color: colors.text },
+});
