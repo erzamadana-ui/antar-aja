@@ -18,9 +18,9 @@ export interface MapProps {
   paddingBottom?: number;            // ruang untuk sheet di bawah agar fitBounds tidak tertutup
 }
 
-// Tile gratis tanpa API key. Ganti ke MapTiler/Google jika trafik sudah besar.
-export const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-export const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
+// Tile OpenStreetMap standar (gratis, tanpa API key; patuhi tile usage policy — untuk trafik besar pindah ke MapTiler/Google).
+export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 export const MARKER_COLORS: Record<MarkerKind, string> = {
   pickup: '#0E7C7B', dropoff: '#E5484D', me: '#2F80ED', motor: '#00A86B', car: '#2F80ED', merchant: '#EB5757', driver: '#00A86B',
@@ -72,7 +72,7 @@ html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#e8ecef;over
 (function(){
   var TILE='${TILE_URL}';
   var map=L.map('map',{zoomControl:false,attributionControl:true,tap:false}).setView([${center.lat},${center.lng}],${zoom});
-  L.tileLayer(TILE,{maxZoom:19,subdomains:'abcd',attribution:'${TILE_ATTR.replace(/'/g, "\\'")}'}).addTo(map);
+  L.tileLayer(TILE,{maxZoom:19,attribution:'${TILE_ATTR.replace(/'/g, "\\'")}'}).addTo(map);
   var markers={},line=null,programmatic=false;
   var markerHtml=function(kind,heading,label){${MARKER_JS_BODY}};
   function post(m){ if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(JSON.stringify(m));} }

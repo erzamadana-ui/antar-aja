@@ -99,7 +99,7 @@ Pengaturan dashboard yang disarankan:
 
 ## Peta & integrasi berbayar (opsional)
 
-Tanpa API key: tile CARTO/OSM, pencarian Photon → Nominatim, rute OSRM publik (rate limit ringan; cocok untuk MVP/uji).
+Tanpa API key: tile OpenStreetMap, pencarian Photon → Nominatim, rute OSRM publik (rate limit ringan; cocok untuk MVP/uji).
 
 Untuk produksi:
 * **Google Maps**: isi `EXPO_PUBLIC_GOOGLE_MAPS_KEY` di `.env` → pencarian tempat, reverse geocode, dan rute otomatis memakai Google (Places, Geocoding, Directions). Tile peta tetap Leaflet; bila ingin Google Maps SDK native, ganti `src/components/map/MapView.tsx` dengan `react-native-maps` (butuh build native).

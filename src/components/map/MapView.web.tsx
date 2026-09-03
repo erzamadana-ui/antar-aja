@@ -66,7 +66,7 @@ export default function MapView(props: MapProps) {
   return (
     <View style={[styles.wrap, style]}>
       <MapContainer center={initial} zoom={zoom} zoomControl={false} attributionControl style={{ width: '100%', height: '100%' }}>
-        <TileLayer url={TILE_URL} attribution={TILE_ATTR} subdomains="abcd" maxZoom={19} />
+        <TileLayer url={TILE_URL} attribution={TILE_ATTR} maxZoom={19} />
         <Controller {...props} />
         {polyline && polyline.length > 1 && <Polyline positions={polyline} pathOptions={{ color: colors.primary, weight: 5, opacity: 0.9, lineJoin: 'round' }} />}
         {markers.map((m) => (
