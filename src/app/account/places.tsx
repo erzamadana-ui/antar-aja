@@ -3,6 +3,7 @@ import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Input, Button, ListItem, Empty, Row, toast } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { useBooking } from '@/store/booking';
 import { supabase } from '@/lib/supabase';
@@ -35,7 +36,7 @@ export default function SavedPlaces() {
   return (
     <Screen title="Alamat Tersimpan" back>
       <Card style={{ gap: 12 }}>
-        <Text style={font.h3}>Tambah alamat</Text>
+        <Text style={font.label}>Tambah alamat</Text>
         <Input label="Label" value={label} onChangeText={setLabel} placeholder="Rumah / Kantor / Kos" icon="bookmark-outline" />
         <Pressable onPress={() => router.push({ pathname: '/place-picker', params: { target: 'generic', title: 'Pilih alamat' } } as never)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.bg, padding: 12, borderRadius: 12 }}>
           <Ionicons name="location-outline" size={20} color={colors.primary} />
@@ -45,14 +46,16 @@ export default function SavedPlaces() {
       </Card>
       <View style={{ height: 16 }} />
       {list.length === 0 ? <Empty icon="bookmark-outline" title="Belum ada alamat tersimpan" /> : (
-        <Card padded={false}>
-          <View style={{ paddingHorizontal: 12 }}>
-            {list.map((p) => (
-              <ListItem key={p.id} icon={p.label.toLowerCase().includes('rumah') ? 'home-outline' : p.label.toLowerCase().includes('kantor') ? 'business-outline' : 'bookmark-outline'} title={p.label} subtitle={p.address}
-                right={<Row><Pressable onPress={() => remove(p.id)} hitSlop={8}><Ionicons name="trash-outline" size={20} color={colors.danger} /></Pressable></Row>} />
-            ))}
-          </View>
-        </Card>
+        <Entrance index={0}>
+          <Card padded={false}>
+            <View style={{ paddingHorizontal: 12 }}>
+              {list.map((p) => (
+                <ListItem key={p.id} icon={p.label.toLowerCase().includes('rumah') ? 'home-outline' : p.label.toLowerCase().includes('kantor') ? 'business-outline' : 'bookmark-outline'} title={p.label} subtitle={p.address}
+                  right={<Row><Pressable onPress={() => remove(p.id)} hitSlop={8}><Ionicons name="trash-outline" size={20} color={colors.danger} /></Pressable></Row>} />
+              ))}
+            </View>
+          </Card>
+        </Entrance>
       )}
     </Screen>
   );

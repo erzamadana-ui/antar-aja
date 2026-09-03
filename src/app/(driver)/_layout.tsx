@@ -1,16 +1,24 @@
 import React from 'react';
+import { Tabs } from 'expo-router';
 import { RequireAuth } from '@/components/AuthGate';
-import { Tabs, tabIcon, tabScreenOptions } from '@/components/TabBarIcon';
+import { makeGlassTabBar } from '@/components/GlassTabBar';
 import { colors } from '@/lib/theme';
+
+const TabBar = makeGlassTabBar({
+  index: { label: 'Beranda', icon: 'navigate-outline', iconActive: 'navigate' },
+  history: { label: 'Riwayat', icon: 'receipt-outline', iconActive: 'receipt' },
+  earnings: { label: 'Pendapatan', icon: 'wallet-outline', iconActive: 'wallet' },
+  account: { label: 'Akun', icon: 'person-outline', iconActive: 'person' },
+}, colors.ride);
 
 export default function DriverLayout() {
   return (
     <RequireAuth role="driver">
-      <Tabs screenOptions={{ ...tabScreenOptions, tabBarActiveTintColor: colors.ride }}>
-        <Tabs.Screen name="index" options={{ title: 'Beranda', tabBarIcon: tabIcon('navigate', 'navigate-outline') }} />
-        <Tabs.Screen name="history" options={{ title: 'Riwayat', tabBarIcon: tabIcon('receipt', 'receipt-outline') }} />
-        <Tabs.Screen name="earnings" options={{ title: 'Pendapatan', tabBarIcon: tabIcon('wallet', 'wallet-outline') }} />
-        <Tabs.Screen name="account" options={{ title: 'Akun', tabBarIcon: tabIcon('person', 'person-outline') }} />
+      <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent' } }}>
+        <Tabs.Screen name="index" options={{ title: 'Beranda' }} />
+        <Tabs.Screen name="history" options={{ title: 'Riwayat' }} />
+        <Tabs.Screen name="earnings" options={{ title: 'Pendapatan' }} />
+        <Tabs.Screen name="account" options={{ title: 'Akun' }} />
       </Tabs>
     </RequireAuth>
   );

@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, Row, Avatar, ListItem, Divider, Badge, Button } from '@/components/ui';
+import { Entrance } from '@/components/motion';
+import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { colors, font } from '@/lib/theme';
@@ -11,8 +13,8 @@ export default function DriverAccount() {
   const { profile, driver, signOut } = useAuth();
   const setMode = useMode((s) => s.setMode);
   return (
-    <Screen title="Akun Mitra">
-      <Card>
+    <Screen title="Akun Mitra" ambient="amber" bottomSpace={TAB_BAR_SPACE + 16}>
+      <Entrance index={0}><Card>
         <Row gap={14}>
           <Avatar name={profile?.full_name} url={profile?.avatar_url} size={60} />
           <View style={{ flex: 1 }}>
@@ -26,8 +28,8 @@ export default function DriverAccount() {
           <View><Text style={font.tiny}>Ulasan</Text><Text style={font.h3}>{driver?.rating_count}</Text></View>
           <View><Text style={font.tiny}>Total trip</Text><Text style={font.h3}>{driver?.total_trips}</Text></View>
         </Row>
-      </Card>
-      <Card style={{ marginTop: 16 }} padded={false}>
+      </Card></Entrance>
+      <Entrance index={1}><Card style={{ marginTop: 16 }} padded={false}>
         <View style={{ paddingHorizontal: 12 }}>
           <ListItem icon="person-outline" title="Edit profil" onPress={() => router.push('/account/edit')} />
           <Divider style={{ marginVertical: 0 }} />
@@ -35,11 +37,11 @@ export default function DriverAccount() {
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="help-circle-outline" title="Bantuan" onPress={() => router.push('/account/help')} />
         </View>
-      </Card>
-      <View style={{ marginTop: 16, gap: 10 }}>
+      </Card></Entrance>
+      <Entrance index={2} style={{ marginTop: 16, gap: 10 }}>
         <Button title="Beralih ke Mode Pelanggan" variant="secondary" icon="swap-horizontal" onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }} />
         <Button title="Keluar" variant="outline" color={colors.danger} onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} />
-      </View>
+      </Entrance>
     </Screen>
   );
 }

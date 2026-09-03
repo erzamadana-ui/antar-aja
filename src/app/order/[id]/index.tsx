@@ -1,35 +1,40 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, useWindowDimensions, Animated, Alert, Platform, TextInput } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Alert, Platform, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
-import { Button, Row, Badge, Loading, Divider, Stars, toast, Card, Empty } from '@/components/ui';
+import { Button, Row, Badge, Loading, Divider, Stars, toast, Empty } from '@/components/ui';
+import { MapScreen } from '@/components/MapScreen';
+import { Radar, ProgressBar, LiveDot, PressableScale } from '@/components/motion';
+import { AmbientBackground } from '@/components/glass';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, driverSubtitle } from '@/components/OrderDetails';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { rpc, supabase } from '@/lib/supabase';
-import { colors, font, radius, shadow } from '@/lib/theme';
+import { colors, font, radius, motion, glass } from '@/lib/theme';
 import { statusLabel, statusColor, rupiah, serviceLabel } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
+import type { Order, OrderStatus } from '@/lib/types';
+
+const STEPS: { key: OrderStatus; label: string; icon: string }[] = [
+  { key: 'searching', label: 'Mencari', icon: 'search' },
+  { key: 'accepted', label: 'Menuju', icon: 'navigate' },
+  { key: 'arrived', label: 'Tiba', icon: 'location' },
+  { key: 'in_progress', label: 'Jalan', icon: 'flag' },
+  { key: 'completed', label: 'Selesai', icon: 'checkmark' },
+];
+const stepIndex = (s: OrderStatus) => Math.max(0, STEPS.findIndex((x) => x.key === s));
 
 export default function OrderTracking() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { order, driver, events, loading, reload } = useOrder(id);
   const refreshWallet = useAuth((s) => s.refreshWallet);
-  const { height, width } = useWindowDimensions();
-  const wide = width >= 900;
   const [rated, setRated] = useState<{ driver?: number; merchant?: number }>({});
   const [comment, setComment] = useState('');
-  const pulse = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (order?.status !== 'searching') return;
-    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 900, useNativeDriver: true })]));
-    loop.start(); return () => loop.stop();
-  }, [order?.status, pulse]);
 
   useEffect(() => {
     if (order?.status === 'completed' || order?.status === 'cancelled') refreshWallet();
@@ -68,66 +73,121 @@ export default function OrderTracking() {
     catch (e) { toast.error((e as Error).message); }
   };
 
-  if (loading) return <SafeAreaView style={{ flex: 1 }}><Loading text="Memuat pesanan…" /></SafeAreaView>;
-  if (!order) return <SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Pesanan tidak ditemukan" subtitle="Pesanan tidak ada atau Anda tidak memiliki akses." action={<Button title="Kembali" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />} /></SafeAreaView>;
+  if (loading) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Loading text="Memuat pesanan…" /></SafeAreaView></View>;
+  if (!order) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Pesanan tidak ditemukan" subtitle="Pesanan tidak ada atau Anda tidak memiliki akses." action={<Button title="Kembali" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />} /></SafeAreaView></View>;
   const def = serviceDef(order.service);
   const active = !['completed', 'cancelled'].includes(order.status);
   const canCancel = ['searching', 'accepted', 'arrived'].includes(order.status);
+  const sc = statusColor(order.status);
+  const searching = order.status === 'searching';
+
+  const header = (
+    <View style={{ gap: 12 }}>
+      <Row gap={12}>
+        <Animated.View key={order.status} entering={ZoomIn.duration(motion.base)} style={[s.statusIcon, { backgroundColor: sc + '1A' }]}>
+          {searching ? <LiveDot color={colors.warning} size={12} /> : <Ionicons name={(order.status === 'completed' ? 'checkmark-circle' : order.status === 'cancelled' ? 'close-circle' : def.icon) as never} size={24} color={sc} />}
+        </Animated.View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Animated.Text key={`t-${order.status}-${order.merchant_status ?? ''}`} entering={FadeIn.duration(motion.base)} style={font.h3} numberOfLines={1}>{statusLabel(order.status, order.service, order.merchant_status)}</Animated.Text>
+          <Text style={font.tiny} numberOfLines={1}>{serviceLabel[order.service]} · {subtitle(order)}</Text>
+        </View>
+        <Text style={{ fontWeight: '900', fontSize: 16, color: colors.text }}>{rupiah(order.total)}</Text>
+      </Row>
+      {order.status !== 'cancelled' && <StatusStepper status={order.status} color={sc} />}
+    </View>
+  );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top']}>
-      <View style={[{ flex: 1 }, wide && { flexDirection: 'row-reverse' }]}>
-        <View style={[{ flex: 1 }, wide && { flex: 1.4 }]}>
-          <MapView center={{ lat: order.pickup_lat, lng: order.pickup_lng }} markers={markers} polyline={order.route_geometry} fitTo={fitTo} paddingBottom={wide ? 0 : 20} />
-          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(customer)/orders'))} style={s.back}><Ionicons name="arrow-back" size={22} color={colors.text} /></Pressable>
-          <View style={s.codeTag}><Text style={{ fontWeight: '700', fontSize: 12, color: colors.text }}>{order.code}</Text></View>
-        </View>
-        <View style={[s.sheet, wide ? { width: 440, borderRadius: 0 } : { maxHeight: Math.round(height * 0.6) }]}>
-          <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 28 }}>
-            <Row gap={12}>
-              {order.status === 'searching' ? (
-                <Animated.View style={[s.pulseWrap, { opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }]}><Ionicons name="radio" size={22} color={colors.warning} /></Animated.View>
-              ) : <View style={[s.pulseWrap, { backgroundColor: statusColor(order.status) + '1A' }]}><Ionicons name={order.status === 'completed' ? 'checkmark-circle' : order.status === 'cancelled' ? 'close-circle' : def.icon as never} size={22} color={statusColor(order.status)} /></View>}
-              <View style={{ flex: 1 }}>
-                <Text style={font.h3}>{statusLabel(order.status, order.service, order.merchant_status)}</Text>
-                <Text style={font.tiny}>{serviceLabel[order.service]} · {order.status === 'searching' ? 'Kami sedang mencarikan driver terdekat' : order.status === 'accepted' ? 'Driver sedang menuju lokasi' : order.status === 'in_progress' ? `Perkiraan ${order.duration_min} menit` : order.status === 'completed' ? 'Terima kasih sudah memakai Antar Aja' : order.cancel_reason ?? ''}</Text>
-              </View>
-              <Text style={{ fontWeight: '800', fontSize: 16 }}>{rupiah(order.total)}</Text>
-            </Row>
+    <MapScreen
+      map={<MapView center={{ lat: order.pickup_lat, lng: order.pickup_lng }} markers={markers} polyline={order.route_geometry} fitTo={fitTo} paddingBottom={20} />}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/(customer)/orders'))}
+      floatingTag={<Text style={{ fontWeight: '800', fontSize: 12, color: colors.text, letterSpacing: 0.5 }}>{order.code}</Text>}
+      header={header}
+      minHeight={searching ? 250 : 210}
+      maxRatio={0.66}
+      initiallyExpanded={!active}
+    >
+      <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 14 }}>
+        {searching && (
+          <Animated.View entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={s.radarBox}>
+            <Radar color={colors.primary} size={140}><Ionicons name={def.icon as never} size={26} color={colors.primary} /></Radar>
+            <Text style={[font.h3, { marginTop: 6 }]}>Mencari driver terdekat…</Text>
+            <Text style={[font.small, { textAlign: 'center' }]}>Biasanya kurang dari 2 menit. Anda akan diberi tahu saat driver menerima.</Text>
+          </Animated.View>
+        )}
 
-            {driver && active && (
-              <PersonCard name={driver.profile?.full_name} subtitle={driverSubtitle(driver)} phone={driver.profile?.phone} avatar={driver.profile?.avatar_url} rating={driver.rating_avg} ratingCount={driver.rating_count}
-                onChat={() => router.push(`/order/${id}/chat` as never)} />
-            )}
-            {order.status === 'completed' && driver && (
-              <Card style={{ backgroundColor: colors.bg }}>
-                <Text style={font.h3}>Beri penilaian</Text>
-                <Row between style={{ marginTop: 8 }}><Text style={font.small}>Driver {driver.profile?.full_name}</Text><Stars value={rated.driver ?? 0} size={22} onChange={(v) => rate('driver', v)} /></Row>
-                {order.merchant && <Row between style={{ marginTop: 8 }}><Text style={font.small}>{order.merchant.name}</Text><Stars value={rated.merchant ?? 0} size={22} onChange={(v) => rate('merchant', v)} /></Row>}
-                <TextInput placeholder="Tulis ulasan (opsional)" placeholderTextColor={colors.textMuted} value={comment} onChangeText={setComment} style={s.comment} />
-              </Card>
-            )}
+        {driver && active && (
+          <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut}>
+            <PersonCard name={driver.profile?.full_name} subtitle={driverSubtitle(driver)} phone={driver.profile?.phone} avatar={driver.profile?.avatar_url} rating={driver.rating_avg} ratingCount={driver.rating_count}
+              onChat={() => router.push(`/order/${id}/chat` as never)} />
+          </Animated.View>
+        )}
+        {order.status === 'completed' && driver && (
+          <Animated.View entering={FadeInDown.delay(120).duration(motion.slow)} style={s.rateBox}>
+            <Text style={font.h3}>Beri penilaian</Text>
+            <Row between style={{ marginTop: 8 }}><Text style={font.small}>Driver {driver.profile?.full_name}</Text><Stars value={rated.driver ?? 0} size={24} onChange={(v) => rate('driver', v)} /></Row>
+            {order.merchant && <Row between style={{ marginTop: 8 }}><Text style={font.small}>{order.merchant.name}</Text><Stars value={rated.merchant ?? 0} size={24} onChange={(v) => rate('merchant', v)} /></Row>}
+            <TextInput placeholder="Tulis ulasan (opsional)" placeholderTextColor={colors.textMuted} value={comment} onChangeText={setComment} style={s.comment} />
+          </Animated.View>
+        )}
 
-            <RouteBlock order={order} />
-            <OrderExtras order={order} />
-            <Divider />
-            <PriceBlock order={order} />
-            {order.payment_status === 'refunded' && <Badge text="Dana dikembalikan ke AntarPay" color={colors.info} />}
-            <Divider />
-            <Timeline events={events} />
-            {canCancel && <Button title="Batalkan pesanan" variant="outline" color={colors.danger} onPress={cancel} />}
-            {!active && <Button title="Pesan lagi" variant="secondary" onPress={() => router.replace(def.route as never)} />}
-          </ScrollView>
+        <View style={s.block}>
+          <RouteBlock order={order} />
+          <OrderExtras order={order} />
         </View>
-      </View>
-    </SafeAreaView>
+        <View style={s.block}>
+          <PriceBlock order={order} />
+          {order.payment_status === 'refunded' && <Badge text="Dana dikembalikan ke AntarPay" color={colors.info} style={{ marginTop: 8 }} />}
+        </View>
+        <View style={s.block}><Timeline events={events} /></View>
+        {canCancel && <Button title="Batalkan pesanan" variant="outline" color={colors.danger} onPress={cancel} />}
+        {!active && <Button title="Pesan lagi" variant="secondary" onPress={() => router.replace(def.route as never)} />}
+      </Animated.View>
+    </MapScreen>
   );
 }
 
+function subtitle(order: Order) {
+  switch (order.status) {
+    case 'searching': return 'Kami sedang mencarikan driver terdekat';
+    case 'accepted': return 'Driver sedang menuju lokasi';
+    case 'arrived': return 'Driver sudah tiba';
+    case 'in_progress': return `Perkiraan ${order.duration_min} menit`;
+    case 'completed': return 'Terima kasih sudah memakai Antar Aja';
+    default: return order.cancel_reason ?? '';
+  }
+}
+
+/** Stepper status: titik-titik yang terisi berurutan + bar progres animasi. */
+function StatusStepper({ status, color }: { status: OrderStatus; color: string }) {
+  const idx = stepIndex(status);
+  return (
+    <View style={{ gap: 8 }}>
+      <ProgressBar progress={(idx + (status === 'completed' ? 1 : 0.5)) / STEPS.length} color={color} height={5} />
+      <Row between>
+        {STEPS.map((st, i) => {
+          const done = i < idx || status === 'completed';
+          const cur = i === idx && status !== 'completed';
+          return (
+            <View key={st.key} style={{ alignItems: 'center', gap: 4, flex: 1 }}>
+              <Animated.View layout={LinearTransition.springify()} style={[s.step, done && { backgroundColor: color, borderColor: color }, cur && { borderColor: color, backgroundColor: color + '22' }]}>
+                <Ionicons name={st.icon as never} size={12} color={done ? '#fff' : cur ? color : colors.textMuted} />
+              </Animated.View>
+              <Text style={[font.tiny, { fontSize: 10, fontWeight: cur || done ? '700' : '500', color: cur ? color : done ? colors.text : colors.textMuted }]} numberOfLines={1}>{st.label}</Text>
+            </View>
+          );
+        })}
+      </Row>
+    </View>
+  );
+}
+
+export { PressableScale };
 const s = StyleSheet.create({
-  back: { position: 'absolute', left: 16, top: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow.card, zIndex: 6 },
-  codeTag: { position: 'absolute', right: 16, top: 24, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full, ...shadow.card, zIndex: 6 },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, ...shadow.sheet },
-  pulseWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
-  comment: { marginTop: 10, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, height: 42, color: colors.text },
+  statusIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  step: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.12)', backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' },
+  radarBox: { alignItems: 'center', gap: 4, padding: 12, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
+  rateBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
+  block: { backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
+  comment: { marginTop: 10, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, height: 42, color: colors.text },
 });

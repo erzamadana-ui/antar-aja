@@ -4,9 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { ToastHost, Loading } from '@/components/ui';
+import { AmbientBackground } from '@/components/glass';
 import { colors } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -23,20 +25,41 @@ export default function RootLayout() {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.title = 'Antar Aja';
       const style = document.createElement('style');
-      style.textContent = 'html,body,#root{height:100%;background:#F6F7F9} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif} *{box-sizing:border-box} ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#cfd6dc;border-radius:8px}';
+      style.textContent = [
+        'html,body,#root{height:100%;background:#F3F6F8}',
+        'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;-webkit-font-smoothing:antialiased}',
+        '*{box-sizing:border-box}',
+        '::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:rgba(11,31,42,0.18);border-radius:8px}',
+        'a,button,[role=button]{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .2s,opacity .2s}',
+        '[role=button]:hover{filter:brightness(1.03)}',
+        '@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}',
+      ].join('\n');
       document.head.appendChild(style);
     }
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <StatusBar style="dark" />
-        {!ready || !modeLoaded ? <Loading /> : (
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: Platform.OS === 'web' ? 'none' : 'default' }} />
-        )}
-        <ToastHost />
-      </View>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <StatusBar style="dark" />
+          {!ready || !modeLoaded ? (<><AmbientBackground /><Loading /></>) : (
+            <Stack screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: Platform.OS === 'web' ? 'fade' : 'slide_from_right',
+              animationDuration: 260,
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+            }}>
+              <Stack.Screen name="place-picker" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom', presentation: 'card' }} />
+              <Stack.Screen name="food/checkout" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
+              <Stack.Screen name="order/[id]/chat" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
+            </Stack>
+          )}
+          <ToastHost />
+        </View>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

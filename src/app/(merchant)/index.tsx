@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
-import { Screen, Card, Row, Badge, Button, Chip, Empty, Loading, toast } from '@/components/ui';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { Entrance, LiveDot, Skeleton } from '@/components/motion';
+import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
+import { Screen, Card, Row, Badge, Button, Chip, Empty, toast } from '@/components/ui';
 import { useAuth } from '@/store/auth';
 import { useMyOrders } from '@/hooks/useOrder';
 import { rpc } from '@/lib/supabase';
-import { colors, font } from '@/lib/theme';
+import { colors, font, motion } from '@/lib/theme';
 import { rupiah, formatTime, merchantStatusLabel, statusLabel } from '@/lib/format';
 import type { Order, MerchantOrderStatus } from '@/lib/types';
 
@@ -26,27 +29,28 @@ export default function MerchantOrders() {
   };
 
   if (merchant && merchant.status !== 'approved') {
-    return <Screen title="Pesanan"><Empty icon="hourglass-outline" title="Menunggu verifikasi admin" subtitle="Toko akan tampil di AntarFood setelah disetujui. Anda sudah bisa menyiapkan menu." /></Screen>;
+    return <Screen title="Pesanan" ambient="amber"><Empty icon="hourglass-outline" title="Menunggu verifikasi admin" subtitle="Toko akan tampil di AntarFood setelah disetujui. Anda sudah bisa menyiapkan menu." /></Screen>;
   }
   return (
-    <Screen title={merchant?.name ?? 'Pesanan'} scroll={false} padded={false}>
+    <Screen title={merchant?.name ?? 'Pesanan'} scroll={false} padded={false} ambient="amber">
       <Row gap={8} style={{ padding: 16, paddingBottom: 8 }}>
         <Chip label={`Baru (${lists.new.length})`} active={tab === 'new'} onPress={() => setTab('new')} color={colors.food} />
         <Chip label={`Diproses (${lists.process.length})`} active={tab === 'process'} onPress={() => setTab('process')} color={colors.food} />
         <Chip label="Selesai" active={tab === 'done'} onPress={() => setTab('done')} color={colors.food} />
       </Row>
-      {loading ? <Loading /> : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await reload(); setRefreshing(false); }} />}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: TAB_BAR_SPACE + 16, width: '100%', maxWidth: 720, alignSelf: 'center' }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await reload(); setRefreshing(false); }} />}>
+        {loading ? [0, 1].map((i) => <View key={i} style={{ gap: 10, padding: 14, backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 20 }}><Skeleton width="40%" height={16} /><Skeleton width="90%" height={12} /><Skeleton width="70%" height={12} /></View>) : (
+        <Animated.View key={tab} entering={FadeIn.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition} style={{ gap: 12 }}>
           {lists[tab].length === 0 && <Empty icon="receipt-outline" title={tab === 'new' ? 'Belum ada pesanan baru' : 'Kosong'} subtitle="Pesanan baru akan muncul otomatis." />}
-          {lists[tab].map((o) => (
-            <Card key={o.id}>
+          {lists[tab].map((o, i) => (
+            <Entrance key={o.id} index={Math.min(i, 6)} from="up"><Card style={o.merchant_status === 'pending' && isActive(o) ? { borderColor: colors.food + '66' } : undefined}>
               <Row between>
-                <View><Text style={font.h3}>{o.code}</Text><Text style={font.tiny}>{formatTime(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai (driver bayar di kasir)' : 'AntarPay'}</Text></View>
+                <View><Row gap={6}>{isActive(o) && o.merchant_status === 'pending' && <LiveDot color={colors.food} size={7} />}<Text style={font.h3}>{o.code}</Text></Row><Text style={font.tiny}>{formatTime(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai (driver bayar di kasir)' : 'AntarPay'}</Text></View>
                 <Badge text={o.merchant_status ? merchantStatusLabel[o.merchant_status] : statusLabel(o.status, o.service)} color={o.merchant_status === 'ready' ? colors.success : o.status === 'cancelled' ? colors.danger : colors.warning} />
               </Row>
               <View style={{ marginTop: 10, gap: 4 }}>
                 {o.order_items?.map((it) => <Row key={it.id} between><Text style={font.body}>{it.qty}× {it.name}{it.notes ? <Text style={font.tiny}>  ({it.notes})</Text> : null}</Text><Text style={{ fontWeight: '600' }}>{rupiah(it.price * it.qty)}</Text></Row>)}
-                <Row between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 6, marginTop: 4 }}><Text style={font.small}>Pendapatan bersih Anda</Text><Text style={{ fontWeight: '800', color: colors.success }}>{rupiah(o.merchant_earning)}</Text></Row>
+                <Row between style={{ borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)', paddingTop: 6, marginTop: 4 }}><Text style={font.small}>Pendapatan bersih Anda</Text><Text style={{ fontWeight: '800', color: colors.success }}>{rupiah(o.merchant_earning)}</Text></Row>
               </View>
               <Text style={[font.tiny, { marginTop: 6 }]}>Driver: {o.status === 'searching' ? 'belum ada' : o.status === 'accepted' ? 'menuju toko' : o.status === 'arrived' ? 'sudah di toko' : o.status}</Text>
               {o.merchant_status === 'pending' && isActive(o) && (
@@ -56,10 +60,11 @@ export default function MerchantOrders() {
                 </Row>
               )}
               {o.merchant_status === 'accepted' && isActive(o) && <Button title="Pesanan Siap Diambil" size="sm" color={colors.success} style={{ marginTop: 12 }} onPress={() => act(o, 'ready')} />}
-            </Card>
+            </Card></Entrance>
           ))}
-        </ScrollView>
-      )}
+        </Animated.View>
+        )}
+      </ScrollView>
     </Screen>
   );
 }

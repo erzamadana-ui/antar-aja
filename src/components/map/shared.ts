@@ -75,6 +75,17 @@ html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#e8ecef;over
   L.tileLayer(TILE,{maxZoom:19,attribution:'${TILE_ATTR.replace(/'/g, "\\'")}'}).addTo(map);
   var markers={},line=null,programmatic=false;
   var markerHtml=function(kind,heading,label){${MARKER_JS_BODY}};
+  /* Geser marker halus (≈900ms, ease-out) agar posisi driver tidak melompat. */
+  function glide(mk,from,to){
+    if(mk._raf){cancelAnimationFrame(mk._raf);}
+    var t0=null,dur=900;
+    function step(ts){
+      if(t0===null)t0=ts; var k=Math.min(1,(ts-t0)/dur); var e=1-Math.pow(1-k,3);
+      mk.setLatLng([from.lat+(to.lat-from.lat)*e,from.lng+(to.lng-from.lng)*e]);
+      if(k<1){mk._raf=requestAnimationFrame(step);}else{mk._raf=null;}
+    }
+    mk._raf=requestAnimationFrame(step);
+  }
   function post(m){ if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(JSON.stringify(m));} }
   window.__update=function(st){
     try{
@@ -82,10 +93,13 @@ html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#e8ecef;over
       var seen={};
       (st.markers||[]).forEach(function(m){
         seen[m.id]=true;
-        var spec=markerHtml(m.kind,m.heading,m.label);
-        var icon=L.divIcon({html:spec.html,className:'',iconSize:spec.size,iconAnchor:spec.anchor});
-        if(markers[m.id]){markers[m.id].setLatLng([m.lat,m.lng]);markers[m.id].setIcon(icon);}
-        else{markers[m.id]=L.marker([m.lat,m.lng],{icon:icon,interactive:false}).addTo(map);}
+        var key=m.kind+'|'+(Math.round((m.heading||0)/5)*5)+'|'+(m.label||'');
+        if(markers[m.id]){
+          var mk=markers[m.id],cur=mk.getLatLng(),anim=(m.kind==='motor'||m.kind==='car'||m.kind==='driver'||m.kind==='me');
+          if(mk._key!==key){var sp=markerHtml(m.kind,m.heading,m.label);mk.setIcon(L.divIcon({html:sp.html,className:'',iconSize:sp.size,iconAnchor:sp.anchor}));mk._key=key;}
+          if(anim&&(cur.lat!==m.lat||cur.lng!==m.lng)){ glide(mk,cur,{lat:m.lat,lng:m.lng}); } else if(!anim){ mk.setLatLng([m.lat,m.lng]); }
+        }
+        else{var spec=markerHtml(m.kind,m.heading,m.label);var icon=L.divIcon({html:spec.html,className:'',iconSize:spec.size,iconAnchor:spec.anchor});markers[m.id]=L.marker([m.lat,m.lng],{icon:icon,interactive:false}).addTo(map);markers[m.id]._key=key;}
       });
       Object.keys(markers).forEach(function(k){ if(!seen[k]){map.removeLayer(markers[k]);delete markers[k];} });
       if(line){map.removeLayer(line);line=null;}

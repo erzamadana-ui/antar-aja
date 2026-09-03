@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Row, Input, Button, toast, Chip } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { rpc, supabase } from '@/lib/supabase';
 import { pickAndUpload } from '@/lib/upload';
@@ -40,34 +41,40 @@ export default function TopUp() {
   return (
     <Screen title="Top Up AntarPay" back footer={<Button title={`Kirim Permintaan Top Up ${rupiah(Number(amount.replace(/\D/g, '')) || 0)}`} size="lg" onPress={submit} />}>
       <View style={{ gap: 16 }}>
-        <Card>
-          <Text style={font.h3}>Nominal</Text>
-          <Input value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} keyboardType="number-pad" icon="cash-outline" containerStyle={{ marginTop: 8 }} />
-          <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 10 }}>
-            {PRESETS.map((p) => <Chip key={p} label={rupiah(p)} active={amount === String(p)} onPress={() => setAmount(String(p))} />)}
-          </Row>
-        </Card>
-        <Card>
-          <Text style={font.h3}>1. Transfer ke rekening Antar Aja</Text>
-          {bank ? (
-            <View style={s.bank}>
-              <Text style={font.tiny}>{bank.bank} a.n. {bank.name}</Text>
-              <Row between>
-                <Text style={{ fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: 1 }}>{bank.number}</Text>
-                <Pressable onPress={async () => { await Clipboard.setStringAsync(bank.number); toast.show('Nomor rekening disalin'); }} style={s.copy}><Ionicons name="copy-outline" size={18} color={colors.primary} /></Pressable>
-              </Row>
-            </View>
-          ) : <Text style={font.small}>Memuat rekening…</Text>}
-          <Text style={[font.small, { marginTop: 8 }]}>Transfer tepat sesuai nominal. Saldo masuk setelah admin memverifikasi (maks. 1×24 jam).</Text>
-        </Card>
-        <Card>
-          <Text style={font.h3}>2. Unggah bukti transfer</Text>
-          <Pressable onPress={upload} style={s.upload}>
-            <Ionicons name={proof ? 'checkmark-circle' : 'cloud-upload-outline'} size={28} color={proof ? colors.success : colors.primary} />
-            <Text style={{ color: proof ? colors.success : colors.primary, fontWeight: '700' }}>{proof ? 'Bukti terunggah · ganti' : 'Pilih foto bukti transfer'}</Text>
-          </Pressable>
-          <Input placeholder="Catatan (nama pengirim / bank asal)" value={note} onChangeText={setNote} containerStyle={{ marginTop: 10 }} />
-        </Card>
+        <Entrance index={0}>
+          <Card>
+            <Text style={font.label}>Nominal</Text>
+            <Input value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} keyboardType="number-pad" icon="cash-outline" containerStyle={{ marginTop: 8 }} />
+            <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 10 }}>
+              {PRESETS.map((p) => <Chip key={p} label={rupiah(p)} active={amount === String(p)} onPress={() => setAmount(String(p))} />)}
+            </Row>
+          </Card>
+        </Entrance>
+        <Entrance index={1}>
+          <Card>
+            <Text style={font.label}>1. Transfer ke rekening Antar Aja</Text>
+            {bank ? (
+              <View style={s.bank}>
+                <Text style={font.tiny}>{bank.bank} a.n. {bank.name}</Text>
+                <Row between>
+                  <Text style={{ fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: 1 }}>{bank.number}</Text>
+                  <Pressable onPress={async () => { await Clipboard.setStringAsync(bank.number); toast.show('Nomor rekening disalin'); }} style={s.copy}><Ionicons name="copy-outline" size={18} color={colors.primary} /></Pressable>
+                </Row>
+              </View>
+            ) : <Text style={font.small}>Memuat rekening…</Text>}
+            <Text style={[font.small, { marginTop: 8 }]}>Transfer tepat sesuai nominal. Saldo masuk setelah admin memverifikasi (maks. 1×24 jam).</Text>
+          </Card>
+        </Entrance>
+        <Entrance index={2}>
+          <Card>
+            <Text style={font.label}>2. Unggah bukti transfer</Text>
+            <Pressable onPress={upload} style={s.upload}>
+              <Ionicons name={proof ? 'checkmark-circle' : 'cloud-upload-outline'} size={28} color={proof ? colors.success : colors.primary} />
+              <Text style={{ color: proof ? colors.success : colors.primary, fontWeight: '700' }}>{proof ? 'Bukti terunggah · ganti' : 'Pilih foto bukti transfer'}</Text>
+            </Pressable>
+            <Input placeholder="Catatan (nama pengirim / bank asal)" value={note} onChangeText={setNote} containerStyle={{ marginTop: 10 }} />
+          </Card>
+        </Entrance>
       </View>
     </Screen>
   );

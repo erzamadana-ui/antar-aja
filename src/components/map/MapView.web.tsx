@@ -73,6 +73,37 @@ function Controller({ center, zoom, fitTo, paddingBottom, onCenterChange, onPres
   return null;
 }
 
+/** Marker yang meluncur halus ke posisi baru (driver/kendaraan), bukan melompat. */
+function GlideMarker({ id, lat, lng, kind, heading, label }: { id: string; lat: number; lng: number; kind: string; heading?: number | null; label?: string }) {
+  const map = useMap();
+  const ref = useRef<L.Marker | null>(null);
+  const raf = useRef<number | null>(null);
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    const mk = L.marker([lat, lng], { icon: iconFor(kind, heading, label), interactive: false }).addTo(map);
+    ref.current = mk;
+    return () => { if (raf.current) cancelAnimationFrame(raf.current); map.removeLayer(mk); ref.current = null; };
+  }, [map, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { ref.current?.setIcon(iconFor(kind, heading, label)); }, [kind, heading, label]);
+  useEffect(() => {
+    const mk = ref.current; if (!mk) return;
+    const from = mk.getLatLng(); const to = { lat, lng };
+    if (reduce || (from.lat === to.lat && from.lng === to.lng)) { mk.setLatLng([lat, lng]); return; }
+    if (raf.current) cancelAnimationFrame(raf.current);
+    let t0: number | null = null; const dur = 900;
+    const step = (ts: number) => {
+      if (t0 === null) t0 = ts;
+      const k = Math.min(1, (ts - t0) / dur); const e = 1 - Math.pow(1 - k, 3);
+      mk.setLatLng([from.lat + (to.lat - from.lat) * e, from.lng + (to.lng - from.lng) * e]);
+      if (k < 1) raf.current = requestAnimationFrame(step); else raf.current = null;
+    };
+    raf.current = requestAnimationFrame(step);
+  }, [lat, lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+const GLIDE_KINDS = new Set(['motor', 'car', 'driver', 'me']);
+
 export default function MapView(props: MapProps) {
   const { center, zoom = 15, markers = [], polyline, style } = props;
   const initial = useMemo(() => [center.lat, center.lng] as [number, number], []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -82,9 +113,9 @@ export default function MapView(props: MapProps) {
         <TileLayer url={TILE_URL} attribution={TILE_ATTR} maxZoom={19} />
         <Controller {...props} />
         {polyline && polyline.length > 1 && <Polyline positions={polyline} pathOptions={{ color: colors.primary, weight: 5, opacity: 0.9, lineJoin: 'round' }} />}
-        {markers.map((m) => (
-          <Marker key={m.id} position={[m.lat, m.lng]} icon={iconFor(m.kind, m.heading, m.label)} interactive={false} />
-        ))}
+        {markers.map((m) => GLIDE_KINDS.has(m.kind)
+          ? <GlideMarker key={m.id} id={m.id} lat={m.lat} lng={m.lng} kind={m.kind} heading={m.heading} label={m.label} />
+          : <Marker key={m.id} position={[m.lat, m.lng]} icon={iconFor(m.kind, m.heading, m.label)} interactive={false} />)}
       </MapContainer>
     </View>
   );

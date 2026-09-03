@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, glass } from '@/lib/theme';
 import type { Place } from '@/lib/types';
 
 /** Dua baris lokasi (jemput/tujuan) ala Gojek. Menekan baris membuka place-picker. */
@@ -24,7 +24,7 @@ export function LocationFields({ pickup, dropoff, pickupLabel = 'Titik jemput', 
           </View>
           {!lockPickup && <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />}
         </Pressable>
-        <View style={{ height: 1, backgroundColor: colors.border }} />
+        <View style={{ height: 1, backgroundColor: 'rgba(11,31,42,0.07)' }} />
         <Pressable onPress={() => open('dropoff', dropoffLabel)} style={s.row}>
           <View style={{ flex: 1 }}>
             <Text style={font.tiny}>{dropoffLabel}</Text>
@@ -38,7 +38,7 @@ export function LocationFields({ pickup, dropoff, pickupLabel = 'Titik jemput', 
 }
 
 const s = StyleSheet.create({
-  wrap: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, paddingLeft: 12 },
+  wrap: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, paddingLeft: 12 },
   rail: { width: 14, alignItems: 'center', paddingVertical: 22 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   line: { flex: 1, width: 2, backgroundColor: colors.border, marginVertical: 4 },

@@ -3,23 +3,27 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Image, RefreshControl } 
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/store/auth';
 import { useMyOrders } from '@/hooks/useOrder';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { supabase } from '@/lib/supabase';
 import { SERVICES } from '@/lib/services';
-import { colors, font, radius, shadow, spacing } from '@/lib/theme';
+import { colors, font, radius, shadow, spacing, glass } from '@/lib/theme';
 import { rupiah, statusLabel } from '@/lib/format';
 import type { Merchant, Promo } from '@/lib/types';
-import { Row, Stars } from '@/components/ui';
+import { Row, Stars, Avatar } from '@/components/ui';
+import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
+import { Entrance, PressableScale, AnimatedNumber, LiveDot, Skeleton, ProgressBar } from '@/components/motion';
+import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
+
+const STATUS_PROGRESS: Record<string, number> = { searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1 };
 
 export default function CustomerHome() {
   const router = useRouter();
   const { profile, wallet, session, refreshWallet } = useAuth();
   const { orders: active, reload } = useMyOrders('customer', session?.user.id, true);
   const { location } = useCurrentLocation();
-  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[] | null>(null);
   const [promos, setPromos] = useState<Promo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -38,132 +42,160 @@ export default function CustomerHome() {
   const greet = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }} edges={['top']}>
-      <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ paddingBottom: 32 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-        <LinearGradient colors={[colors.primary, colors.primaryDark]} style={s.hero}>
+    <View style={{ flex: 1 }}>
+      <AmbientBackground tint="mixed" />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE + 16 }} showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
           <View style={s.inner}>
-            <Row between>
-              <View>
-                <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{greet},</Text>
-                <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
-              </View>
-              <Pressable onPress={() => router.push('/(customer)/account')} style={s.avatarBtn}>
-                <Ionicons name="person" size={20} color={colors.primary} />
-              </Pressable>
-            </Row>
-            <Pressable onPress={() => router.push('/food')} style={s.search}>
-              <Ionicons name="search" size={18} color={colors.textMuted} />
-              <Text style={{ color: colors.textMuted, flex: 1 }}>Cari makanan, restoran, tempat…</Text>
-            </Pressable>
-          </View>
-        </LinearGradient>
-
-        <View style={[s.inner, { marginTop: -28 }]}>
-          {/* Kartu AntarPay */}
-          <View style={s.payCard}>
-            <Row between>
-              <View>
-                <Text style={font.tiny}>Saldo AntarPay</Text>
-                <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text }}>{rupiah(wallet?.balance ?? 0)}</Text>
-              </View>
-              <Row gap={16}>
-                <PayAction icon="add-circle" label="Top Up" onPress={() => router.push('/pay/topup')} />
-                <PayAction icon="time" label="Riwayat" onPress={() => router.push('/(customer)/pay')} />
-              </Row>
-            </Row>
-          </View>
-
-          {/* Layanan */}
-          <View style={s.grid}>
-            {SERVICES.map((sv) => (
-              <Pressable key={sv.id} onPress={() => router.push(sv.route as never)} style={({ pressed }) => [s.service, pressed && { opacity: 0.8 }]}>
-                <View style={[s.serviceIcon, { backgroundColor: sv.color }]}>
-                  <Ionicons name={sv.icon as never} size={26} color="#fff" />
+            {/* Sapaan */}
+            <Entrance index={0}>
+              <Row between style={{ marginTop: 8 }}>
+                <View>
+                  <Text style={font.small}>{greet},</Text>
+                  <Text style={font.h1}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
                 </View>
-                <Text style={s.serviceLabel}>{sv.label}</Text>
-              </Pressable>
-            ))}
-          </View>
+                <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.9}>
+                  <Avatar name={profile?.full_name} url={profile?.avatar_url} size={44} />
+                </PressableScale>
+              </Row>
+            </Entrance>
 
-          {/* Order aktif */}
-          {active.length > 0 && (
-            <View style={{ marginTop: 20 }}>
-              <Text style={font.h3}>Pesanan berjalan</Text>
-              {active.map((o) => (
-                <Pressable key={o.id} onPress={() => router.push(`/order/${o.id}` as never)} style={s.activeCard}>
-                  <View style={s.pulse} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '700', color: colors.text }}>{statusLabel(o.status, o.service, o.merchant_status)}</Text>
-                    <Text style={font.small} numberOfLines={1}>{o.code} · {o.dropoff_address}</Text>
+            {/* Pencarian */}
+            <Entrance index={1}>
+              <PressableScale onPress={() => router.push('/food')} scaleTo={0.985} style={{ marginTop: 16 }}>
+                <Glass variant="strong" radius={radius.lg}>
+                  <Row gap={10} style={{ paddingHorizontal: 14, height: 50 }}>
+                    <Ionicons name="search" size={18} color={colors.primary} />
+                    <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }}>Cari makanan, restoran, tempat…</Text>
+                    <View style={s.kbd}><Ionicons name="mic-outline" size={16} color={colors.textSecondary} /></View>
+                  </Row>
+                </Glass>
+              </PressableScale>
+            </Entrance>
+
+            {/* Kartu AntarPay */}
+            <Entrance index={2}>
+              <BrandGradient colors={[colors.primary, '#13A29F', '#0E7C7B']} style={s.payCard}>
+                <View style={s.payGlow} />
+                <Row between>
+                  <View>
+                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', letterSpacing: 0.6 }}>SALDO ANTARPAY</Text>
+                    <AnimatedNumber value={wallet?.balance ?? 0} format={(n) => rupiah(n)} style={{ color: '#fff', fontSize: 28, fontWeight: '900', marginTop: 2, letterSpacing: -0.5 }} />
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </Pressable>
+                  <Row gap={8}>
+                    <PayAction icon="add" label="Top Up" onPress={() => router.push('/pay/topup')} />
+                    <PayAction icon="time-outline" label="Riwayat" onPress={() => router.push('/(customer)/pay')} />
+                  </Row>
+                </Row>
+              </BrandGradient>
+            </Entrance>
+
+            {/* Layanan */}
+            <View style={s.grid}>
+              {SERVICES.map((sv, i) => (
+                <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '20%', alignItems: 'center' }}>
+                  <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={{ alignItems: 'center', gap: 6 }}>
+                    <BrandGradient colors={[sv.color, lighten(sv.color)]} style={[s.serviceIcon, shadow.glow(sv.color)]}>
+                      <Ionicons name={sv.icon as never} size={26} color="#fff" />
+                    </BrandGradient>
+                    <Text style={s.serviceLabel}>{sv.label.replace('Antar', '')}</Text>
+                  </PressableScale>
+                </Entrance>
               ))}
             </View>
-          )}
 
-          {/* Promo */}
-          {promos.length > 0 && (
-            <View style={{ marginTop: 22 }}>
-              <Text style={font.h3}>Promo untukmu</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12 }}>
-                {promos.map((p, i) => (
-                  <LinearGradient key={p.code} colors={i % 2 ? ['#F5A524', '#F97316'] : [colors.primary, '#13A29F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.promo}>
-                    <Text style={{ color: '#fff', fontWeight: '900', fontSize: 18 }}>{p.code}</Text>
-                    <Text style={{ color: 'rgba(255,255,255,0.92)', fontSize: 12, marginTop: 4 }}>{p.description}</Text>
-                  </LinearGradient>
+            {/* Order aktif */}
+            {active.length > 0 && (
+              <Entrance index={8}>
+                <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>Pesanan berjalan</Text>
+                {active.map((o) => (
+                  <PressableScale key={o.id} onPress={() => router.push(`/order/${o.id}` as never)} scaleTo={0.985} style={{ marginBottom: 10 }}>
+                    <Glass variant="strong" radius={radius.lg}>
+                      <View style={{ padding: 14, gap: 10 }}>
+                        <Row gap={10}>
+                          <LiveDot color={o.status === 'searching' ? colors.accent : colors.success} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontWeight: '700', color: colors.text }}>{statusLabel(o.status, o.service, o.merchant_status)}</Text>
+                            <Text style={font.tiny} numberOfLines={1}>{o.code} · {o.dropoff_address}</Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                        </Row>
+                        <ProgressBar progress={STATUS_PROGRESS[o.status] ?? 0.1} color={o.status === 'searching' ? colors.accent : colors.primary} />
+                      </View>
+                    </Glass>
+                  </PressableScale>
                 ))}
-              </ScrollView>
-            </View>
-          )}
+              </Entrance>
+            )}
 
-          {/* Rekomendasi merchant */}
-          <View style={{ marginTop: 12 }}>
-            <Row between>
-              <Text style={font.h3}>Lagi laris di AntarFood</Text>
-              <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700' }}>Lihat semua</Text></Pressable>
-            </Row>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12 }}>
-              {merchants.map((m) => (
-                <Pressable key={m.id} onPress={() => router.push(`/food/${m.id}` as never)} style={s.merchant}>
-                  <Image source={{ uri: m.image_url ?? undefined }} style={s.merchantImg} />
-                  <View style={{ padding: 10, gap: 2 }}>
-                    <Text style={{ fontWeight: '700', color: colors.text }} numberOfLines={1}>{m.name}</Text>
-                    <Row gap={6}><Stars value={m.rating_avg} size={11} /><Text style={font.tiny}>{Number(m.rating_avg).toFixed(1)} · {m.distance_km} km</Text></Row>
-                  </View>
-                </Pressable>
-              ))}
-              {merchants.length === 0 && <Text style={font.small}>Belum ada merchant di sekitar lokasi Anda.</Text>}
-            </ScrollView>
+            {/* Promo */}
+            {promos.length > 0 && (
+              <Entrance index={9}>
+                <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>Promo untukmu</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4, paddingRight: 16 }}>
+                  {promos.map((p, i) => (
+                    <PressableScale key={p.code} scaleTo={0.97} onPress={() => router.push(p.service === 'food' ? '/food' : '/ride' as never)}>
+                      <BrandGradient colors={i % 2 ? ['#F5A524', '#F97316'] : [colors.primary, '#13A29F']} style={s.promo}>
+                        <View style={s.promoOrb} />
+                        <Text style={{ color: '#fff', fontWeight: '900', fontSize: 19, letterSpacing: -0.3 }}>{p.code}</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.92)', fontSize: 12, marginTop: 4 }}>{p.description}</Text>
+                      </BrandGradient>
+                    </PressableScale>
+                  ))}
+                </ScrollView>
+              </Entrance>
+            )}
+
+            {/* Merchant */}
+            <Entrance index={10}>
+              <Row between style={{ marginTop: 18 }}>
+                <Text style={font.label}>Lagi laris di AntarFood</Text>
+                <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>Lihat semua</Text></Pressable>
+              </Row>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12, paddingRight: 16 }}>
+                {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={170} height={168} radius={radius.lg} />) : merchants.map((m) => (
+                  <PressableScale key={m.id} onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.97}>
+                    <Glass variant="strong" radius={radius.lg} style={{ width: 170 }}>
+                      <Image source={{ uri: m.image_url ?? undefined }} style={s.merchantImg} />
+                      <View style={{ padding: 10, gap: 2 }}>
+                        <Text style={{ fontWeight: '700', color: colors.text }} numberOfLines={1}>{m.name}</Text>
+                        <Row gap={6}><Stars value={m.rating_avg} size={11} /><Text style={font.tiny}>{Number(m.rating_avg).toFixed(1)} · {m.distance_km} km</Text></Row>
+                      </View>
+                    </Glass>
+                  </PressableScale>
+                ))}
+                {merchants && merchants.length === 0 && <Text style={font.small}>Belum ada merchant di sekitar lokasi Anda.</Text>}
+              </ScrollView>
+            </Entrance>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 function PayAction({ icon, label, onPress }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={{ alignItems: 'center', gap: 2 }}>
-      <Ionicons name={icon} size={26} color={colors.primary} />
-      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary }}>{label}</Text>
-    </Pressable>
+    <PressableScale onPress={onPress} scaleTo={0.9} style={s.payAction}>
+      <Ionicons name={icon} size={20} color="#fff" />
+      <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{label}</Text>
+    </PressableScale>
   );
 }
+function lighten(hex: string) { const n = parseInt(hex.slice(1), 16); const f = (v: number) => Math.min(255, Math.round(v + (255 - v) * 0.25)); return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`; }
 
 const s = StyleSheet.create({
-  hero: { paddingTop: 12, paddingBottom: 44 },
   inner: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: spacing.lg },
-  avatarBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: radius.md, paddingHorizontal: 14, height: 46, marginTop: 16 },
-  payCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, ...shadow.card },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 18, rowGap: 16 },
-  service: { width: '25%', alignItems: 'center', gap: 6 },
-  serviceIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', ...shadow.card },
-  serviceLabel: { fontSize: 12, fontWeight: '600', color: colors.text },
-  activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14, marginTop: 10, ...shadow.card, borderLeftWidth: 4, borderLeftColor: colors.accent },
-  pulse: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent },
-  promo: { width: 240, borderRadius: radius.lg, padding: 16, minHeight: 92, justifyContent: 'center' },
-  merchant: { width: 170, backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden', ...shadow.card },
-  merchantImg: { width: '100%', height: 100, backgroundColor: colors.border },
+  kbd: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
+  payCard: { marginTop: 14, borderRadius: radius.xl, padding: 18, overflow: 'hidden', ...shadow.glow(colors.primary) },
+  payGlow: { position: 'absolute', right: -40, top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.14)' },
+  payAction: { alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, minWidth: 64 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 20, rowGap: 16 },
+  serviceIcon: { width: 58, height: 58, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  serviceLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
+  promo: { width: 240, borderRadius: radius.lg, padding: 16, minHeight: 96, justifyContent: 'center', overflow: 'hidden' },
+  promoOrb: { position: 'absolute', right: -30, bottom: -50, width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(255,255,255,0.16)' },
+  merchantImg: { width: '100%', height: 100, backgroundColor: 'rgba(11,31,42,0.06)' },
+  glassBorder: { borderColor: glass.border },
 });

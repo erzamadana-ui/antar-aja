@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Row, Input, Button, toast } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { supabase } from '@/lib/supabase';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { PaymentMethod, ServiceType } from '@/lib/types';
 
@@ -28,7 +29,7 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
 
   return (
     <View style={{ gap: 12 }}>
-      <Text style={font.h3}>Pembayaran</Text>
+      <Text style={font.label}>Pembayaran</Text>
       <Row gap={10}>
         <PayOption active={method === 'cash'} onPress={() => onMethod('cash')} icon="cash-outline" title="Tunai" subtitle="Bayar ke driver" />
         <PayOption active={method === 'wallet'} onPress={() => onMethod('wallet')} icon="wallet-outline" title="AntarPay" subtitle={`Saldo ${rupiah(wallet?.balance ?? 0)}`} />
@@ -50,14 +51,14 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
 
 function PayOption({ active, onPress, icon, title, subtitle }: { active: boolean; onPress: () => void; icon: React.ComponentProps<typeof Ionicons>['name']; title: string; subtitle: string }) {
   return (
-    <Pressable onPress={onPress} style={[s.pay, active && { borderColor: colors.primary, backgroundColor: colors.primaryLight }]}>
-      <Ionicons name={icon} size={22} color={active ? colors.primary : colors.textSecondary} />
+    <PressableScale onPress={onPress} scaleTo={0.97} style={[s.pay, active && { borderColor: colors.primary, backgroundColor: colors.primary + '14', ...shadow.glow(colors.primary) }]}>
+      <View style={[s.payIcon, active && { backgroundColor: colors.primary }]}><Ionicons name={icon} size={20} color={active ? '#fff' : colors.textSecondary} /></View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontWeight: '700', color: colors.text }}>{title}</Text>
         <Text style={font.tiny} numberOfLines={1}>{subtitle}</Text>
       </View>
       {active && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -79,7 +80,8 @@ export function PriceSummary({ rows, total }: { rows: { label: string; value: nu
 }
 
 const s = StyleSheet.create({
-  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 10 },
-  notes: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: radius.md, paddingHorizontal: 12 },
+  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
+  payIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
+  notes: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.md, paddingHorizontal: 12 },
   notesInput: { flex: 1, height: 44, color: colors.text, fontSize: 14 },
 });

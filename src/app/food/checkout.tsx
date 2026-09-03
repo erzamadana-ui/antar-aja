@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Entrance, PressableScale } from '@/components/motion';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Row, Stepper, Button, Badge, Empty, toast } from '@/components/ui';
@@ -10,7 +12,7 @@ import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { getRoute, reverseGeocode, type RouteResult } from '@/lib/geo';
 import { rpc } from '@/lib/supabase';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, glass } from '@/lib/theme';
 import { rupiah, km, minutes } from '@/lib/format';
 import type { FareEstimate, Order, PaymentMethod } from '@/lib/types';
 
@@ -65,28 +67,28 @@ export default function Checkout() {
   };
 
   return (
-    <Screen title="Checkout" back footer={<Button title={fare ? `Pesan Sekarang · ${rupiah(total)}` : 'Menghitung ongkir…'} size="lg" color={colors.food} disabled={!fare || !dropoff} onPress={order} />}>
+    <Screen title="Checkout" back ambient="amber" footer={<Button title={fare ? `Pesan Sekarang · ${rupiah(total)}` : 'Menghitung ongkir…'} size="lg" color={colors.food} disabled={!fare || !dropoff} onPress={order} />}>
       <View style={{ gap: 16 }}>
-        <Card>
-          <Text style={font.tiny}>ANTAR KE</Text>
-          <Pressable onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} style={s.addr}>
+        <Entrance index={0}><Card>
+          <Text style={font.label}>Antar ke</Text>
+          <PressableScale scaleTo={0.98} haptic={false} onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} style={s.addr}>
             <Ionicons name="location" size={22} color={colors.danger} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '700', color: colors.text }}>{dropoff?.name ?? 'Pilih alamat'}</Text>
               <Text style={font.small} numberOfLines={2}>{dropoff?.address ?? 'Ketuk untuk memilih alamat pengantaran'}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-          </Pressable>
+          </PressableScale>
           {route && <Row gap={8} style={{ marginTop: 10 }}><Badge text={`${km(route.distance_km)} dari ${m.name}`} color={colors.info} /><Badge text={`Tiba ±${minutes((route.duration_min ?? 0) + m.prep_minutes)}`} color={colors.success} /></Row>}
-        </Card>
+        </Card></Entrance>
 
-        <Card>
+        <Entrance index={1}><Card>
           <Row between style={{ marginBottom: 8 }}>
             <Text style={font.h3}>{m.name}</Text>
             <Pressable onPress={() => router.push(`/food/${m.id}` as never)}><Text style={{ color: colors.food, fontWeight: '700' }}>+ Tambah</Text></Pressable>
           </Row>
           {cart.lines.map((l) => (
-            <View key={l.item.id} style={s.line}>
+            <Animated.View key={l.item.id} layout={LinearTransition.springify()} style={s.line}>
               <Row between>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontWeight: '600', color: colors.text }}>{l.item.name}</Text>
@@ -95,18 +97,18 @@ export default function Checkout() {
                 <Stepper value={l.qty} onChange={(v) => cart.setQty(l.item.id, v)} />
               </Row>
               <TextInput placeholder="Catatan untuk menu ini (mis. tidak pedas)" placeholderTextColor={colors.textMuted} value={l.notes ?? ''} onChangeText={(v) => cart.setNotes(l.item.id, v)} style={s.noteInput} />
-            </View>
+            </Animated.View>
           ))}
-        </Card>
+        </Card></Entrance>
 
-        <Card>
-          <Text style={[font.h3, { marginBottom: 10 }]}>Rincian pembayaran</Text>
+        <Entrance index={2}><Card>
+          <Text style={[font.label, { marginBottom: 10 }]}>Rincian pembayaran</Text>
           <PriceSummary rows={[{ label: 'Harga makanan', value: subtotal }, { label: `Ongkos kirim (${fare ? km(fare.distance_km) : '…'})`, value: fare?.fare ?? 0 }, { label: 'Biaya layanan', value: fare?.platform_fee ?? 0 }, { label: 'Diskon promo', value: discount, minus: true }]} total={total} />
-        </Card>
+        </Card></Entrance>
 
-        <Card>
+        <Entrance index={3}><Card>
           <PaymentSection method={method} onMethod={setMethod} promo={promo} onPromo={setPromo} notes={notes} onNotes={setNotes} subtotal={subtotal + (fare?.fare ?? 0)} service="food" onDiscount={setDiscount} notesPlaceholder="Catatan untuk driver (mis. patokan rumah)" />
-        </Card>
+        </Card></Entrance>
       </View>
     </Screen>
   );
@@ -114,6 +116,6 @@ export default function Checkout() {
 
 const s = StyleSheet.create({
   addr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 },
-  line: { borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 10, gap: 6 },
-  noteInput: { backgroundColor: colors.bg, borderRadius: radius.sm, paddingHorizontal: 10, height: 36, fontSize: 13, color: colors.text },
+  line: { borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)', paddingVertical: 10, gap: 6 },
+  noteInput: { backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.sm, paddingHorizontal: 10, height: 36, fontSize: 13, color: colors.text },
 });

@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Row, Chip, toast } from '@/components/ui';
+import Animated, { FadeInDown, FadeInUp, LinearTransition } from 'react-native-reanimated';
+import { Screen, Row, Chip, toast, Avatar } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
+import { BrandGradient } from '@/components/glass';
 import { useOrderChat, useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, glass, shadow, motion } from '@/lib/theme';
 import { formatTime } from '@/lib/format';
 
 const QUICK = ['Saya sudah di lokasi', 'Tunggu sebentar ya', 'Posisi di mana?', 'Terima kasih 🙏'];
@@ -18,7 +21,7 @@ export default function OrderChat() {
   const [text, setText] = useState('');
   const scroll = useRef<ScrollView>(null);
   const isCustomer = order?.customer_id === uid;
-  const other = isCustomer ? driver?.profile?.full_name : customer?.full_name;
+  const other = isCustomer ? driver?.profile : customer;
   const closed = order ? ['completed', 'cancelled', 'searching'].includes(order.status) : false;
 
   useEffect(() => { setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 50); }, [messages.length]);
@@ -28,31 +31,46 @@ export default function OrderChat() {
     try { await send(uid, t); setText(''); } catch (e) { toast.error((e as Error).message); }
   };
 
+  const title = (
+    <Row gap={10} style={{ flex: 1 }}>
+      <Avatar name={other?.full_name} url={other?.avatar_url} size={34} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[font.h3, { fontSize: 15 }]} numberOfLines={1}>{other?.full_name ?? 'Chat'}</Text>
+        <Text style={font.tiny} numberOfLines={1}>{closed ? 'Chat ditutup' : 'Pesanan berlangsung'}</Text>
+      </View>
+    </Row>
+  );
+
   return (
-    <Screen title={other ? `Chat · ${other}` : 'Chat'} back scroll={false} padded={false} keyboard={false}>
+    <Screen back scroll={false} padded={false} keyboard={false} right={title}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={60}>
-        <ScrollView ref={scroll} contentContainerStyle={{ padding: 16, gap: 8 }}>
+        <ScrollView ref={scroll} contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
           <Text style={[font.tiny, { textAlign: 'center', marginBottom: 8 }]}>Chat hanya tersedia selama pesanan berlangsung. Jaga sopan santun ya.</Text>
-          {messages.map((m) => {
+          {messages.map((m, i) => {
             const mine = m.sender_id === uid;
+            const last = i >= messages.length - 1;
             return (
-              <View key={m.id} style={[s.bubble, mine ? s.mine : s.theirs]}>
-                <Text style={{ color: mine ? '#fff' : colors.text }}>{m.body}</Text>
+              <Animated.View key={m.id} entering={last ? (mine ? FadeInUp : FadeInDown).springify().damping(18) : undefined} layout={LinearTransition.springify()} style={[s.bubble, mine ? s.mine : s.theirs]}>
+                {mine && <BrandGradient style={StyleSheet.absoluteFill} />}
+                <Text style={{ color: mine ? '#fff' : colors.text, fontSize: 15, lineHeight: 21 }}>{m.body}</Text>
                 <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>
-              </View>
+              </Animated.View>
             );
           })}
         </ScrollView>
         {!closed && (
-          <View style={s.composer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+          <Animated.View entering={FadeInUp.duration(motion.base)} style={s.composer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10 }}>
               {QUICK.map((q) => <Chip key={q} label={q} onPress={() => submit(q)} />)}
             </ScrollView>
             <Row gap={8}>
-              <TextInput value={text} onChangeText={setText} placeholder="Tulis pesan…" placeholderTextColor={colors.textMuted} style={s.input} onSubmitEditing={() => submit(text)} />
-              <Pressable onPress={() => submit(text)} style={s.send}><Ionicons name="send" size={18} color="#fff" /></Pressable>
+              <TextInput value={text} onChangeText={setText} placeholder="Tulis pesan…" placeholderTextColor={colors.textMuted} style={s.input} onSubmitEditing={() => submit(text)} blurOnSubmit={false} />
+              <PressableScale onPress={() => submit(text)} scaleTo={0.88} style={[s.send, shadow.glow(colors.primary)]} disabled={!text.trim()}>
+                <BrandGradient style={StyleSheet.absoluteFill} />
+                <Ionicons name="send" size={18} color="#fff" />
+              </PressableScale>
             </Row>
-          </View>
+          </Animated.View>
         )}
         {closed && <Text style={[font.small, { textAlign: 'center', padding: 16 }]}>Chat ditutup.</Text>}
       </KeyboardAvoidingView>
@@ -61,10 +79,10 @@ export default function OrderChat() {
 }
 
 const s = StyleSheet.create({
-  bubble: { maxWidth: '80%', padding: 10, borderRadius: radius.lg },
-  mine: { alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 4 },
-  theirs: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderBottomLeftRadius: 4 },
-  composer: { padding: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  input: { flex: 1, backgroundColor: colors.bg, borderRadius: radius.full, paddingHorizontal: 16, height: 44, color: colors.text },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  bubble: { maxWidth: '80%', padding: 12, borderRadius: radius.lg, overflow: 'hidden' },
+  mine: { alignSelf: 'flex-end', borderBottomRightRadius: 6, ...shadow.soft },
+  theirs: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.8)', borderBottomLeftRadius: 6, borderWidth: 1, borderColor: glass.border },
+  composer: { padding: 12, backgroundColor: 'rgba(255,255,255,0.7)', borderTopWidth: 1, borderTopColor: glass.border },
+  input: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: radius.full, paddingHorizontal: 16, height: 46, color: colors.text, borderWidth: 1, borderColor: glass.border, fontSize: 15 },
+  send: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });

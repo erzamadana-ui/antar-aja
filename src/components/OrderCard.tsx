@@ -1,24 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Row, Badge, IconCircle } from '@/components/ui';
-import { colors, font } from '@/lib/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Row, Badge } from '@/components/ui';
+import { PressableScale, LiveDot, ProgressBar } from '@/components/motion';
+import { BrandGradient } from '@/components/glass';
+import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah, statusLabel, statusColor, formatDate, serviceLabel } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
 import type { Order } from '@/lib/types';
+
+const PROGRESS: Record<string, number> = { searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1, cancelled: 1 };
 
 export function OrderCard({ order, href, compact }: { order: Order; href?: string; compact?: boolean }) {
   const router = useRouter();
   const def = serviceDef(order.service);
   const active = !['completed', 'cancelled'].includes(order.status);
+  const sc = statusColor(order.status);
   return (
-    <Card onPress={() => router.push((href ?? `/order/${order.id}`) as never)} style={[{ marginBottom: 12 }, active && { borderLeftWidth: 4, borderLeftColor: def.color }]}>
+    <PressableScale onPress={() => router.push((href ?? `/order/${order.id}`) as never)} scaleTo={0.98} style={[s.card, active && shadow.glow(def.color)]}>
       <Row gap={12}>
-        <IconCircle name={def.icon as never} color={def.color} size={42} />
-        <View style={{ flex: 1 }}>
+        <BrandGradient colors={[def.color, def.color + 'BB']} style={s.icon}><Ionicons name={def.icon as never} size={20} color="#fff" /></BrandGradient>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <Row between>
             <Text style={[font.h3, { fontSize: 15 }]}>{serviceLabel[order.service]}</Text>
-            <Text style={{ fontWeight: '800', color: colors.text }}>{rupiah(order.total)}</Text>
+            <Text style={{ fontWeight: '900', color: colors.text }}>{rupiah(order.total)}</Text>
           </Row>
           <Text style={font.tiny}>{order.code} · {formatDate(order.created_at)}</Text>
         </View>
@@ -26,15 +32,23 @@ export function OrderCard({ order, href, compact }: { order: Order; href?: strin
       {!compact && (
         <View style={{ marginTop: 10, gap: 4 }}>
           <Row gap={8}><View style={[s.dot, { backgroundColor: colors.primary }]} /><Text style={font.small} numberOfLines={1}>{order.merchant?.name ?? order.pickup_address}</Text></Row>
-          <Row gap={8}><View style={[s.dot, { backgroundColor: colors.danger }]} /><Text style={font.small} numberOfLines={1}>{order.dropoff_address}</Text></Row>
+          <Row gap={8}><View style={[s.dot, { backgroundColor: colors.danger, borderRadius: 2 }]} /><Text style={font.small} numberOfLines={1}>{order.dropoff_address}</Text></Row>
         </View>
       )}
+      {active && <View style={{ marginTop: 10 }}><ProgressBar progress={PROGRESS[order.status] ?? 0} color={sc} height={4} /></View>}
       <Row between style={{ marginTop: 10 }}>
-        <Badge text={statusLabel(order.status, order.service, order.merchant_status)} color={statusColor(order.status)} />
+        <Row gap={6}>
+          {active && <LiveDot color={sc} size={7} />}
+          <Badge text={statusLabel(order.status, order.service, order.merchant_status)} color={sc} />
+        </Row>
         <Text style={font.tiny}>{order.payment_method === 'wallet' ? 'AntarPay' : 'Tunai'}</Text>
       </Row>
-    </Card>
+    </PressableScale>
   );
 }
 
-const s = StyleSheet.create({ dot: { width: 8, height: 8, borderRadius: 4 } });
+const s = StyleSheet.create({
+  card: { marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 14, borderWidth: 1, borderColor: glass.border, ...shadow.card },
+  icon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+});

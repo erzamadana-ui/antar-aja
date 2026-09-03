@@ -1,19 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, useWindowDimensions, Linking, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Linking, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
-import { Button, Row, Badge, Loading, Divider, toast, Card, Empty } from '@/components/ui';
+import { Button, Row, Badge, Loading, toast, Empty } from '@/components/ui';
+import { MapScreen } from '@/components/MapScreen';
+import { PressableScale, ProgressBar, AnimatedNumber } from '@/components/motion';
+import { AmbientBackground, BrandGradient } from '@/components/glass';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, customerSubtitle } from '@/components/OrderDetails';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { useCurrentLocation, useWatchLocation } from '@/hooks/useLocation';
 import { rpc } from '@/lib/supabase';
-import { colors, font, radius, shadow } from '@/lib/theme';
+import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
 import { statusLabel, statusColor, rupiah, serviceLabel, merchantStatusLabel } from '@/lib/format';
 import type { OrderStatus } from '@/lib/types';
+
+const PROGRESS: Record<string, number> = { accepted: 0.33, arrived: 0.66, in_progress: 0.9, completed: 1, cancelled: 1, searching: 0 };
 
 export default function DriverOrder() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,8 +27,6 @@ export default function DriverOrder() {
   const { order, customer, events, loading, reload } = useOrder(id);
   const { driver, refreshWallet } = useAuth();
   const { location } = useCurrentLocation();
-  const { height, width } = useWindowDimensions();
-  const wide = width >= 900;
   const [live, setLive] = useState<{ lat: number; lng: number; heading: number | null } | null>(null);
   useWatchLocation(true, (p) => setLive(p));
   const me = live ?? (driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location);
@@ -55,61 +59,78 @@ export default function DriverOrder() {
   };
   const navigate = (lat: number, lng: number) => Linking.openURL(Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
 
-  if (loading) return <SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView>;
-  if (!order) return <SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Order tidak ditemukan" subtitle="Order sudah dilepas atau tidak tersedia." action={<Button title="Kembali" onPress={() => router.replace('/(driver)')} />} /></SafeAreaView>;
+  if (loading) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView></View>;
+  if (!order) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Order tidak ditemukan" subtitle="Order sudah dilepas atau tidak tersedia." action={<Button title="Kembali" onPress={() => router.replace('/(driver)')} />} /></SafeAreaView></View>;
   const active = ['accepted', 'arrived', 'in_progress'].includes(order.status);
   const navTarget = order.status === 'in_progress' ? { lat: order.dropoff_lat, lng: order.dropoff_lng } : { lat: order.pickup_lat, lng: order.pickup_lng };
   const foodNotReady = order.service === 'food' && order.merchant_status !== 'ready';
+  const sc = statusColor(order.status);
+
+  const header = (
+    <View style={{ gap: 10 }}>
+      <Row between>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Animated.Text key={order.status} entering={FadeIn.duration(motion.base)} style={font.h3} numberOfLines={1}>{statusLabel(order.status, order.service)}</Animated.Text>
+          <Text style={font.tiny}>{serviceLabel[order.service]} · {order.code}</Text>
+        </View>
+        <Badge text={order.status.replace('_', ' ').toUpperCase()} color={sc} />
+      </Row>
+      {order.status !== 'cancelled' && <ProgressBar progress={PROGRESS[order.status] ?? 0} color={sc} height={5} />}
+    </View>
+  );
+
+  const navButton = active ? (
+    <PressableScale onPress={() => navigate(navTarget.lat, navTarget.lng)} scaleTo={0.92} style={[s.navBtn, shadow.glow(colors.info)]}>
+      <BrandGradient colors={[colors.info, '#1D4ED8']} style={StyleSheet.absoluteFill} />
+      <Ionicons name="navigate" size={18} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800' }}>Navigasi</Text>
+    </PressableScale>
+  ) : null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={['top']}>
-      <View style={[{ flex: 1 }, wide && { flexDirection: 'row-reverse' }]}>
-        <View style={[{ flex: 1 }, wide && { flex: 1.4 }]}>
-          <MapView center={me} markers={markers} polyline={order.route_geometry} fitTo={fitTo} paddingBottom={wide ? 0 : 20} />
-          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(driver)'))} style={s.back}><Ionicons name="arrow-back" size={22} color={colors.text} /></Pressable>
-          {active && <Pressable onPress={() => navigate(navTarget.lat, navTarget.lng)} style={s.navBtn}><Ionicons name="navigate" size={18} color="#fff" /><Text style={{ color: '#fff', fontWeight: '700' }}>Navigasi</Text></Pressable>}
-        </View>
-        <View style={[s.sheet, wide ? { width: 440, borderRadius: 0 } : { maxHeight: Math.round(height * 0.62) }]}>
-          <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 28 }}>
-            <Row between>
-              <View style={{ flex: 1 }}>
-                <Text style={font.h3}>{statusLabel(order.status, order.service)}</Text>
-                <Text style={font.tiny}>{serviceLabel[order.service]} · {order.code}</Text>
-              </View>
-              <Badge text={order.status.toUpperCase()} color={statusColor(order.status)} />
-            </Row>
-            <Card style={{ backgroundColor: colors.successLight, paddingVertical: 12 }}>
-              <Row between>
-                <View><Text style={font.tiny}>Pendapatan Anda</Text><Text style={[font.h2, { color: colors.success }]}>{rupiah(order.driver_earning)}</Text></View>
-                <View style={{ alignItems: 'flex-end' }}><Text style={font.tiny}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text><Text style={font.h3}>{order.payment_method === 'cash' ? rupiah(order.total) : '✓ Lunas'}</Text></View>
-              </Row>
-              {order.service === 'food' && order.payment_method === 'cash' && <Text style={[font.tiny, { marginTop: 4 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
-            </Card>
-            {customer && <PersonCard name={customer.full_name} subtitle={customerSubtitle(customer)} phone={customer.phone} avatar={customer.avatar_url} onChat={active ? () => router.push(`/order/${id}/chat` as never) : undefined} badge="Pelanggan" />}
-            {order.service === 'food' && order.merchant_status && (
-              <Row gap={8}><Ionicons name="restaurant" size={18} color={colors.food} /><Text style={font.small}>Merchant: </Text><Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} /></Row>
-            )}
-            <RouteBlock order={order} />
-            <OrderExtras order={order} />
-            {order.service === 'send' && active && order.recipient_phone && <Button title={`Hubungi penerima (${order.recipient_name})`} variant="secondary" icon="call-outline" onPress={() => Linking.openURL(`tel:${order.recipient_phone}`)} />}
+    <MapScreen
+      map={<MapView center={me} markers={markers} polyline={order.route_geometry} fitTo={fitTo} paddingBottom={20} />}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/(driver)'))}
+      floatingRight={navButton}
+      header={header}
+      minHeight={230}
+      maxRatio={0.66}
+    >
+      <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 14 }}>
+        <Animated.View entering={ZoomIn.duration(motion.base)} style={[s.earnCard, shadow.glow(colors.success)]}>
+          <BrandGradient colors={[colors.success, '#047857']} angle="horizontal" style={StyleSheet.absoluteFill} />
+          <Row between>
+            <View><Text style={s.earnLabel}>Pendapatan Anda</Text><AnimatedNumber value={order.driver_earning} format={rupiah} style={{ color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: -0.5 }} duration={600} /></View>
+            <View style={{ alignItems: 'flex-end' }}><Text style={s.earnLabel}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 17 }}>{order.payment_method === 'cash' ? rupiah(order.total) : '✓ Lunas'}</Text></View>
+          </Row>
+          {order.service === 'food' && order.payment_method === 'cash' && <Text style={[s.earnLabel, { marginTop: 6 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
+        </Animated.View>
 
-            {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : 'Sudah tiba di titik jemput'} size="lg" color={colors.ride} onPress={() => update('arrived')} />}
-            {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady} onPress={() => update('in_progress')} />}
-            {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" color={colors.success} onPress={complete} />}
-            {(order.status === 'accepted' || order.status === 'arrived') && <Button title="Lepas order" variant="ghost" color={colors.danger} onPress={cancel} />}
-            <Divider />
-            <PriceBlock order={order} forDriver />
-            <Divider />
-            <Timeline events={events} />
-          </ScrollView>
+        {customer && <Animated.View entering={FadeInDown.delay(80).duration(motion.slow)}><PersonCard name={customer.full_name} subtitle={customerSubtitle(customer)} phone={customer.phone} avatar={customer.avatar_url} onChat={active ? () => router.push(`/order/${id}/chat` as never) : undefined} badge="Pelanggan" /></Animated.View>}
+        {order.service === 'food' && order.merchant_status && (
+          <Row gap={8} style={s.block}><Ionicons name="restaurant" size={18} color={colors.food} /><Text style={font.small}>Status merchant:</Text><Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} /></Row>
+        )}
+        <View style={s.block}>
+          <RouteBlock order={order} />
+          <OrderExtras order={order} />
         </View>
-      </View>
-    </SafeAreaView>
+        {order.service === 'send' && active && order.recipient_phone && <Button title={`Hubungi penerima (${order.recipient_name})`} variant="secondary" icon="call-outline" onPress={() => Linking.openURL(`tel:${order.recipient_phone}`)} />}
+
+        <Animated.View key={`act-${order.status}-${order.merchant_status ?? ''}`} entering={FadeInDown.duration(motion.base)} style={{ gap: 8 }}>
+          {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : 'Sudah tiba di titik jemput'} size="lg" color={colors.ride} onPress={() => update('arrived')} />}
+          {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady} onPress={() => update('in_progress')} />}
+          {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" color={colors.success} onPress={complete} />}
+          {(order.status === 'accepted' || order.status === 'arrived') && <Button title="Lepas order" variant="ghost" color={colors.danger} onPress={cancel} />}
+        </Animated.View>
+        <View style={s.block}><PriceBlock order={order} forDriver /></View>
+        <View style={s.block}><Timeline events={events} /></View>
+      </Animated.View>
+    </MapScreen>
   );
 }
 
 const s = StyleSheet.create({
-  back: { position: 'absolute', left: 16, top: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow.card, zIndex: 6 },
-  navBtn: { position: 'absolute', right: 16, top: 16, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.info, paddingHorizontal: 14, height: 44, borderRadius: 22, ...shadow.card, zIndex: 6 },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, ...shadow.sheet },
+  navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 44, borderRadius: 22, overflow: 'hidden' },
+  earnCard: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
+  earnLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' },
+  block: { backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
 });

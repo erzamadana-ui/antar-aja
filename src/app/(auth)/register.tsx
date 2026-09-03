@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Input, Button } from '@/components/ui';
+import { Glass } from '@/components/glass';
+import { Entrance } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { colors, font } from '@/lib/theme';
 
@@ -24,9 +26,8 @@ export default function Register() {
 
   return (
     <Screen title="Buat Akun" back maxWidth={480}>
-      <View style={{ gap: 14, paddingTop: 8 }}>
-        <Text style={font.h1}>Daftar Antar Aja</Text>
-        <Text style={font.small}>Gratis, cukup satu menit.</Text>
+      <Entrance index={0}><Text style={[font.h1, { marginTop: 8 }]}>Daftar Antar Aja</Text><Text style={font.small}>Gratis, cukup satu menit.</Text></Entrance>
+      <Entrance index={1}><Glass variant="strong" padded style={{ marginTop: 16 }}><View style={{ gap: 14 }}>
         <Input label="Nama lengkap" icon="person-outline" value={f.full_name} onChangeText={set('full_name')} placeholder="Nama sesuai KTP" />
         <Input label="Nomor HP" icon="call-outline" value={f.phone} onChangeText={set('phone')} keyboardType="phone-pad" placeholder="08123456789" />
         <Input label="Email" icon="mail-outline" value={f.email} onChangeText={set('email')} autoCapitalize="none" keyboardType="email-address" placeholder="nama@email.com" />
@@ -38,7 +39,7 @@ export default function Register() {
         <Pressable onPress={() => router.replace('/(auth)/login')} style={{ alignItems: 'center', padding: 8 }}>
           <Text style={font.small}>Sudah punya akun? <Text style={{ color: colors.primary, fontWeight: '700' }}>Masuk</Text></Text>
         </Pressable>
-      </View>
+      </View></Glass></Entrance>
     </Screen>
   );
 }

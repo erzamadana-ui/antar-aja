@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, Row, Avatar, ListItem, Divider, Badge } from '@/components/ui';
+import { Entrance } from '@/components/motion';
+import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { colors, font } from '@/lib/theme';
@@ -19,8 +21,8 @@ export default function Account() {
   };
 
   return (
-    <Screen title="Akun">
-      <Card>
+    <Screen title="Akun" bottomSpace={TAB_BAR_SPACE + 16}>
+      <Entrance index={0}><Card>
         <Row gap={14}>
           <Avatar name={profile?.full_name} url={profile?.avatar_url} size={60} />
           <View style={{ flex: 1 }}>
@@ -31,9 +33,9 @@ export default function Account() {
             </Row>
           </View>
         </Row>
-      </Card>
+      </Card></Entrance>
 
-      <Card style={{ marginTop: 16 }} padded={false}>
+      <Entrance index={1}><Card style={{ marginTop: 16 }} padded={false}>
         <View style={{ paddingHorizontal: 12 }}>
           <ListItem icon="person-outline" title="Edit profil" subtitle="Nama, nomor HP, foto" onPress={() => router.push('/account/edit')} />
           <Divider style={{ marginVertical: 0 }} />
@@ -41,9 +43,9 @@ export default function Account() {
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="wallet-outline" title="AntarPay" subtitle="Saldo & riwayat" onPress={() => router.push('/(customer)/pay')} />
         </View>
-      </Card>
+      </Card></Entrance>
 
-      <Text style={[font.h3, { marginTop: 24, marginBottom: 8 }]}>Mode & Kemitraan</Text>
+      <Entrance index={2}><Text style={[font.label, { marginTop: 24, marginBottom: 8 }]}>Mode & Kemitraan</Text>
       <Card padded={false}>
         <View style={{ paddingHorizontal: 12 }}>
           {driver ? (
@@ -63,17 +65,17 @@ export default function Account() {
             <ListItem icon="shield-checkmark-outline" iconColor={colors.info} title="Panel Admin" subtitle="Kelola driver, merchant, tarif, top up" onPress={async () => { await setMode('admin'); router.replace('/(admin)'); }} />
           </>)}
         </View>
-      </Card>
+      </Card></Entrance>
 
-      <Text style={[font.h3, { marginTop: 24, marginBottom: 8 }]}>Lainnya</Text>
+      <Entrance index={3}><Text style={[font.label, { marginTop: 24, marginBottom: 8 }]}>Lainnya</Text>
       <Card padded={false}>
         <View style={{ paddingHorizontal: 12 }}>
           <ListItem icon="help-circle-outline" title="Bantuan & FAQ" onPress={() => router.push('/account/help')} />
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="log-out-outline" title="Keluar" danger onPress={confirmSignOut} />
         </View>
-      </Card>
-      <Text style={[font.tiny, { textAlign: 'center', marginTop: 24 }]}>Antar Aja v1.0.0</Text>
+      </Card></Entrance>
+      <Text style={[font.tiny, { textAlign: 'center', marginTop: 24 }]}>Antar Aja v2.0 · Desain 2026</Text>
     </Screen>
   );
 }

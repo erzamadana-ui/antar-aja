@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Switch } from 'react-native';
 import { AdminPage } from '@/components/admin';
 import { Card, Row, Input, Button, Badge, toast } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { supabase } from '@/lib/supabase';
 import { colors, font } from '@/lib/theme';
 import { serviceLabel } from '@/lib/format';
@@ -54,34 +55,36 @@ export default function AdminPricing() {
           </Card>
         ))}
       </Row>
-      <Card style={{ gap: 10 }}>
-        <Text style={font.h3}>Promo</Text>
-        {promos.map((p) => (
-          <Row key={p.code} between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
-            <View style={{ flex: 1 }}>
-              <Row gap={8}><Text style={{ fontWeight: '800' }}>{p.code}</Text><Badge text={p.discount_type === 'percent' ? `${p.value}%${p.max_discount ? ` maks ${p.max_discount}` : ''}` : `Rp${p.value}`} />{p.service && <Badge text={serviceLabel[p.service]} color={colors.info} />}</Row>
-              <Text style={font.tiny}>{p.description} · min Rp{p.min_total} · dipakai {p.used_count}{p.quota ? `/${p.quota}` : ''}</Text>
-            </View>
-            <Switch value={p.is_active} onValueChange={() => togglePromo(p)} trackColor={{ true: colors.success, false: colors.border }} thumbColor="#fff" />
+      <Entrance index={0}>
+        <Card style={{ gap: 10 }}>
+          <Text style={font.label}>Promo</Text>
+          {promos.map((p) => (
+            <Row key={p.code} between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Row gap={8}><Text style={{ fontWeight: '800' }}>{p.code}</Text><Badge text={p.discount_type === 'percent' ? `${p.value}%${p.max_discount ? ` maks ${p.max_discount}` : ''}` : `Rp${p.value}`} />{p.service && <Badge text={serviceLabel[p.service]} color={colors.info} />}</Row>
+                <Text style={font.tiny}>{p.description} · min Rp{p.min_total} · dipakai {p.used_count}{p.quota ? `/${p.quota}` : ''}</Text>
+              </View>
+              <Switch value={p.is_active} onValueChange={() => togglePromo(p)} trackColor={{ true: colors.success, false: colors.border }} thumbColor="#fff" />
+            </Row>
+          ))}
+          <Text style={[font.h3, { marginTop: 8 }]}>Tambah / ubah promo</Text>
+          <Row gap={10} style={{ flexWrap: 'wrap' }}>
+            <Input placeholder="KODE" value={np.code} onChangeText={(v) => setNp({ ...np, code: v.toUpperCase() })} containerStyle={{ minWidth: 140, flex: 1 }} autoCapitalize="characters" />
+            <Input placeholder="Deskripsi" value={np.description} onChangeText={(v) => setNp({ ...np, description: v })} containerStyle={{ minWidth: 220, flex: 2 }} />
           </Row>
-        ))}
-        <Text style={[font.h3, { marginTop: 8 }]}>Tambah / ubah promo</Text>
-        <Row gap={10} style={{ flexWrap: 'wrap' }}>
-          <Input placeholder="KODE" value={np.code} onChangeText={(v) => setNp({ ...np, code: v.toUpperCase() })} containerStyle={{ minWidth: 140, flex: 1 }} autoCapitalize="characters" />
-          <Input placeholder="Deskripsi" value={np.description} onChangeText={(v) => setNp({ ...np, description: v })} containerStyle={{ minWidth: 220, flex: 2 }} />
-        </Row>
-        <Row gap={10} style={{ flexWrap: 'wrap' }}>
-          <Row gap={6}><Button size="sm" title="Nominal" variant={np.discount_type === 'fixed' ? 'primary' : 'outline'} onPress={() => setNp({ ...np, discount_type: 'fixed' })} /><Button size="sm" title="Persen" variant={np.discount_type === 'percent' ? 'primary' : 'outline'} onPress={() => setNp({ ...np, discount_type: 'percent' })} /></Row>
-          <Input placeholder={np.discount_type === 'percent' ? 'Nilai %' : 'Nilai Rp'} keyboardType="number-pad" value={np.value} onChangeText={(v) => setNp({ ...np, value: v })} containerStyle={{ width: 110 }} />
-          <Input placeholder="Maks diskon" keyboardType="number-pad" value={np.max_discount} onChangeText={(v) => setNp({ ...np, max_discount: v })} containerStyle={{ width: 120 }} />
-          <Input placeholder="Min transaksi" keyboardType="number-pad" value={np.min_total} onChangeText={(v) => setNp({ ...np, min_total: v })} containerStyle={{ width: 120 }} />
-          <Input placeholder="Kuota" keyboardType="number-pad" value={np.quota} onChangeText={(v) => setNp({ ...np, quota: v })} containerStyle={{ width: 90 }} />
-        </Row>
-        <Row gap={6} style={{ flexWrap: 'wrap' }}>
-          {[['', 'Semua layanan'], ['ride_motor', 'AntarRide'], ['ride_car', 'AntarCar'], ['food', 'AntarFood'], ['send', 'AntarSend']].map(([k, l]) => <Button key={k} size="sm" title={l} variant={np.service === k ? 'primary' : 'outline'} onPress={() => setNp({ ...np, service: k })} />)}
-        </Row>
-        <Button title="Simpan promo" onPress={savePromo} />
-      </Card>
+          <Row gap={10} style={{ flexWrap: 'wrap' }}>
+            <Row gap={6}><Button size="sm" title="Nominal" variant={np.discount_type === 'fixed' ? 'primary' : 'outline'} onPress={() => setNp({ ...np, discount_type: 'fixed' })} /><Button size="sm" title="Persen" variant={np.discount_type === 'percent' ? 'primary' : 'outline'} onPress={() => setNp({ ...np, discount_type: 'percent' })} /></Row>
+            <Input placeholder={np.discount_type === 'percent' ? 'Nilai %' : 'Nilai Rp'} keyboardType="number-pad" value={np.value} onChangeText={(v) => setNp({ ...np, value: v })} containerStyle={{ width: 110 }} />
+            <Input placeholder="Maks diskon" keyboardType="number-pad" value={np.max_discount} onChangeText={(v) => setNp({ ...np, max_discount: v })} containerStyle={{ width: 120 }} />
+            <Input placeholder="Min transaksi" keyboardType="number-pad" value={np.min_total} onChangeText={(v) => setNp({ ...np, min_total: v })} containerStyle={{ width: 120 }} />
+            <Input placeholder="Kuota" keyboardType="number-pad" value={np.quota} onChangeText={(v) => setNp({ ...np, quota: v })} containerStyle={{ width: 90 }} />
+          </Row>
+          <Row gap={6} style={{ flexWrap: 'wrap' }}>
+            {[['', 'Semua layanan'], ['ride_motor', 'AntarRide'], ['ride_car', 'AntarCar'], ['food', 'AntarFood'], ['send', 'AntarSend']].map(([k, l]) => <Button key={k} size="sm" title={l} variant={np.service === k ? 'primary' : 'outline'} onPress={() => setNp({ ...np, service: k })} />)}
+          </Row>
+          <Button title="Simpan promo" onPress={savePromo} />
+        </Card>
+      </Entrance>
     </AdminPage>
   );
 }

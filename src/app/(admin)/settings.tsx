@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { AdminPage } from '@/components/admin';
 import { Card, Input, Button, toast } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { supabase } from '@/lib/supabase';
 import { font } from '@/lib/theme';
 
@@ -31,21 +32,25 @@ export default function AdminSettings() {
   };
   return (
     <AdminPage title="Pengaturan" subtitle="Konfigurasi umum aplikasi">
-      <Card style={{ gap: 12, maxWidth: 560 }}>
-        <Text style={font.h3}>Rekening top up</Text>
-        <Input label="Bank" value={bank.bank} onChangeText={(v) => setBank({ ...bank, bank: v })} />
-        <Input label="Nomor rekening" value={bank.number} onChangeText={(v) => setBank({ ...bank, number: v })} keyboardType="number-pad" />
-        <Input label="Atas nama" value={bank.name} onChangeText={(v) => setBank({ ...bank, name: v })} />
-        <Text style={[font.h3, { marginTop: 8 }]}>Operasional</Text>
-        <Input label="Nomor WhatsApp CS" value={support} onChangeText={setSupport} keyboardType="phone-pad" />
-        <Input label="Radius pencarian driver (km)" value={radius} onChangeText={setRadius} keyboardType="decimal-pad" />
-        <Input label="Batas rasio rute vs garis lurus (anti-manipulasi jarak)" value={ratio} onChangeText={setRatio} keyboardType="decimal-pad" />
-        <Button title="Simpan pengaturan" onPress={save} />
-      </Card>
-      <Card style={{ maxWidth: 560 }}>
-        <Text style={font.h3}>Integrasi (opsional)</Text>
-        <Text style={font.small}>Google Maps: isi EXPO_PUBLIC_GOOGLE_MAPS_KEY di .env lalu build ulang — pencarian & rute otomatis beralih ke Google.{'\n'}Pembayaran otomatis (Midtrans/Xendit): lihat docs/INTEGRASI.md di repositori.</Text>
-      </Card>
+      <Entrance index={0}>
+        <Card style={{ gap: 12, maxWidth: 560 }}>
+          <Text style={font.label}>Rekening top up</Text>
+          <Input label="Bank" value={bank.bank} onChangeText={(v) => setBank({ ...bank, bank: v })} />
+          <Input label="Nomor rekening" value={bank.number} onChangeText={(v) => setBank({ ...bank, number: v })} keyboardType="number-pad" />
+          <Input label="Atas nama" value={bank.name} onChangeText={(v) => setBank({ ...bank, name: v })} />
+          <Text style={[font.h3, { marginTop: 8 }]}>Operasional</Text>
+          <Input label="Nomor WhatsApp CS" value={support} onChangeText={setSupport} keyboardType="phone-pad" />
+          <Input label="Radius pencarian driver (km)" value={radius} onChangeText={setRadius} keyboardType="decimal-pad" />
+          <Input label="Batas rasio rute vs garis lurus (anti-manipulasi jarak)" value={ratio} onChangeText={setRatio} keyboardType="decimal-pad" />
+          <Button title="Simpan pengaturan" onPress={save} />
+        </Card>
+      </Entrance>
+      <Entrance index={1}>
+        <Card style={{ maxWidth: 560 }}>
+          <Text style={font.label}>Integrasi (opsional)</Text>
+          <Text style={font.small}>Google Maps: isi EXPO_PUBLIC_GOOGLE_MAPS_KEY di .env lalu build ulang — pencarian & rute otomatis beralih ke Google.{'\n'}Pembayaran otomatis (Midtrans/Xendit): lihat docs/INTEGRASI.md di repositori.</Text>
+        </Card>
+      </Entrance>
     </AdminPage>
   );
 }

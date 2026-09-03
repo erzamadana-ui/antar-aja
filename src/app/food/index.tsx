@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Input, Chip, Row, Stars, Empty } from '@/components/ui';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Screen, Input, Chip, Row, Stars, Empty, Badge } from '@/components/ui';
 import { CartBar } from '@/components/CartBar';
+import { Entrance, PressableScale, Skeleton } from '@/components/motion';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { supabase } from '@/lib/supabase';
-import { colors, font, radius, shadow } from '@/lib/theme';
+import { colors, font, radius, shadow, glass } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { Merchant } from '@/lib/types';
 
@@ -33,44 +35,58 @@ export default function FoodHome() {
   const shown = list.filter((m) => cat === 'Semua' || m.category === cat);
 
   return (
-    <Screen title="AntarFood" back scroll={false} padded={false} footer={<CartBar />}>
-      <View style={{ padding: 16, paddingBottom: 8, gap: 12, backgroundColor: colors.surface }}>
-        <Input icon="search" placeholder="Cari resto atau menu…" value={q} onChangeText={setQ} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {CATS.map((c) => <Chip key={c} label={c} active={cat === c} onPress={() => setCat(c)} color={colors.food} />)}
-        </ScrollView>
+    <Screen title="AntarFood" back scroll={false} padded={false} footer={<CartBar />} ambient="amber">
+      <View style={{ padding: 16, paddingBottom: 8, gap: 12 }}>
+        <Entrance index={0}><Input icon="search" placeholder="Cari resto atau menu…" value={q} onChangeText={setQ} /></Entrance>
+        <Entrance index={1}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {CATS.map((c) => <Chip key={c} label={c} active={cat === c} onPress={() => setCat(c)} color={colors.food} />)}
+          </ScrollView>
+        </Entrance>
       </View>
-      {loading ? <ActivityIndicator color={colors.food} style={{ marginTop: 32 }} /> : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 100 }}>
-          {shown.length === 0 && <Empty icon="restaurant-outline" title="Belum ada merchant" subtitle="Coba kata kunci lain atau perluas lokasi." />}
-          {shown.map((m) => (
-            <Pressable key={m.id} onPress={() => router.push(`/food/${m.id}` as never)} style={({ pressed }) => [s.card, pressed && { opacity: 0.9 }]}>
-              <Image source={{ uri: m.image_url ?? undefined }} style={s.img} />
-              <View style={{ flex: 1, padding: 12, gap: 3 }}>
-                <Row between>
-                  <Text style={[font.h3, { flex: 1 }]} numberOfLines={1}>{m.name}</Text>
-                  {!m.is_open && <Text style={{ color: colors.danger, fontSize: 11, fontWeight: '700' }}>TUTUP</Text>}
-                </Row>
-                <Text style={font.small} numberOfLines={1}>{m.category} · {m.description}</Text>
-                <Row gap={6} style={{ marginTop: 4 }}>
-                  <Stars value={m.rating_avg} size={12} />
-                  <Text style={font.tiny}>{Number(m.rating_avg).toFixed(1)} ({m.rating_count})</Text>
-                  <Text style={font.tiny}>· {m.distance_km} km · {m.prep_minutes + 15} mnt</Text>
-                </Row>
-                <Row gap={4} style={{ marginTop: 2 }}>
-                  <Ionicons name="bicycle" size={13} color={colors.food} />
-                  <Text style={{ fontSize: 12, color: colors.food, fontWeight: '700' }}>Ongkir {rupiah(m.delivery_fee)}</Text>
-                </Row>
-              </View>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        {loading ? [0, 1, 2].map((i) => (
+          <View key={i} style={[s.card, { padding: 0 }]}>
+            <Skeleton width={110} height={110} radius={0} />
+            <View style={{ flex: 1, padding: 12, gap: 8 }}><Skeleton width="70%" height={16} /><Skeleton width="90%" height={12} /><Skeleton width="50%" height={12} /></View>
+          </View>
+        )) : (
+          <>
+            {shown.length === 0 && <Empty icon="restaurant-outline" title="Belum ada merchant" subtitle="Coba kata kunci lain atau perluas lokasi." />}
+            {shown.map((m, i) => (
+              <Entrance key={m.id} index={Math.min(i, 6)} from="up">
+                <Animated.View layout={LinearTransition.springify()}>
+                  <PressableScale onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.98} style={s.card}>
+                    <View>
+                      <Image source={{ uri: m.image_url ?? undefined }} style={s.img} />
+                      {!m.is_open && <View style={s.closed}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>TUTUP</Text></View>}
+                    </View>
+                    <View style={{ flex: 1, padding: 12, gap: 3, minWidth: 0 }}>
+                      <Text style={font.h3} numberOfLines={1}>{m.name}</Text>
+                      <Text style={font.small} numberOfLines={1}>{m.category} · {m.description}</Text>
+                      <Row gap={6} style={{ marginTop: 4 }}>
+                        <Stars value={m.rating_avg} size={12} />
+                        <Text style={font.tiny}>{Number(m.rating_avg).toFixed(1)} ({m.rating_count})</Text>
+                        <Text style={font.tiny}>· {m.distance_km} km · {m.prep_minutes + 15} mnt</Text>
+                      </Row>
+                      <Row gap={6} style={{ marginTop: 4 }}>
+                        <Badge text={`Ongkir ${rupiah(m.delivery_fee)}`} color={colors.food} />
+                        {m.delivery_fee === 0 && <Ionicons name="flash" size={13} color={colors.food} />}
+                      </Row>
+                    </View>
+                  </PressableScale>
+                </Animated.View>
+              </Entrance>
+            ))}
+          </>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  card: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden', ...shadow.card },
-  img: { width: 110, height: 110, backgroundColor: colors.border },
+  card: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: glass.border, ...shadow.card },
+  img: { width: 110, height: 110, backgroundColor: 'rgba(11,31,42,0.06)' },
+  closed: { position: 'absolute', left: 8, top: 8, backgroundColor: 'rgba(11,31,42,0.7)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
 });

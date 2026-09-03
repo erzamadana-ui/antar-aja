@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, Linking } from 'react-native';
 import { AdminPage, Table, FilterBar } from '@/components/admin';
 import { Row, Badge, Button, toast, Card } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { rpc, supabase } from '@/lib/supabase';
 import { signedUrl } from '@/lib/upload';
 import { colors, font } from '@/lib/theme';
@@ -37,28 +38,32 @@ export default function AdminFinance() {
   return (
     <AdminPage title="Keuangan" subtitle="Verifikasi top up & penarikan saldo" onRefresh={load}>
       <FilterBar value={filter} onChange={setFilter} options={[{ key: 'pending', label: 'Menunggu' }, { key: 'approved', label: 'Disetujui' }, { key: 'rejected', label: 'Ditolak' }, { key: 'all', label: 'Semua' }]} />
-      <Card style={{ padding: 0 }} padded={false}>
-        <Text style={[font.h3, { padding: 14 }]}>Top up ({f(topups).length})</Text>
-        <Table rows={f(topups) as unknown as Record<string, unknown>[]} columns={[
-          { key: 'user', label: 'Pengguna', width: 200, render: (r) => { const x = r as unknown as T; return <View><Text style={{ fontWeight: '700' }}>{x.user?.full_name}</Text><Text style={font.tiny}>{x.user?.email}</Text></View>; } },
-          { key: 'amount', label: 'Nominal', width: 120, render: (r) => <Text style={{ fontWeight: '800' }}>{rupiah(Number(r.amount))}</Text> },
-          { key: 'note', label: 'Catatan / bukti', width: 220, render: (r) => { const x = r as unknown as T; return <View><Text style={font.tiny}>{x.sender_note ?? '-'}</Text>{x.proof_url ? <Pressable onPress={() => openProof(x.proof_url)}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 12 }}>Lihat bukti transfer</Text></Pressable> : <Text style={[font.tiny, { color: colors.danger }]}>Tanpa bukti</Text>}</View>; } },
-          { key: 'created_at', label: 'Waktu', width: 140, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at))}</Text> },
-          { key: 'status', label: 'Status', width: 110, render: (r) => <Badge text={String(r.status)} color={sc[r.status as keyof typeof sc]} /> },
-          { key: 'actions', label: 'Aksi', width: 180, render: (r) => r.status === 'pending' ? <Row gap={6}><Button size="sm" title="Setujui" color={colors.success} onPress={() => reviewTopup(String(r.id), true)} /><Button size="sm" title="Tolak" variant="outline" color={colors.danger} onPress={() => reviewTopup(String(r.id), false)} /></Row> : <Text style={font.tiny}>{String(r.review_note ?? '')}</Text> },
-        ]} />
-      </Card>
-      <Card padded={false}>
-        <Text style={[font.h3, { padding: 14 }]}>Penarikan saldo ({f(wds).length})</Text>
-        <Table rows={f(wds) as unknown as Record<string, unknown>[]} columns={[
-          { key: 'user', label: 'Pengguna', width: 200, render: (r) => { const x = r as unknown as W; return <View><Text style={{ fontWeight: '700' }}>{x.user?.full_name}</Text><Text style={font.tiny}>{x.user?.email}</Text></View>; } },
-          { key: 'amount', label: 'Nominal', width: 120, render: (r) => <Text style={{ fontWeight: '800' }}>{rupiah(Number(r.amount))}</Text> },
-          { key: 'bank', label: 'Rekening tujuan', width: 240, render: (r) => { const x = r as unknown as W; return <Text style={font.small}>{x.bank_name} {x.bank_account}{'\n'}a.n. {x.account_name}</Text>; } },
-          { key: 'created_at', label: 'Waktu', width: 140, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at))}</Text> },
-          { key: 'status', label: 'Status', width: 110, render: (r) => <Badge text={String(r.status)} color={sc[r.status as keyof typeof sc]} /> },
-          { key: 'actions', label: 'Aksi', width: 200, render: (r) => r.status === 'pending' ? <Row gap={6}><Button size="sm" title="Sudah ditransfer" color={colors.success} onPress={() => reviewWd(String(r.id), true)} /><Button size="sm" title="Tolak" variant="outline" color={colors.danger} onPress={() => reviewWd(String(r.id), false)} /></Row> : <Text style={font.tiny}>{String(r.review_note ?? '')}</Text> },
-        ]} />
-      </Card>
+      <Entrance index={0}>
+        <Card style={{ padding: 0 }} padded={false}>
+          <Text style={[font.h3, { padding: 14 }]}>Top up ({f(topups).length})</Text>
+          <Table rows={f(topups) as unknown as Record<string, unknown>[]} columns={[
+            { key: 'user', label: 'Pengguna', width: 200, render: (r) => { const x = r as unknown as T; return <View><Text style={{ fontWeight: '700' }}>{x.user?.full_name}</Text><Text style={font.tiny}>{x.user?.email}</Text></View>; } },
+            { key: 'amount', label: 'Nominal', width: 120, render: (r) => <Text style={{ fontWeight: '800' }}>{rupiah(Number(r.amount))}</Text> },
+            { key: 'note', label: 'Catatan / bukti', width: 220, render: (r) => { const x = r as unknown as T; return <View><Text style={font.tiny}>{x.sender_note ?? '-'}</Text>{x.proof_url ? <Pressable onPress={() => openProof(x.proof_url)}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 12 }}>Lihat bukti transfer</Text></Pressable> : <Text style={[font.tiny, { color: colors.danger }]}>Tanpa bukti</Text>}</View>; } },
+            { key: 'created_at', label: 'Waktu', width: 140, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at))}</Text> },
+            { key: 'status', label: 'Status', width: 110, render: (r) => <Badge text={String(r.status)} color={sc[r.status as keyof typeof sc]} /> },
+            { key: 'actions', label: 'Aksi', width: 180, render: (r) => r.status === 'pending' ? <Row gap={6}><Button size="sm" title="Setujui" color={colors.success} onPress={() => reviewTopup(String(r.id), true)} /><Button size="sm" title="Tolak" variant="outline" color={colors.danger} onPress={() => reviewTopup(String(r.id), false)} /></Row> : <Text style={font.tiny}>{String(r.review_note ?? '')}</Text> },
+          ]} />
+        </Card>
+      </Entrance>
+      <Entrance index={1}>
+        <Card padded={false}>
+          <Text style={[font.h3, { padding: 14 }]}>Penarikan saldo ({f(wds).length})</Text>
+          <Table rows={f(wds) as unknown as Record<string, unknown>[]} columns={[
+            { key: 'user', label: 'Pengguna', width: 200, render: (r) => { const x = r as unknown as W; return <View><Text style={{ fontWeight: '700' }}>{x.user?.full_name}</Text><Text style={font.tiny}>{x.user?.email}</Text></View>; } },
+            { key: 'amount', label: 'Nominal', width: 120, render: (r) => <Text style={{ fontWeight: '800' }}>{rupiah(Number(r.amount))}</Text> },
+            { key: 'bank', label: 'Rekening tujuan', width: 240, render: (r) => { const x = r as unknown as W; return <Text style={font.small}>{x.bank_name} {x.bank_account}{'\n'}a.n. {x.account_name}</Text>; } },
+            { key: 'created_at', label: 'Waktu', width: 140, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at))}</Text> },
+            { key: 'status', label: 'Status', width: 110, render: (r) => <Badge text={String(r.status)} color={sc[r.status as keyof typeof sc]} /> },
+            { key: 'actions', label: 'Aksi', width: 200, render: (r) => r.status === 'pending' ? <Row gap={6}><Button size="sm" title="Sudah ditransfer" color={colors.success} onPress={() => reviewWd(String(r.id), true)} /><Button size="sm" title="Tolak" variant="outline" color={colors.danger} onPress={() => reviewWd(String(r.id), false)} /></Row> : <Text style={font.tiny}>{String(r.review_note ?? '')}</Text> },
+          ]} />
+        </Card>
+      </Entrance>
     </AdminPage>
   );
 }

@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AdminPage, StatCard, MiniBars } from '@/components/admin';
 import { Card, Row, Button, Badge } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { rpc, supabase } from '@/lib/supabase';
 import { colors, font } from '@/lib/theme';
 import { rupiah, formatTime, serviceLabel, statusLabel, statusColor } from '@/lib/format';
@@ -24,15 +25,15 @@ export default function AdminDashboard() {
   return (
     <AdminPage title="Dashboard" subtitle="Ringkasan operasional hari ini" onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} refreshing={refreshing}>
       <Row gap={12} style={{ flexWrap: 'wrap' }}>
-        <StatCard label="Pesanan hari ini" value={st?.orders_today ?? '…'} hint={`${st?.orders_active ?? 0} sedang berjalan`} />
-        <StatCard label="GMV hari ini" value={rupiah(st?.gmv_today ?? 0)} hint={`Bulan ini ${rupiah(st?.gmv_month ?? 0)}`} color={colors.success} />
-        <StatCard label="Pendapatan platform (bulan)" value={rupiah(st?.revenue_month ?? 0)} hint="Komisi + biaya layanan" color={colors.accent} />
-        <StatCard label="Driver online" value={`${st?.drivers_online ?? 0}/${st?.drivers_total ?? 0}`} hint={`${st?.drivers_pending ?? 0} menunggu verifikasi`} color={colors.ride} />
-        <StatCard label="Merchant" value={st?.merchants_total ?? '…'} hint={`${st?.merchants_pending ?? 0} menunggu verifikasi`} color={colors.food} />
-        <StatCard label="Pengguna" value={st?.users ?? '…'} color={colors.info} />
+        <StatCard index={1} label="Pesanan hari ini" value={st?.orders_today ?? '…'} hint={`${st?.orders_active ?? 0} sedang berjalan`} />
+        <StatCard index={2} label="GMV hari ini" value={rupiah(st?.gmv_today ?? 0)} hint={`Bulan ini ${rupiah(st?.gmv_month ?? 0)}`} color={colors.success} />
+        <StatCard index={3} label="Pendapatan platform (bulan)" value={rupiah(st?.revenue_month ?? 0)} hint="Komisi + biaya layanan" color={colors.accent} />
+        <StatCard index={4} label="Driver online" value={`${st?.drivers_online ?? 0}/${st?.drivers_total ?? 0}`} hint={`${st?.drivers_pending ?? 0} menunggu verifikasi`} color={colors.ride} />
+        <StatCard index={5} label="Merchant" value={st?.merchants_total ?? '…'} hint={`${st?.merchants_pending ?? 0} menunggu verifikasi`} color={colors.food} />
+        <StatCard index={6} label="Pengguna" value={st?.users ?? '…'} color={colors.info} />
       </Row>
       {((st?.topups_pending ?? 0) > 0 || (st?.withdrawals_pending ?? 0) > 0 || (st?.drivers_pending ?? 0) > 0 || (st?.merchants_pending ?? 0) > 0) && (
-        <Card style={{ backgroundColor: colors.accentLight }}>
+        <Card style={{ backgroundColor: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)' }}>
           <Text style={[font.h3, { color: colors.warning }]}>Perlu tindakan</Text>
           <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 8 }}>
             {(st?.topups_pending ?? 0) > 0 && <Button size="sm" title={`${st!.topups_pending} top up`} onPress={() => router.replace('/(admin)/finance')} />}
@@ -44,11 +45,11 @@ export default function AdminDashboard() {
       )}
       <Row gap={16} style={{ flexWrap: 'wrap', alignItems: 'stretch' }}>
         <Card style={{ flex: 1, minWidth: 300 }}>
-          <Text style={font.h3}>Pesanan 7 hari terakhir</Text>
+          <Text style={font.label}>Pesanan 7 hari terakhir</Text>
           <View style={{ marginTop: 12 }}><MiniBars data={(st?.orders_last7 ?? []).map((d) => ({ label: new Date(d.day).toLocaleDateString('id-ID', { weekday: 'short' }), value: d.count }))} /></View>
         </Card>
         <Card style={{ flex: 1, minWidth: 300 }}>
-          <Text style={font.h3}>Komposisi layanan (30 hari)</Text>
+          <Text style={font.label}>Komposisi layanan (30 hari)</Text>
           <View style={{ marginTop: 12, gap: 8 }}>
             {Object.entries(st?.orders_by_service ?? {}).map(([k, v]) => (
               <Row key={k} between><Text style={font.body}>{serviceLabel[k as keyof typeof serviceLabel] ?? k}</Text><Badge text={String(v)} /></Row>
@@ -57,18 +58,20 @@ export default function AdminDashboard() {
           </View>
         </Card>
       </Row>
-      <Card>
-        <Row between><Text style={font.h3}>Pesanan berjalan</Text><Button size="sm" variant="ghost" title="Lihat semua" onPress={() => router.replace('/(admin)/orders')} /></Row>
-        <View style={{ marginTop: 8 }}>
-          {live.length === 0 && <Text style={font.small}>Tidak ada pesanan berjalan.</Text>}
-          {live.map((o) => (
-            <Row key={o.id} between style={{ paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
-              <View style={{ flex: 1 }}><Text style={{ fontWeight: '700' }}>{o.code} · {serviceLabel[o.service]}</Text><Text style={font.tiny} numberOfLines={1}>{formatTime(o.created_at)} · {o.dropoff_address}</Text></View>
-              <Badge text={statusLabel(o.status, o.service, o.merchant_status)} color={statusColor(o.status)} />
-            </Row>
-          ))}
-        </View>
-      </Card>
+      <Entrance index={0}>
+        <Card>
+          <Row between><Text style={font.label}>Pesanan berjalan</Text><Button size="sm" variant="ghost" title="Lihat semua" onPress={() => router.replace('/(admin)/orders')} /></Row>
+          <View style={{ marginTop: 8 }}>
+            {live.length === 0 && <Text style={font.small}>Tidak ada pesanan berjalan.</Text>}
+            {live.map((o) => (
+              <Row key={o.id} between style={{ paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)' }}>
+                <View style={{ flex: 1 }}><Text style={{ fontWeight: '700' }}>{o.code} · {serviceLabel[o.service]}</Text><Text style={font.tiny} numberOfLines={1}>{formatTime(o.created_at)} · {o.dropoff_address}</Text></View>
+                <Badge text={statusLabel(o.status, o.service, o.merchant_status)} color={statusColor(o.status)} />
+              </Row>
+            ))}
+          </View>
+        </Card>
+      </Entrance>
     </AdminPage>
   );
 }

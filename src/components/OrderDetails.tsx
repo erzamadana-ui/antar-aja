@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Linking, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Row, Avatar, Stars, Badge, Divider } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
 import { PriceSummary } from '@/components/BookingSheet';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah, km, formatTime, merchantStatusLabel, phoneDisplay } from '@/lib/format';
 import type { Driver, Order, OrderEvent, Profile } from '@/lib/types';
 
@@ -19,8 +20,8 @@ export function PersonCard({ name, subtitle, phone, avatar, rating, ratingCount,
         {badge ? <Badge text={badge} style={{ marginTop: 4 }} /> : null}
       </View>
       <Row gap={8}>
-        {onChat && <Pressable onPress={onChat} style={s.circle}><Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} /></Pressable>}
-        {phone && <Pressable onPress={() => Linking.openURL(`tel:${phone}`)} style={[s.circle, { backgroundColor: colors.successLight }]}><Ionicons name="call" size={20} color={colors.success} /></Pressable>}
+        {onChat && <PressableScale onPress={onChat} scaleTo={0.9} style={[s.circle, shadow.glow(colors.primary)]}><Ionicons name="chatbubble-ellipses" size={20} color="#fff" /></PressableScale>}
+        {phone && <PressableScale onPress={() => Linking.openURL(`tel:${phone}`)} scaleTo={0.9} style={[s.circle, { backgroundColor: colors.success }, shadow.glow(colors.success)]}><Ionicons name="call" size={20} color="#fff" /></PressableScale>}
       </Row>
     </View>
   );
@@ -113,11 +114,11 @@ export function customerSubtitle(p: Profile | null) { return p ? phoneDisplay(p.
 
 export { Divider };
 const s = StyleSheet.create({
-  person: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.bg, borderRadius: radius.lg, padding: 12 },
-  circle: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 12, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
+  circle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5 },
   addr: { fontWeight: '600', color: colors.text, fontSize: 14 },
-  note: { flexDirection: 'row', gap: 8, backgroundColor: colors.accentLight, padding: 10, borderRadius: radius.md, alignItems: 'center' },
+  note: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(245,158,11,0.12)', padding: 10, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)' },
   tdot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border, marginTop: 4 },
   tline: { width: 2, flex: 1, minHeight: 14, backgroundColor: colors.border, marginVertical: 2 },
 });

@@ -1,15 +1,24 @@
 import React from 'react';
+import { Tabs } from 'expo-router';
 import { RequireAuth } from '@/components/AuthGate';
-import { Tabs, tabIcon, tabScreenOptions } from '@/components/TabBarIcon';
+import { makeGlassTabBar } from '@/components/GlassTabBar';
+import { colors } from '@/lib/theme';
+
+const TabBar = makeGlassTabBar({
+  index: { label: 'Beranda', icon: 'home-outline', iconActive: 'home' },
+  orders: { label: 'Pesanan', icon: 'receipt-outline', iconActive: 'receipt' },
+  pay: { label: 'AntarPay', icon: 'wallet-outline', iconActive: 'wallet' },
+  account: { label: 'Akun', icon: 'person-outline', iconActive: 'person' },
+}, colors.primary);
 
 export default function CustomerLayout() {
   return (
     <RequireAuth>
-      <Tabs screenOptions={tabScreenOptions}>
-        <Tabs.Screen name="index" options={{ title: 'Beranda', tabBarIcon: tabIcon('home', 'home-outline') }} />
-        <Tabs.Screen name="orders" options={{ title: 'Pesanan', tabBarIcon: tabIcon('receipt', 'receipt-outline') }} />
-        <Tabs.Screen name="pay" options={{ title: 'AntarPay', tabBarIcon: tabIcon('wallet', 'wallet-outline') }} />
-        <Tabs.Screen name="account" options={{ title: 'Akun', tabBarIcon: tabIcon('person', 'person-outline') }} />
+      <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent' } }}>
+        <Tabs.Screen name="index" options={{ title: 'Beranda' }} />
+        <Tabs.Screen name="orders" options={{ title: 'Pesanan' }} />
+        <Tabs.Screen name="pay" options={{ title: 'AntarPay' }} />
+        <Tabs.Screen name="account" options={{ title: 'Akun' }} />
       </Tabs>
     </RequireAuth>
   );

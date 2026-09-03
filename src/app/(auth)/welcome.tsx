@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withDelay, Easing, useReducedMotion } from 'react-native-reanimated';
 import { Button } from '@/components/ui';
-import { colors, radius } from '@/lib/theme';
+import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
+import { Entrance, PressableScale } from '@/components/motion';
+import { colors, radius, font, shadow } from '@/lib/theme';
 import { SERVICES } from '@/lib/services';
 
 export default function Welcome() {
@@ -13,45 +15,65 @@ export default function Welcome() {
   const { width } = useWindowDimensions();
   const wide = width >= 900;
   return (
-    <LinearGradient colors={[colors.primaryDark, colors.primary, '#13A29F']} style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
+      <AmbientBackground tint="mixed" />
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={[s.wrap, wide && { flexDirection: 'row', alignItems: 'center', gap: 48, paddingHorizontal: 64 }]}>
+        <View style={[s.wrap, wide && { flexDirection: 'row', alignItems: 'center', gap: 56, paddingHorizontal: 64 }]}>
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <View style={s.logo}><Ionicons name="navigate" size={34} color={colors.primary} /></View>
-            <Text style={s.brand}>Antar Aja</Text>
-            <Text style={s.tag}>Ojek, mobil, makanan, dan kirim barang.{'\n'}Satu aplikasi untuk semua kebutuhan harian.</Text>
-            <View style={s.grid}>
-              {SERVICES.filter((x) => x.id !== 'pay').map((sv) => (
-                <View key={sv.id} style={s.pill}>
-                  <Ionicons name={sv.icon as never} size={16} color="#fff" />
-                  <Text style={s.pillText}>{sv.label}</Text>
-                </View>
+            <Entrance index={0} from="zoom">
+              <Floating>
+                <BrandGradient style={[s.logo, shadow.glow(colors.primary)]}><Ionicons name="navigate" size={36} color="#fff" /></BrandGradient>
+              </Floating>
+            </Entrance>
+            <Entrance index={1}><Text style={[font.display, { fontSize: wide ? 56 : 42, marginTop: 20 }]}>Antar Aja</Text></Entrance>
+            <Entrance index={2}><Text style={s.tag}>Ojek, mobil, makanan, dan kirim barang.{'\n'}Satu aplikasi untuk semua kebutuhan harian.</Text></Entrance>
+            <View style={s.pills}>
+              {SERVICES.filter((x) => x.id !== 'pay').map((sv, i) => (
+                <Entrance key={sv.id} index={3 + i} from="zoom">
+                  <Glass variant="strong" radius={radius.full} shadowed={false}>
+                    <View style={s.pill}>
+                      <View style={[s.pillDot, { backgroundColor: sv.color }]} />
+                      <Text style={s.pillText}>{sv.label}</Text>
+                    </View>
+                  </Glass>
+                </Entrance>
               ))}
             </View>
           </View>
-          <View style={[s.card, wide && { width: 380 }]}>
-            <Text style={s.cardTitle}>Mulai sekarang</Text>
-            <Text style={s.cardSub}>Daftar gratis, pesan dalam hitungan detik.</Text>
-            <Button title="Buat Akun" size="lg" onPress={() => router.push('/(auth)/register')} />
-            <Button title="Masuk" size="lg" variant="outline" onPress={() => router.push('/(auth)/login')} />
-            <Text style={s.foot}>Ingin jadi mitra driver atau merchant? Daftar akun lalu buka menu Akun.</Text>
-          </View>
+          <Entrance index={5} style={wide ? { width: 400 } : undefined}>
+            <Glass variant="strong" radius={radius.xl} padded>
+              <View style={{ gap: 12, padding: 4 }}>
+                <Text style={font.h2}>Mulai sekarang</Text>
+                <Text style={font.small}>Daftar gratis, pesan dalam hitungan detik.</Text>
+                <Button title="Buat Akun" size="lg" onPress={() => router.push('/(auth)/register')} />
+                <Button title="Masuk" size="lg" variant="glass" onPress={() => router.push('/(auth)/login')} />
+                <Text style={[font.tiny, { textAlign: 'center' }]}>Ingin jadi mitra driver atau merchant? Daftar akun lalu buka menu Akun.</Text>
+              </View>
+            </Glass>
+          </Entrance>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
+/** Melayang naik-turun perlahan (dimatikan saat reduce motion). */
+function Floating({ children }: { children: React.ReactNode }) {
+  const y = useSharedValue(0);
+  const reduce = useReducedMotion();
+  useEffect(() => { if (!reduce) y.value = withDelay(400, withRepeat(withTiming(-8, { duration: 1800, easing: Easing.inOut(Easing.sin) }), -1, true)); }, [y, reduce]);
+  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  return <Animated.View style={[a, { alignSelf: 'flex-start' }]}>{children}</Animated.View>;
+}
+
+export { PressableScale };
+
 const s = StyleSheet.create({
   wrap: { flex: 1, padding: 24, justifyContent: 'space-between', width: '100%', maxWidth: 1100, alignSelf: 'center' },
-  logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  brand: { fontSize: 40, fontWeight: '900', color: '#fff', letterSpacing: -1 },
-  tag: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 10, lineHeight: 24 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full },
-  pillText: { color: '#fff', fontWeight: '600', fontSize: 13 },
-  card: { backgroundColor: '#fff', borderRadius: radius.xl, padding: 22, gap: 12 },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
-  cardSub: { color: colors.textSecondary, marginBottom: 4 },
-  foot: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 4 },
+  logo: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  tag: { fontSize: 16, color: colors.textSecondary, marginTop: 10, lineHeight: 24 },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  pillDot: { width: 8, height: 8, borderRadius: 4 },
+  pillText: { color: colors.text, fontWeight: '700', fontSize: 13 },
 });

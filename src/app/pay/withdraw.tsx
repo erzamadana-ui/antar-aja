@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, Input, Button, toast } from '@/components/ui';
+import { Entrance } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { rpc } from '@/lib/supabase';
 import { font } from '@/lib/theme';
@@ -29,17 +30,21 @@ export default function Withdraw() {
   return (
     <Screen title="Tarik Saldo" back footer={<Button title="Ajukan Penarikan" size="lg" onPress={submit} />}>
       <View style={{ gap: 16 }}>
-        <Card>
-          <Text style={font.tiny}>Saldo tersedia</Text>
-          <Text style={font.h1}>{rupiah(wallet?.balance ?? 0)}</Text>
-        </Card>
-        <Card style={{ gap: 12 }}>
-          <Input label="Nominal (min. Rp20.000)" keyboardType="number-pad" value={f.amount} onChangeText={(v) => set('amount')(v.replace(/\D/g, ''))} icon="cash-outline" />
-          <Input label="Bank" placeholder="BCA / BRI / Mandiri / BNI" value={f.bank} onChangeText={set('bank')} icon="business-outline" />
-          <Input label="Nomor rekening" keyboardType="number-pad" value={f.account} onChangeText={set('account')} icon="card-outline" />
-          <Input label="Nama pemilik rekening" value={f.name} onChangeText={set('name')} icon="person-outline" />
-          <Text style={font.tiny}>Saldo langsung ditahan saat pengajuan. Jika ditolak, saldo dikembalikan otomatis.</Text>
-        </Card>
+        <Entrance index={0}>
+          <Card>
+            <Text style={font.tiny}>Saldo tersedia</Text>
+            <Text style={font.h1}>{rupiah(wallet?.balance ?? 0)}</Text>
+          </Card>
+        </Entrance>
+        <Entrance index={1}>
+          <Card style={{ gap: 12 }}>
+            <Input label="Nominal (min. Rp20.000)" keyboardType="number-pad" value={f.amount} onChangeText={(v) => set('amount')(v.replace(/\D/g, ''))} icon="cash-outline" />
+            <Input label="Bank" placeholder="BCA / BRI / Mandiri / BNI" value={f.bank} onChangeText={set('bank')} icon="business-outline" />
+            <Input label="Nomor rekening" keyboardType="number-pad" value={f.account} onChangeText={set('account')} icon="card-outline" />
+            <Input label="Nama pemilik rekening" value={f.name} onChangeText={set('name')} icon="person-outline" />
+            <Text style={font.tiny}>Saldo langsung ditahan saat pengajuan. Jika ditolak, saldo dikembalikan otomatis.</Text>
+          </Card>
+        </Entrance>
       </View>
     </Screen>
   );

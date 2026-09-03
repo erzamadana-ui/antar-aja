@@ -1,24 +1,29 @@
-import React from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from 'react-native-reanimated';
 import { RequireAuth } from '@/components/AuthGate';
+import { AmbientBackground, BrandGradient } from '@/components/glass';
+import { PressableScale } from '@/components/motion';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
-import { colors, font } from '@/lib/theme';
+import { colors, font, glass, motion, radius, shadow } from '@/lib/theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-const NAV: { href: string; label: string; icon: IconName }[] = [
-  { href: '/(admin)', label: 'Dashboard', icon: 'grid-outline' },
-  { href: '/(admin)/orders', label: 'Pesanan', icon: 'receipt-outline' },
-  { href: '/(admin)/drivers', label: 'Driver', icon: 'bicycle-outline' },
-  { href: '/(admin)/merchants', label: 'Merchant', icon: 'storefront-outline' },
-  { href: '/(admin)/users', label: 'Pengguna', icon: 'people-outline' },
-  { href: '/(admin)/finance', label: 'Keuangan', icon: 'cash-outline' },
-  { href: '/(admin)/pricing', label: 'Tarif & Promo', icon: 'pricetags-outline' },
-  { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline' },
+const NAV: { href: string; label: string; icon: IconName; iconActive: IconName }[] = [
+  { href: '/(admin)', label: 'Dashboard', icon: 'grid-outline', iconActive: 'grid' },
+  { href: '/(admin)/orders', label: 'Pesanan', icon: 'receipt-outline', iconActive: 'receipt' },
+  { href: '/(admin)/drivers', label: 'Driver', icon: 'bicycle-outline', iconActive: 'bicycle' },
+  { href: '/(admin)/merchants', label: 'Merchant', icon: 'storefront-outline', iconActive: 'storefront' },
+  { href: '/(admin)/users', label: 'Pengguna', icon: 'people-outline', iconActive: 'people' },
+  { href: '/(admin)/finance', label: 'Keuangan', icon: 'cash-outline', iconActive: 'cash' },
+  { href: '/(admin)/pricing', label: 'Tarif & Promo', icon: 'pricetags-outline', iconActive: 'pricetags' },
+  { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline', iconActive: 'settings' },
 ];
+const ITEM_H = 44;
 
 export default function AdminLayout() {
   const { width } = useWindowDimensions();
@@ -27,57 +32,91 @@ export default function AdminLayout() {
   const router = useRouter();
   const { profile, signOut } = useAuth();
   const setMode = useMode((s) => s.setMode);
+  const reduce = useReducedMotion();
   const isActive = (href: string) => { const p = href.replace('/(admin)', '') || '/'; return pathname === p || (p !== '/' && pathname.startsWith(p)); };
-
-  const items = NAV.map((n) => {
-    const active = isActive(n.href);
-    return (
-      <Pressable key={n.href} onPress={() => router.replace(n.href as never)} style={[wide ? s.side : s.chip, active && (wide ? s.sideActive : s.chipActive)]}>
-        <Ionicons name={n.icon} size={18} color={active ? (wide ? '#fff' : colors.primary) : wide ? 'rgba(255,255,255,0.7)' : colors.textSecondary} />
-        <Text style={{ color: active ? (wide ? '#fff' : colors.primary) : wide ? 'rgba(255,255,255,0.75)' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>{n.label}</Text>
-      </Pressable>
-    );
-  });
+  const activeIdx = Math.max(0, NAV.findIndex((n) => isActive(n.href)));
+  const y = useSharedValue(activeIdx * (ITEM_H + 4));
+  useEffect(() => { y.value = reduce ? activeIdx * (ITEM_H + 4) : withSpring(activeIdx * (ITEM_H + 4), motion.spring); }, [activeIdx, reduce, y]);
+  const indicator = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
 
   return (
     <RequireAuth role="admin">
-      <SafeAreaView style={{ flex: 1, backgroundColor: wide ? colors.primaryDark : colors.surface }} edges={['top']}>
-        <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', backgroundColor: colors.bg }}>
-          {wide ? (
-            <View style={s.sidebar}>
-              <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>Antar Aja</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>Panel Admin</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <AmbientBackground tint="teal" />
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+          <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column' }}>
+            {wide ? (
+              <View style={s.sidebarWrap}>
+                <View style={[s.sidebar, shadow.card]}>
+                  {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
+                  <View style={s.brand}>
+                    <BrandGradient style={[s.logo, shadow.glow(colors.primary)]}><Ionicons name="navigate" size={18} color="#fff" /></BrandGradient>
+                    <View><Text style={{ color: colors.text, fontSize: 17, fontWeight: '900' }}>Antar Aja</Text><Text style={font.tiny}>Panel Admin</Text></View>
+                  </View>
+                  <View style={{ paddingHorizontal: 10, gap: 4 }}>
+                    <Animated.View style={[s.indicator, indicator]} />
+                    {NAV.map((n) => {
+                      const active = isActive(n.href);
+                      return (
+                        <Pressable key={n.href} onPress={() => router.replace(n.href as never)} style={(st) => [s.side, !active && (st as { hovered?: boolean }).hovered && { backgroundColor: 'rgba(11,31,42,0.04)' }]}>
+                          <Ionicons name={active ? n.iconActive : n.icon} size={18} color={active ? colors.primary : colors.textSecondary} />
+                          <Text style={{ color: active ? colors.primary : colors.textSecondary, fontWeight: active ? '800' : '600', fontSize: 14 }}>{n.label}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <View style={{ flex: 1 }} />
+                  <View style={s.footer}>
+                    <Text style={{ color: colors.text, fontWeight: '700' }} numberOfLines={1}>{profile?.full_name}</Text>
+                    <PressableScale haptic={false} onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }} style={s.footBtn}><Ionicons name="swap-horizontal" size={16} color={colors.primary} /><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>Mode pelanggan</Text></PressableScale>
+                    <PressableScale haptic={false} onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} style={s.footBtn}><Ionicons name="log-out-outline" size={16} color={colors.danger} /><Text style={{ color: colors.danger, fontWeight: '700', fontSize: 13 }}>Keluar</Text></PressableScale>
+                  </View>
+                </View>
               </View>
-              {items}
-              <View style={{ flex: 1 }} />
-              <View style={{ padding: 16, gap: 8 }}>
-                <Text style={{ color: '#fff', fontWeight: '600' }}>{profile?.full_name}</Text>
-                <Pressable onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }}><Text style={{ color: 'rgba(255,255,255,0.7)' }}>↔ Mode pelanggan</Text></Pressable>
-                <Pressable onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }}><Text style={{ color: '#FCA5A5' }}>Keluar</Text></Pressable>
+            ) : (
+              <View style={s.topbar}>
+                {Platform.OS !== 'android' && <BlurView intensity={glass.blur} tint="light" style={StyleSheet.absoluteFill} />}
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, gap: 10 }}>
+                  <BrandGradient style={s.logoSm}><Ionicons name="navigate" size={14} color="#fff" /></BrandGradient>
+                  <Text style={[font.h3, { flex: 1 }]}>Panel Admin</Text>
+                  <PressableScale onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }} scaleTo={0.9} style={s.iconBtn}><Ionicons name="swap-horizontal" size={20} color={colors.primary} /></PressableScale>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, padding: 10 }}>
+                  {NAV.map((n) => {
+                    const active = isActive(n.href);
+                    return (
+                      <PressableScale key={n.href} haptic={false} scaleTo={0.94} onPress={() => router.replace(n.href as never)} style={[s.chip, active && s.chipActive]}>
+                        <Ionicons name={active ? n.iconActive : n.icon} size={16} color={active ? '#fff' : colors.textSecondary} />
+                        <Text style={{ color: active ? '#fff' : colors.textSecondary, fontWeight: '700', fontSize: 13 }}>{n.label}</Text>
+                      </PressableScale>
+                    );
+                  })}
+                </ScrollView>
               </View>
-            </View>
-          ) : (
-            <View style={s.topbar}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 6 }}>
-                <Text style={[font.h3, { flex: 1 }]}>Panel Admin</Text>
-                <Pressable onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }}><Ionicons name="swap-horizontal" size={22} color={colors.primary} /></Pressable>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, padding: 10 }}>{items}</ScrollView>
-            </View>
-          )}
-          <View style={{ flex: 1 }}><Slot /></View>
-        </View>
-      </SafeAreaView>
+            )}
+            {/* Transisi halaman: fade + geser naik halus setiap pindah rute */}
+            <Animated.View key={pathname} entering={reduce ? undefined : FadeIn.duration(motion.base)} style={{ flex: 1 }}>
+              <Slot />
+            </Animated.View>
+          </View>
+        </SafeAreaView>
+      </View>
     </RequireAuth>
   );
 }
 
 const s = StyleSheet.create({
-  sidebar: { width: 230, backgroundColor: colors.primaryDark },
-  side: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 12 },
-  sideActive: { backgroundColor: 'rgba(255,255,255,0.14)', borderLeftWidth: 3, borderLeftColor: colors.accent },
-  topbar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.bg },
-  chipActive: { backgroundColor: colors.primaryLight },
+  sidebarWrap: { width: 250, padding: 12, paddingRight: 0 },
+  sidebar: { flex: 1, borderRadius: radius.xl, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.62)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', paddingBottom: 8 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 18 },
+  logo: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  logoSm: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  indicator: { position: 'absolute', left: 10, right: 10, top: 0, height: ITEM_H, borderRadius: radius.md, backgroundColor: colors.primary + '1A', borderWidth: 1, borderColor: colors.primary + '33' },
+  side: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, height: ITEM_H, borderRadius: radius.md },
+  footer: { padding: 14, gap: 6, borderTopWidth: 1, borderTopColor: glass.border, marginTop: 8 },
+  footBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
+  topbar: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.55)', borderBottomWidth: 1, borderBottomColor: glass.border, overflow: 'hidden' },
+  iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadow.glow(colors.primary) },
 });
