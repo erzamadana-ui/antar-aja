@@ -1,0 +1,49 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: Prebuild proyek Android (Expo)
+        env:
+          EXPO_NO_TELEMETRY: 1
+          CI: 1
+        run: npx expo prebuild --platform android --no-install
+      - name: Build APK release (ditandatangani keystore debug — cukup untuk distribusi langsung/uji)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../antar-aja-${{ github.run_number }}.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: antar-aja-apk
+          path: antar-aja-*.apk
+      - name: Terbitkan sebagai GitHub Release (link unduh permanen)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Antar Aja APK build ${{ github.run_number }}
+          body: |
+            APK Android Antar Aja. Unduh `antar-aja-${{ github.run_number }}.apk`, buka di HP Android, izinkan "instal dari sumber tidak dikenal".
+            Backend: Supabase (lihat README). Untuk Play Store gunakan `eas build -p android --profile production`.
+          files: antar-aja-*.apk
