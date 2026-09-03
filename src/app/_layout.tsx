@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
+import { useI18n, applyDirection } from '@/lib/i18n';
+import { IncomingCallOverlay } from '@/components/call/IncomingCall';
 import { ToastHost, Loading } from '@/components/ui';
 import { AmbientBackground } from '@/components/glass';
 import { colors } from '@/lib/theme';
@@ -18,8 +20,11 @@ export default function RootLayout() {
   const init = useAuth((s) => s.init);
   const modeLoaded = useMode((s) => s.loaded);
   const loadMode = useMode((s) => s.load);
+  const loadLocale = useI18n((s) => s.load);
+  const locale = useI18n((s) => s.locale);
 
-  useEffect(() => { init(); loadMode(); }, [init, loadMode]);
+  useEffect(() => { init(); loadMode(); loadLocale(); }, [init, loadMode, loadLocale]);
+  useEffect(() => { applyDirection(locale); }, [locale]);
   useEffect(() => { if (ready && modeLoaded) SplashScreen.hideAsync().catch(() => {}); }, [ready, modeLoaded]);
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -55,8 +60,11 @@ export default function RootLayout() {
               <Stack.Screen name="place-picker" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom', presentation: 'card' }} />
               <Stack.Screen name="food/checkout" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
               <Stack.Screen name="order/[id]/chat" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
+              <Stack.Screen name="call/[id]" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
+              <Stack.Screen name="pay/gateway" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
             </Stack>
           )}
+          {ready && <IncomingCallOverlay />}
           <ToastHost />
         </View>
       </SafeAreaProvider>

@@ -54,7 +54,7 @@ export default function AdminDashboard() {
             {Object.entries(st?.orders_by_service ?? {}).map(([k, v]) => (
               <Row key={k} between><Text style={font.body}>{serviceLabel[k as keyof typeof serviceLabel] ?? k}</Text><Badge text={String(v)} /></Row>
             ))}
-            {!st || Object.keys(st.orders_by_service).length === 0 ? <Text style={font.small}>Belum ada data.</Text> : null}
+            {!st || Object.keys(st.orders_by_service ?? {}).length === 0 ? <Text style={font.small}>Belum ada data.</Text> : null}
           </View>
         </Card>
       </Row>

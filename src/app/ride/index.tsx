@@ -127,6 +127,7 @@ export default function RideScreen() {
             <Row gap={8} style={{ flexWrap: 'wrap' }}>
               <Badge text={loadingEst || !route ? 'Menghitung rute…' : `${km(route.distance_km)} · ${minutes(route.duration_min)}${route.estimated ? ' (perkiraan)' : ''}`} color={colors.info} />
               {nearby.length > 0 && <Badge text={`${nearby.length} driver di dekat Anda`} color={colors.success} />}
+              {fare?.session && fare.session.multiplier !== 1 && <Badge text={`${fare.session.level === 'high' ? 'Jam sibuk' : 'Jam sepi'} ${fare.session.multiplier}×`} color={fare.session.level === 'high' ? colors.danger : colors.success} />}
             </Row>
             {fare && (
               <PressableScale onPress={() => setShowDetails(!showDetails)} scaleTo={0.99} haptic={false}>

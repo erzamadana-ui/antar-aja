@@ -11,6 +11,7 @@ import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, with
 import { colors, radius, shadow, spacing, font, glass, motion } from '@/lib/theme';
 import { initials } from '@/lib/format';
 import { PressableScale } from '@/components/motion';
+import { LogoPulse } from '@/components/Logo';
 import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -167,11 +168,11 @@ export function IconCircle({ name, color = colors.primary, size = 44, bg }: { na
     </View>
   );
 }
-export function Loading({ text }: { text?: string }) {
+export function Loading({ text, compact }: { text?: string; compact?: boolean }) {
+  if (compact) return <View style={{ alignItems: 'center', padding: 16 }}><ActivityIndicator color={colors.primary} /></View>;
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
-      <ActivityIndicator size="large" color={colors.primary} />
-      {text ? <Text style={font.small}>{text}</Text> : null}
+      <LogoPulse size={64} text={text} />
     </View>
   );
 }

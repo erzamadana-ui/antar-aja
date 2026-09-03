@@ -1,7 +1,10 @@
 export type UserRole = 'customer' | 'driver' | 'merchant' | 'admin';
 export type VehicleType = 'motor' | 'car';
 export type ApprovalStatus = 'pending' | 'approved' | 'suspended' | 'rejected';
-export type ServiceType = 'ride_motor' | 'ride_car' | 'food' | 'send';
+export type ServiceType = 'ride_motor' | 'ride_car' | 'food' | 'send' | 'shop';
+export type Locale = 'id' | 'en' | 'zh' | 'ar';
+export interface OrderExtra { id: string; kind: 'parking' | 'toll' | 'waiting' | 'other'; amount: number; note?: string | null; status: 'pending' | 'approved' | 'rejected'; created_at: string; responded_at?: string }
+export interface ShoppingItem { name: string; qty: number; note?: string }
 export type OrderStatus = 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled';
 export type MerchantOrderStatus = 'pending' | 'accepted' | 'ready' | 'rejected';
 export type PaymentMethod = 'cash' | 'wallet';
@@ -11,7 +14,7 @@ export interface Place extends LatLng { address: string; name?: string }
 
 export interface Profile {
   id: string; full_name: string; phone: string | null; email: string | null; avatar_url: string | null;
-  role: UserRole; is_active: boolean; created_at: string;
+  role: UserRole; is_active: boolean; created_at: string; locale?: Locale;
 }
 export interface Wallet { user_id: string; balance: number; updated_at: string }
 export interface WalletTx {
@@ -57,13 +60,15 @@ export interface Order {
   driver_earning: number; merchant_earning: number; payment_method: PaymentMethod; payment_status: 'unpaid' | 'paid' | 'refunded';
   notes: string | null; recipient_name: string | null; recipient_phone: string | null;
   package_details: { type?: string; weight?: string; description?: string } | null;
+  shopping_list?: ShoppingItem[] | null; est_budget?: number; shop_store?: string | null; receipt_url?: string | null;
+  tip?: number; extras?: OrderExtra[]; extras_total?: number;
   cancel_reason: string | null; created_at: string; accepted_at: string | null; arrived_at: string | null; started_at: string | null;
   completed_at: string | null; cancelled_at: string | null;
   // relasi opsional
   driver?: Driver | null; customer?: Profile | null; merchant?: Merchant | null; order_items?: OrderItem[];
 }
 
-export interface FareEstimate { distance_km: number; straight_km: number; fare: number; platform_fee: number; total: number; duration_min: number }
+export interface FareEstimate { distance_km: number; straight_km: number; fare: number; platform_fee: number; total: number; duration_min: number; session?: { name: string; level: 'low' | 'middle' | 'high'; multiplier: number } | null }
 
 export interface Pricing {
   service: ServiceType; base_fare: number; per_km: number; per_min: number; min_fare: number; platform_fee: number;
@@ -82,3 +87,8 @@ export interface AvailableOrder {
   fare_delivery: number; items_subtotal: number; total: number; driver_earning: number; payment_method: PaymentMethod;
   merchant_status: MerchantOrderStatus | null; created_at: string; distance_to_pickup_km: number; merchant_name: string | null;
 }
+
+export interface PricingSession { id: string; name: string; level: 'low' | 'middle' | 'high'; days: number[]; start_time: string; end_time: string; multiplier: number; driver_bonus_pct: number; services: ServiceType[] | null; active: boolean; note: string | null }
+export interface CompetitorPrice { id: string; competitor: string; service: ServiceType; base_fare: number; per_km: number; min_fare: number; level: 'low' | 'middle' | 'high'; city: string | null; source: string | null; captured_at: string; note: string | null }
+export interface Payment { id: string; user_id: string; order_id: string | null; purpose: 'topup' | 'order'; amount: number; method: string; provider: string; status: 'pending' | 'settlement' | 'expire' | 'cancel' | 'deny' | 'failure'; external_id: string | null; snap_token: string | null; redirect_url: string | null; created_at: string }
+export interface CallLog { id: string; order_id: string | null; caller_id: string; callee_id: string; status: 'ringing' | 'answered' | 'missed' | 'declined' | 'ended'; started_at: string; answered_at: string | null; ended_at: string | null }

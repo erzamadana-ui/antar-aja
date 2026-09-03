@@ -42,6 +42,14 @@ export default function TopUp() {
     <Screen title="Top Up AntarPay" back footer={<Button title={`Kirim Permintaan Top Up ${rupiah(Number(amount.replace(/\D/g, '')) || 0)}`} size="lg" onPress={submit} />}>
       <View style={{ gap: 16 }}>
         <Entrance index={0}>
+          <Pressable onPress={() => router.push({ pathname: '/pay/gateway', params: { amount: amount || '50000' } } as never)} style={s.gw}>
+            <View style={s.gwIcon}><Ionicons name="flash" size={20} color="#fff" /></View>
+            <View style={{ flex: 1 }}><Text style={{ fontWeight: '800', color: colors.text }}>Top up instan — GoPay, OVO, DANA, ShopeePay, QRIS, VA</Text><Text style={font.tiny}>Saldo langsung masuk otomatis lewat payment gateway.</Text></View>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          </Pressable>
+          <Text style={[font.tiny, { textAlign: 'center', marginTop: 10 }]}>— atau transfer bank manual (verifikasi admin) —</Text>
+        </Entrance>
+        <Entrance index={1}>
           <Card>
             <Text style={font.label}>Nominal</Text>
             <Input value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} keyboardType="number-pad" icon="cash-outline" containerStyle={{ marginTop: 8 }} />
@@ -81,6 +89,8 @@ export default function TopUp() {
 }
 
 const s = StyleSheet.create({
+  gw: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: colors.primary + '14', borderWidth: 1.5, borderColor: colors.primary + '44' },
+  gwIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   bank: { backgroundColor: colors.primaryLight, borderRadius: radius.md, padding: 12, marginTop: 8 },
   copy: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   upload: { alignItems: 'center', gap: 6, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.primary, borderRadius: radius.md, padding: 18, marginTop: 8 },

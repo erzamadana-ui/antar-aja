@@ -21,6 +21,7 @@ const NAV: { href: string; label: string; icon: IconName; iconActive: IconName }
   { href: '/(admin)/users', label: 'Pengguna', icon: 'people-outline', iconActive: 'people' },
   { href: '/(admin)/finance', label: 'Keuangan', icon: 'cash-outline', iconActive: 'cash' },
   { href: '/(admin)/pricing', label: 'Tarif & Promo', icon: 'pricetags-outline', iconActive: 'pricetags' },
+  { href: '/(admin)/pricing-intel', label: 'Intelijen Harga', icon: 'trending-up-outline', iconActive: 'trending-up' },
   { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline', iconActive: 'settings' },
 ];
 const ITEM_H = 44;
@@ -33,7 +34,7 @@ export default function AdminLayout() {
   const { profile, signOut } = useAuth();
   const setMode = useMode((s) => s.setMode);
   const reduce = useReducedMotion();
-  const isActive = (href: string) => { const p = href.replace('/(admin)', '') || '/'; return pathname === p || (p !== '/' && pathname.startsWith(p)); };
+  const isActive = (href: string) => { const p = href.replace('/(admin)', '') || '/'; return pathname === p || (p !== '/' && pathname.startsWith(p + '/')); };
   const activeIdx = Math.max(0, NAV.findIndex((n) => isActive(n.href)));
   const y = useSharedValue(activeIdx * (ITEM_H + 4));
   useEffect(() => { y.value = reduce ? activeIdx * (ITEM_H + 4) : withSpring(activeIdx * (ITEM_H + 4), motion.spring); }, [activeIdx, reduce, y]);

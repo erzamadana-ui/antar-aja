@@ -47,6 +47,8 @@ const config: ExpoConfig = {
     ['expo-location', { locationWhenInUsePermission: 'Antar Aja memakai lokasi Anda untuk titik jemput dan pelacakan.' }],
     ['expo-image-picker', { photosPermission: 'Galeri dipakai untuk unggah foto & bukti transfer.' }],
     ['expo-splash-screen', { backgroundColor: '#0E7C7B', image: './assets/images/splash-icon.png', imageWidth: 140 }],
+    ['@config-plugins/react-native-webrtc', { cameraPermission: 'Kamera tidak dipakai untuk panggilan suara.', microphonePermission: 'Mikrofon dipakai untuk panggilan suara dalam aplikasi.' }],
+    'expo-localization',
   ],
   experiments: { typedRoutes: false, reactCompiler: true, baseUrl },
   extra: { eas: { projectId: process.env.EAS_PROJECT_ID ?? '' } },

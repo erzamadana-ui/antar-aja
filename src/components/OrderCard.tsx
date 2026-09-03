@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Row, Badge } from '@/components/ui';
 import { PressableScale, LiveDot, ProgressBar } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
+import { ServiceArt } from '@/components/ServiceArt';
 import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah, statusLabel, statusColor, formatDate, serviceLabel } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
@@ -20,7 +19,7 @@ export function OrderCard({ order, href, compact }: { order: Order; href?: strin
   return (
     <PressableScale onPress={() => router.push((href ?? `/order/${order.id}`) as never)} scaleTo={0.98} style={[s.card, active && shadow.glow(def.color)]}>
       <Row gap={12}>
-        <BrandGradient colors={[def.color, def.color + 'BB']} style={s.icon}><Ionicons name={def.icon as never} size={20} color="#fff" /></BrandGradient>
+        <ServiceArt kind={def.art} color={def.color} size={46} glow={false} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Row between>
             <Text style={[font.h3, { fontSize: 15 }]}>{serviceLabel[order.service]}</Text>
@@ -49,6 +48,5 @@ export function OrderCard({ order, href, compact }: { order: Order; href?: strin
 
 const s = StyleSheet.create({
   card: { marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 14, borderWidth: 1, borderColor: glass.border, ...shadow.card },
-  icon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4 },
 });

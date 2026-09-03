@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { Screen, Input, Button, Icon, toast } from '@/components/ui';
 import { Glass } from '@/components/glass';
 import { Entrance } from '@/components/motion';
+import { LogoLockup } from '@/components/Logo';
+import { useT } from '@/lib/i18n';
 import { useAuth } from '@/store/auth';
 import { colors, font } from '@/lib/theme';
 
@@ -14,6 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const t = useT();
 
   const submit = async () => {
     setErr(null);
@@ -23,19 +26,20 @@ export default function Login() {
   };
 
   return (
-    <Screen title="Masuk" back maxWidth={480}>
-      <Entrance index={0}><Text style={[font.h1, { marginTop: 8 }]}>Selamat datang kembali</Text><Text style={font.small}>Masuk untuk mulai memesan.</Text></Entrance>
-      <Entrance index={1}><Glass variant="strong" padded style={{ marginTop: 16 }}><View style={{ gap: 14 }}>
-        <Input label="Email" icon="mail-outline" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="nama@email.com" textContentType="emailAddress" />
-        <Input label="Kata sandi" icon="lock-closed-outline" value={password} onChangeText={setPassword} secureTextEntry={!show} placeholder="••••••••" onSubmitEditing={submit}
+    <Screen title={t('login')} back maxWidth={480}>
+      <Entrance index={0} from="zoom" style={{ alignItems: 'center', marginTop: 8, marginBottom: 6 }}><LogoLockup size={56} /></Entrance>
+      <Entrance index={1}><Text style={[font.h1, { marginTop: 8 }]}>{t('welcome_back')}</Text><Text style={font.small}>{t('login_sub')}</Text></Entrance>
+      <Entrance index={2}><Glass variant="strong" padded style={{ marginTop: 16 }}><View style={{ gap: 14 }}>
+        <Input label={t('email')} icon="mail-outline" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="nama@email.com" textContentType="emailAddress" />
+        <Input label={t('password')} icon="lock-closed-outline" value={password} onChangeText={setPassword} secureTextEntry={!show} placeholder="••••••••" onSubmitEditing={submit}
           right={<Pressable onPress={() => setShow(!show)} hitSlop={8}><Icon name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} /></Pressable>} />
         {err ? <Text style={{ color: colors.danger }}>{err}</Text> : null}
-        <Button title="Masuk" size="lg" onPress={submit} />
+        <Button title={t('login')} size="lg" onPress={submit} />
         <Pressable onPress={() => router.push('/(auth)/register')} style={{ alignItems: 'center', padding: 8 }}>
-          <Text style={font.small}>Belum punya akun? <Text style={{ color: colors.primary, fontWeight: '700' }}>Daftar</Text></Text>
+          <Text style={font.small}>{t('no_account')} <Text style={{ color: colors.primary, fontWeight: '700' }}>{t('register')}</Text></Text>
         </Pressable>
       </View></Glass></Entrance>
-      <Entrance index={2}>
+      <Entrance index={3}>
         <View style={{ backgroundColor: colors.accentLight, padding: 12, borderRadius: 12, marginTop: 16 }}>
           <Text style={{ fontSize: 12, color: colors.warning, fontWeight: '700', marginBottom: 4 }}>Akun demo (kata sandi: AntarAja#2026)</Text>
           {['customer@antaraja.id — pelanggan', 'driver@antaraja.id — mitra driver (motor)', 'driver2@antaraja.id — mitra driver (mobil)', 'merchant@antaraja.id — merchant', 'admin@antaraja.id — admin'].map((t) => (

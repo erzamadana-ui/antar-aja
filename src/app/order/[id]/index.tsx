@@ -11,6 +11,7 @@ import { MapScreen } from '@/components/MapScreen';
 import { Radar, ProgressBar, LiveDot, PressableScale } from '@/components/motion';
 import { AmbientBackground } from '@/components/glass';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, driverSubtitle } from '@/components/OrderDetails';
+import { TipCard, ExtrasApproval } from '@/components/TipExtras';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { rpc, supabase } from '@/lib/supabase';
@@ -48,7 +49,7 @@ export default function OrderTracking() {
   const markers = useMemo<MapMarker[]>(() => {
     if (!order) return [];
     const m: MapMarker[] = [
-      { id: 'pickup', lat: order.pickup_lat, lng: order.pickup_lng, kind: order.service === 'food' ? 'merchant' : 'pickup' },
+      { id: 'pickup', lat: order.pickup_lat, lng: order.pickup_lng, kind: order.service === 'food' || order.service === 'shop' ? 'merchant' : 'pickup' },
       { id: 'dropoff', lat: order.dropoff_lat, lng: order.dropoff_lng, kind: 'dropoff' },
     ];
     if (driver?.lat && driver.lng && ['accepted', 'arrived', 'in_progress'].includes(order.status)) m.push({ id: 'driver', lat: driver.lat, lng: driver.lng, kind: driver.vehicle_type === 'car' ? 'car' : 'motor', heading: driver.heading });
@@ -118,10 +119,12 @@ export default function OrderTracking() {
 
         {driver && active && (
           <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut}>
-            <PersonCard name={driver.profile?.full_name} subtitle={driverSubtitle(driver)} phone={driver.profile?.phone} avatar={driver.profile?.avatar_url} rating={driver.rating_avg} ratingCount={driver.rating_count}
-              onChat={() => router.push(`/order/${id}/chat` as never)} />
+            <PersonCard name={driver.profile?.full_name} subtitle={driverSubtitle(driver)} avatar={driver.profile?.avatar_url} rating={driver.rating_avg} ratingCount={driver.rating_count}
+              onChat={() => router.push(`/order/${id}/chat` as never)}
+              callPeer={driver.profile ? { id: driver.id, name: driver.profile.full_name, avatar: driver.profile.avatar_url, role: 'driver' } : null} orderId={order.id} />
           </Animated.View>
         )}
+        {active && <ExtrasApproval order={order} onDone={reload} />}
         {order.status === 'completed' && driver && (
           <Animated.View entering={FadeInDown.delay(120).duration(motion.slow)} style={s.rateBox}>
             <Text style={font.h3}>Beri penilaian</Text>
@@ -130,6 +133,7 @@ export default function OrderTracking() {
             <TextInput placeholder="Tulis ulasan (opsional)" placeholderTextColor={colors.textMuted} value={comment} onChangeText={setComment} style={s.comment} />
           </Animated.View>
         )}
+        {driver && order.status !== 'cancelled' && order.status !== 'searching' && <TipCard order={order} onDone={reload} />}
 
         <View style={s.block}>
           <RouteBlock order={order} />

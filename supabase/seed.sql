@@ -92,3 +92,17 @@ insert into promos (code, description, discount_type, value, max_discount, min_t
 insert into saved_places (user_id, label, address, lat, lng) values
   ('a0000000-0000-4000-8000-000000000002', 'Rumah', 'Jl. Sudirman No. 45, Padang', -0.9471, 100.4172),
   ('a0000000-0000-4000-8000-000000000002', 'Kantor', 'Jl. Khatib Sulaiman, Padang', -0.9250, 100.3720);
+
+-- Contoh harga kompetitor (untuk halaman intelijen harga admin) — perbarui dengan survei nyata
+insert into competitor_prices (competitor, service, base_fare, per_km, min_fare, level, source, note)
+select * from (values
+ ('Kompetitor A','ride_motor'::service_type,0,2600,10000,'middle','Contoh referensi — perbarui dengan survei aplikasi kompetitor','Data contoh'),
+ ('Kompetitor B','ride_motor'::service_type,0,2500,9500,'middle','Contoh referensi — perbarui dengan survei aplikasi kompetitor','Data contoh'),
+ ('Kompetitor A','ride_motor'::service_type,0,3400,13000,'high','Contoh referensi (jam sibuk)','Data contoh'),
+ ('Kompetitor A','ride_car'::service_type,0,5000,20000,'middle','Contoh referensi','Data contoh'),
+ ('Kompetitor B','ride_car'::service_type,0,4800,19000,'middle','Contoh referensi','Data contoh'),
+ ('Kompetitor A','food'::service_type,0,2500,9000,'middle','Contoh referensi (ongkir)','Data contoh'),
+ ('Kompetitor A','send'::service_type,0,2700,10000,'middle','Contoh referensi','Data contoh'),
+ ('Kompetitor A','shop'::service_type,3000,2700,12000,'middle','Contoh referensi (jasa belanja)','Data contoh')
+) v(competitor, service, base_fare, per_km, min_fare, level, source, note)
+where not exists (select 1 from competitor_prices);

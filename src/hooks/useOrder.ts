@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Driver, Order, OrderEvent, OrderMessage, Profile } from '@/lib/types';
 
-const ORDER_SELECT = '*, order_items(*), merchant:merchants(id,name,address,image_url,lat,lng,rating_avg,prep_minutes)';
+const ORDER_SELECT = '*, order_items(*), merchant:merchants(id,name,address,image_url,lat,lng,rating_avg,prep_minutes,owner_id)';
 
 /** Ambil satu order + relasi, dan ikuti perubahannya secara realtime (fallback polling 8 dtk). */
 export function useOrder(orderId: string | undefined) {

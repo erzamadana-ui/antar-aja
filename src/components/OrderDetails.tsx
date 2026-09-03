@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, Linking } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Row, Avatar, Stars, Badge, Divider } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
+import { CallButton } from '@/components/call/IncomingCall';
+import type { CallPeer } from '@/lib/call';
 import { PriceSummary } from '@/components/BookingSheet';
 import { colors, font, radius, glass, shadow } from '@/lib/theme';
-import { rupiah, km, formatTime, merchantStatusLabel, phoneDisplay } from '@/lib/format';
+import { rupiah, km, formatTime, merchantStatusLabel, phoneDisplay, phoneMasked, extraKindLabel } from '@/lib/format';
 import type { Driver, Order, OrderEvent, Profile } from '@/lib/types';
 
 /** Kartu driver (untuk customer) atau kartu customer (untuk driver). */
-export function PersonCard({ name, subtitle, phone, avatar, rating, ratingCount, onChat, badge }: { name?: string | null; subtitle?: string; phone?: string | null; avatar?: string | null; rating?: number; ratingCount?: number; onChat?: () => void; badge?: string }) {
+/** phone tidak lagi ditampilkan/dipakai (UU PDP) — telepon lewat aplikasi via `callPeer`. */
+export function PersonCard({ name, subtitle, avatar, rating, ratingCount, onChat, badge, callPeer, orderId }: { name?: string | null; subtitle?: string; phone?: string | null; avatar?: string | null; rating?: number; ratingCount?: number; onChat?: () => void; badge?: string; callPeer?: CallPeer | null; orderId?: string | null }) {
   return (
     <View style={s.person}>
       <Avatar name={name} url={avatar} size={50} />
@@ -21,7 +24,7 @@ export function PersonCard({ name, subtitle, phone, avatar, rating, ratingCount,
       </View>
       <Row gap={8}>
         {onChat && <PressableScale onPress={onChat} scaleTo={0.9} style={[s.circle, shadow.glow(colors.primary)]}><Ionicons name="chatbubble-ellipses" size={20} color="#fff" /></PressableScale>}
-        {phone && <PressableScale onPress={() => Linking.openURL(`tel:${phone}`)} scaleTo={0.9} style={[s.circle, { backgroundColor: colors.success }, shadow.glow(colors.success)]}><Ionicons name="call" size={20} color="#fff" /></PressableScale>}
+        {callPeer && <CallButton peer={callPeer} orderId={orderId} />}
       </Row>
     </View>
   );
@@ -57,6 +60,26 @@ export function OrderExtras({ order }: { order: Order }) {
           ))}
         </View>
       )}
+      {order.service === 'shop' && (
+        <View style={{ gap: 6 }}>
+          <Row between><Text style={font.h3}>Daftar belanja</Text><Badge text={order.shop_store ?? 'Toko'} color={colors.shop} /></Row>
+          {(order.shopping_list ?? []).map((it, i) => (
+            <Row key={i} gap={8}><View style={s.bullet}><Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{it.qty}</Text></View><Text style={[font.body, { flex: 1 }]}>{it.name}{it.note ? <Text style={font.tiny}>  ({it.note})</Text> : null}</Text></Row>
+          ))}
+          <Row between><Text style={font.small}>{order.receipt_url || order.status === 'completed' || order.status === 'in_progress' ? 'Total belanja (struk)' : 'Perkiraan anggaran'}</Text><Text style={{ fontWeight: '700' }}>{rupiah(order.items_subtotal)}</Text></Row>
+        </View>
+      )}
+      {(order.extras ?? []).length > 0 && (
+        <View style={{ gap: 4 }}>
+          <Text style={font.h3}>Biaya tambahan</Text>
+          {(order.extras ?? []).map((e) => (
+            <Row key={e.id} between>
+              <Text style={font.small}>{extraKindLabel[e.kind] ?? e.kind}{e.note ? ` · ${e.note}` : ''}</Text>
+              <Row gap={6}><Text style={{ fontWeight: '600', color: e.status === 'rejected' ? colors.textMuted : colors.text, textDecorationLine: e.status === 'rejected' ? 'line-through' : 'none' }}>{rupiah(e.amount)}</Text><Badge text={e.status === 'approved' ? 'Disetujui' : e.status === 'rejected' ? 'Ditolak' : 'Menunggu'} color={e.status === 'approved' ? colors.success : e.status === 'rejected' ? colors.danger : colors.warning} /></Row>
+            </Row>
+          ))}
+        </View>
+      )}
       {order.service === 'send' && (
         <View style={{ gap: 4 }}>
           <Text style={font.h3}>Detail paket</Text>
@@ -72,11 +95,11 @@ export function OrderExtras({ order }: { order: Order }) {
 export function PriceBlock({ order, forDriver }: { order: Order; forDriver?: boolean }) {
   if (forDriver) {
     return (
-      <PriceSummary rows={[{ label: 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Potongan platform', value: order.fare_delivery - order.driver_earning, minus: true }]} total={order.driver_earning} />
+      <PriceSummary rows={[{ label: 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Biaya tambahan disetujui', value: order.extras_total ?? 0 }, { label: 'Tip pelanggan', value: order.tip ?? 0 }, { label: 'Potongan platform', value: Math.max(0, order.fare_delivery - (order.driver_earning - (order.status === 'completed' ? (order.tip ?? 0) + (order.extras_total ?? 0) : 0))), minus: true }]} total={order.status === 'completed' ? order.driver_earning : order.driver_earning + (order.tip ?? 0) + (order.extras_total ?? 0)} />
     );
   }
   return (
-    <PriceSummary rows={[{ label: 'Harga makanan', value: order.items_subtotal }, { label: order.service === 'food' || order.service === 'send' ? 'Ongkos kirim' : 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Biaya layanan', value: order.platform_fee }, { label: `Diskon${order.promo_code ? ` (${order.promo_code})` : ''}`, value: order.discount, minus: true }]} total={order.total} />
+    <PriceSummary rows={[{ label: order.service === 'shop' ? 'Belanja' : 'Harga makanan', value: order.items_subtotal }, { label: order.service === 'food' || order.service === 'send' ? 'Ongkos kirim' : order.service === 'shop' ? 'Jasa belanja & antar' : 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Biaya layanan', value: order.platform_fee }, { label: 'Biaya tambahan', value: order.extras_total ?? 0 }, { label: 'Tip driver', value: order.tip ?? 0 }, { label: `Diskon${order.promo_code ? ` (${order.promo_code})` : ''}`, value: order.discount, minus: true }]} total={order.total + (order.tip ?? 0)} />
   );
 }
 
@@ -84,6 +107,7 @@ const eventLabel: Record<string, string> = {
   searching: 'Pesanan dibuat, mencari driver', accepted: 'Driver menerima pesanan', arrived: 'Driver tiba di titik jemput', in_progress: 'Perjalanan dimulai',
   completed: 'Pesanan selesai', cancelled: 'Pesanan dibatalkan', driver_cancelled: 'Driver membatalkan, mencari driver lain',
   merchant_accepted: 'Merchant menyiapkan pesanan', merchant_ready: 'Pesanan siap diambil', merchant_rejected: 'Merchant menolak pesanan',
+  shop_total: 'Driver memasukkan total belanja', tip: 'Pelanggan memberi tip', extra_requested: 'Driver mengajukan biaya tambahan', extra_approved: 'Biaya tambahan disetujui', extra_rejected: 'Biaya tambahan ditolak',
 };
 export function Timeline({ events }: { events: OrderEvent[] }) {
   if (!events.length) return null;
@@ -110,13 +134,14 @@ export function driverSubtitle(d: Driver | null) {
   if (!d) return '';
   return `${d.vehicle_brand ?? (d.vehicle_type === 'car' ? 'Mobil' : 'Motor')} · ${d.vehicle_plate}${d.vehicle_color ? ` · ${d.vehicle_color}` : ''}`;
 }
-export function customerSubtitle(p: Profile | null) { return p ? phoneDisplay(p.phone) : ''; }
+export function customerSubtitle(p: Profile | null) { return p ? `Nomor tersembunyi · ${phoneMasked(p.phone)}` : ''; }
 
 export { Divider };
 const s = StyleSheet.create({
   person: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 12, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
   circle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5 },
+  bullet: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, backgroundColor: colors.shop, alignItems: 'center', justifyContent: 'center' },
   addr: { fontWeight: '600', color: colors.text, fontSize: 14 },
   note: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(245,158,11,0.12)', padding: 10, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)' },
   tdot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border, marginTop: 4 },

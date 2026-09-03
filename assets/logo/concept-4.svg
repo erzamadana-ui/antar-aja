@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7C7B"/><stop offset="1" stop-color="#12938F"/></linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="60" fill="url(#g4)"/>
+  <!-- rute berkelok -->
+  <path d="M70 176 C60 120, 120 120, 128 84 C136 120, 196 120, 186 176" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 18"/>
+  <!-- pin kiri -->
+  <path d="M70 200 c-22 -30 -30 -44 -30 -60 a30 30 0 0 1 60 0 c0 16 -8 30 -30 60z" fill="#fff"/>
+  <circle cx="70" cy="140" r="12" fill="#0E7C7B"/>
+  <!-- pin kanan (oranye) -->
+  <path d="M186 200 c-22 -30 -30 -44 -30 -60 a30 30 0 0 1 60 0 c0 16 -8 30 -30 60z" fill="#F5A524"/>
+  <circle cx="186" cy="140" r="12" fill="#fff"/>
+  <!-- panah puncak -->
+  <path d="M128 60 l14 26 h-28 z" fill="#FFC15E"/>
+</svg>

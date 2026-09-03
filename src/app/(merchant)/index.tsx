@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { Entrance, LiveDot, Skeleton } from '@/components/motion';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
+import { CallButton } from '@/components/call/IncomingCall';
 import { Screen, Card, Row, Badge, Button, Chip, Empty, toast } from '@/components/ui';
 import { useAuth } from '@/store/auth';
 import { useMyOrders } from '@/hooks/useOrder';
@@ -52,7 +53,15 @@ export default function MerchantOrders() {
                 {o.order_items?.map((it) => <Row key={it.id} between><Text style={font.body}>{it.qty}× {it.name}{it.notes ? <Text style={font.tiny}>  ({it.notes})</Text> : null}</Text><Text style={{ fontWeight: '600' }}>{rupiah(it.price * it.qty)}</Text></Row>)}
                 <Row between style={{ borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)', paddingTop: 6, marginTop: 4 }}><Text style={font.small}>Pendapatan bersih Anda</Text><Text style={{ fontWeight: '800', color: colors.success }}>{rupiah(o.merchant_earning)}</Text></Row>
               </View>
-              <Text style={[font.tiny, { marginTop: 6 }]}>Driver: {o.status === 'searching' ? 'belum ada' : o.status === 'accepted' ? 'menuju toko' : o.status === 'arrived' ? 'sudah di toko' : o.status}</Text>
+              <Row between style={{ marginTop: 8 }}>
+                <Text style={font.tiny}>Driver: {o.status === 'searching' ? 'belum ada' : o.status === 'accepted' ? 'menuju toko' : o.status === 'arrived' ? 'sudah di toko' : o.status}</Text>
+                {isActive(o) && (
+                  <Row gap={8}>
+                    {o.driver_id && <CallButton peer={{ id: o.driver_id, name: 'Driver', role: 'driver' }} orderId={o.id} size={34} color={colors.ride} />}
+                    <CallButton peer={{ id: o.customer_id, name: 'Pelanggan', role: 'customer' }} orderId={o.id} size={34} color={colors.info} />
+                  </Row>
+                )}
+              </Row>
               {o.merchant_status === 'pending' && isActive(o) && (
                 <Row gap={8} style={{ marginTop: 12 }}>
                   <Button title="Tolak" variant="outline" color={colors.danger} size="sm" onPress={() => act(o, 'rejected')} />

@@ -8,15 +8,17 @@ import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { colors, glass, motion, radius, shadow } from '@/lib/theme';
+import { useI18n, translate, type TKey } from '@/lib/i18n';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-export type TabSpec = Record<string, { label: string; icon: IconName; iconActive: IconName }>;
+export type TabSpec = Record<string, { label: string; icon: IconName; iconActive: IconName; tk?: TKey }>;
 
 export function makeGlassTabBar(spec: TabSpec, accent = colors.primary) {
   return function GlassTabBar({ state, navigation }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
     const reduce = useReducedMotion();
+    const locale = useI18n((st) => st.locale);
     const routes = state.routes.filter((r) => spec[r.name]);
     const barWidth = Math.min(width - 32, 520);
     const tabW = (barWidth - 12) / routes.length;
@@ -37,7 +39,7 @@ export function makeGlassTabBar(spec: TabSpec, accent = colors.primary) {
                 onPress={() => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true }); if (!focused && !e.defaultPrevented) navigation.navigate(r.name); }}
                 style={[s.tab, { width: tabW }]}>
                 <Ionicons name={focused ? sp.iconActive : sp.icon} size={22} color={focused ? accent : colors.textMuted} />
-                <Text style={[s.label, { color: focused ? accent : colors.textMuted }]}>{sp.label}</Text>
+                <Text style={[s.label, { color: focused ? accent : colors.textMuted }]}>{sp.tk ? translate(locale, sp.tk) : sp.label}</Text>
               </Pressable>
             );
           })}

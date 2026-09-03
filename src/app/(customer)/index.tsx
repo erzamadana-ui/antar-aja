@@ -9,14 +9,16 @@ import { useCurrentLocation } from '@/hooks/useLocation';
 import { supabase } from '@/lib/supabase';
 import { SERVICES } from '@/lib/services';
 import { colors, font, radius, shadow, spacing, glass } from '@/lib/theme';
-import { rupiah, statusLabel } from '@/lib/format';
+import { rupiah } from '@/lib/format';
 import type { Merchant, Promo } from '@/lib/types';
 import { Row, Stars, Avatar } from '@/components/ui';
 import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
-import { Entrance, PressableScale, AnimatedNumber, LiveDot, Skeleton, ProgressBar } from '@/components/motion';
+import { Entrance, PressableScale, AnimatedNumber, Skeleton } from '@/components/motion';
+import { ServiceArt } from '@/components/ServiceArt';
+import { ActiveOrderBubbles } from '@/components/ActiveOrderBubbles';
+import { BrandLogo } from '@/components/Logo';
+import { useT } from '@/lib/i18n';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
-
-const STATUS_PROGRESS: Record<string, number> = { searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1 };
 
 export default function CustomerHome() {
   const router = useRouter();
@@ -26,6 +28,7 @@ export default function CustomerHome() {
   const [merchants, setMerchants] = useState<Merchant[] | null>(null);
   const [promos, setPromos] = useState<Promo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const t = useT();
 
   const loadExtras = async () => {
     const [{ data: m }, { data: p }] = await Promise.all([
@@ -39,7 +42,7 @@ export default function CustomerHome() {
 
   const onRefresh = async () => { setRefreshing(true); await Promise.all([reload(), refreshWallet(), loadExtras()]); setRefreshing(false); };
   const hour = new Date().getHours();
-  const greet = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
+  const greet = hour < 11 ? t('greeting_morning') : hour < 15 ? t('greeting_noon') : hour < 18 ? t('greeting_afternoon') : t('greeting_evening');
 
   return (
     <View style={{ flex: 1 }}>
@@ -51,10 +54,13 @@ export default function CustomerHome() {
             {/* Sapaan */}
             <Entrance index={0}>
               <Row between style={{ marginTop: 8 }}>
-                <View>
-                  <Text style={font.small}>{greet},</Text>
-                  <Text style={font.h1}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
-                </View>
+                <Row gap={10}>
+                  <BrandLogo size={40} />
+                  <View>
+                    <Text style={font.small}>{greet},</Text>
+                    <Text style={[font.h1, { fontSize: 22 }]}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
+                  </View>
+                </Row>
                 <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.9}>
                   <Avatar name={profile?.full_name} url={profile?.avatar_url} size={44} />
                 </PressableScale>
@@ -67,7 +73,7 @@ export default function CustomerHome() {
                 <Glass variant="strong" radius={radius.lg}>
                   <Row gap={10} style={{ paddingHorizontal: 14, height: 50 }}>
                     <Ionicons name="search" size={18} color={colors.primary} />
-                    <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }}>Cari makanan, restoran, tempat…</Text>
+                    <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }}>{t('search_placeholder')}</Text>
                     <View style={s.kbd}><Ionicons name="mic-outline" size={16} color={colors.textSecondary} /></View>
                   </Row>
                 </Glass>
@@ -80,59 +86,45 @@ export default function CustomerHome() {
                 <View style={s.payGlow} />
                 <Row between>
                   <View>
-                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', letterSpacing: 0.6 }}>SALDO ANTARPAY</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', letterSpacing: 0.6 }}>{t('balance').toUpperCase()}</Text>
                     <AnimatedNumber value={wallet?.balance ?? 0} format={(n) => rupiah(n)} style={{ color: '#fff', fontSize: 28, fontWeight: '900', marginTop: 2, letterSpacing: -0.5 }} />
                   </View>
                   <Row gap={8}>
-                    <PayAction icon="add" label="Top Up" onPress={() => router.push('/pay/topup')} />
-                    <PayAction icon="time-outline" label="Riwayat" onPress={() => router.push('/(customer)/pay')} />
+                    <PayAction icon="add" label={t('topup')} onPress={() => router.push('/pay/topup')} />
+                    <PayAction icon="time-outline" label={t('history')} onPress={() => router.push('/(customer)/pay')} />
                   </Row>
                 </Row>
               </BrandGradient>
             </Entrance>
 
-            {/* Layanan */}
+            {/* Layanan — ilustrasi kartun berbingkai warna layanan */}
             <View style={s.grid}>
               {SERVICES.map((sv, i) => (
-                <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '20%', alignItems: 'center' }}>
-                  <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={{ alignItems: 'center', gap: 6 }}>
-                    <BrandGradient colors={[sv.color, lighten(sv.color)]} style={[s.serviceIcon, shadow.glow(sv.color)]}>
-                      <Ionicons name={sv.icon as never} size={26} color="#fff" />
-                    </BrandGradient>
+                <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '33.33%', alignItems: 'stretch' }}>
+                  <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
+                    <ServiceArt kind={sv.art} color={sv.color} size={66} />
                     <Text style={s.serviceLabel}>{sv.label.replace('Antar', '')}</Text>
+                    <Text style={s.serviceTag} numberOfLines={2}>{sv.tagline}</Text>
                   </PressableScale>
                 </Entrance>
               ))}
             </View>
 
-            {/* Order aktif */}
+            {/* Order aktif → bubble */}
             {active.length > 0 && (
               <Entrance index={8}>
-                <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>Pesanan berjalan</Text>
-                {active.map((o) => (
-                  <PressableScale key={o.id} onPress={() => router.push(`/order/${o.id}` as never)} scaleTo={0.985} style={{ marginBottom: 10 }}>
-                    <Glass variant="strong" radius={radius.lg}>
-                      <View style={{ padding: 14, gap: 10 }}>
-                        <Row gap={10}>
-                          <LiveDot color={o.status === 'searching' ? colors.accent : colors.success} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontWeight: '700', color: colors.text }}>{statusLabel(o.status, o.service, o.merchant_status)}</Text>
-                            <Text style={font.tiny} numberOfLines={1}>{o.code} · {o.dropoff_address}</Text>
-                          </View>
-                          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                        </Row>
-                        <ProgressBar progress={STATUS_PROGRESS[o.status] ?? 0.1} color={o.status === 'searching' ? colors.accent : colors.primary} />
-                      </View>
-                    </Glass>
-                  </PressableScale>
-                ))}
+                <Row between style={{ marginTop: 22, marginBottom: 8 }}>
+                  <Text style={font.label}>{t('active_orders')}</Text>
+                  <Text style={font.tiny}>{active.length} · ketuk untuk detail</Text>
+                </Row>
+                <ActiveOrderBubbles orders={active} />
               </Entrance>
             )}
 
             {/* Promo */}
             {promos.length > 0 && (
               <Entrance index={9}>
-                <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>Promo untukmu</Text>
+                <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>{t('promo_for_you')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4, paddingRight: 16 }}>
                   {promos.map((p, i) => (
                     <PressableScale key={p.code} scaleTo={0.97} onPress={() => router.push(p.service === 'food' ? '/food' : '/ride' as never)}>
@@ -150,8 +142,8 @@ export default function CustomerHome() {
             {/* Merchant */}
             <Entrance index={10}>
               <Row between style={{ marginTop: 18 }}>
-                <Text style={font.label}>Lagi laris di AntarFood</Text>
-                <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>Lihat semua</Text></Pressable>
+                <Text style={font.label}>{t('trending_food')}</Text>
+                <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>{t('see_all')}</Text></Pressable>
               </Row>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12, paddingRight: 16 }}>
                 {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={170} height={168} radius={radius.lg} />) : merchants.map((m) => (
@@ -183,7 +175,6 @@ function PayAction({ icon, label, onPress }: { icon: React.ComponentProps<typeof
     </PressableScale>
   );
 }
-function lighten(hex: string) { const n = parseInt(hex.slice(1), 16); const f = (v: number) => Math.min(255, Math.round(v + (255 - v) * 0.25)); return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`; }
 
 const s = StyleSheet.create({
   inner: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: spacing.lg },
@@ -191,9 +182,10 @@ const s = StyleSheet.create({
   payCard: { marginTop: 14, borderRadius: radius.xl, padding: 18, overflow: 'hidden', ...shadow.glow(colors.primary) },
   payGlow: { position: 'absolute', right: -40, top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.14)' },
   payAction: { alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, minWidth: 64 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 20, rowGap: 16 },
-  serviceIcon: { width: 58, height: 58, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  serviceLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 18, rowGap: 12 },
+  serviceTile: { alignItems: 'center', gap: 4, width: '100%', paddingHorizontal: 4, paddingVertical: 8 },
+  serviceLabel: { fontSize: 13, fontWeight: '800', color: colors.text, marginTop: 4 },
+  serviceTag: { fontSize: 10, color: colors.textMuted, textAlign: 'center', lineHeight: 13, minHeight: 26 },
   promo: { width: 240, borderRadius: radius.lg, padding: 16, minHeight: 96, justifyContent: 'center', overflow: 'hidden' },
   promoOrb: { position: 'absolute', right: -30, bottom: -50, width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(255,255,255,0.16)' },
   merchantImg: { width: '100%', height: 100, backgroundColor: 'rgba(11,31,42,0.06)' },

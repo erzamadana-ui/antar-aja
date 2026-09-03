@@ -60,6 +60,8 @@ export default function MerchantStore() {
             <View style={{ paddingHorizontal: 12 }}>
               <ListItem icon="person-outline" title="Edit profil pemilik" onPress={() => router.push('/account/edit')} />
               <Divider style={{ marginVertical: 0 }} />
+              <ListItem icon="language-outline" title="Bahasa / Language" onPress={() => router.push('/account/language')} />
+              <Divider style={{ marginVertical: 0 }} />
               <ListItem icon="swap-horizontal-outline" title="Beralih ke Mode Pelanggan" onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }} />
               <Divider style={{ marginVertical: 0 }} />
               <ListItem icon="log-out-outline" title="Keluar" danger onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} />

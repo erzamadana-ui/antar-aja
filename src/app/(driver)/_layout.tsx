@@ -5,10 +5,10 @@ import { makeGlassTabBar } from '@/components/GlassTabBar';
 import { colors } from '@/lib/theme';
 
 const TabBar = makeGlassTabBar({
-  index: { label: 'Beranda', icon: 'navigate-outline', iconActive: 'navigate' },
-  history: { label: 'Riwayat', icon: 'receipt-outline', iconActive: 'receipt' },
-  earnings: { label: 'Pendapatan', icon: 'wallet-outline', iconActive: 'wallet' },
-  account: { label: 'Akun', icon: 'person-outline', iconActive: 'person' },
+  index: { label: 'Beranda', tk: 'home', icon: 'navigate-outline', iconActive: 'navigate' },
+  history: { label: 'Riwayat', tk: 'history', icon: 'receipt-outline', iconActive: 'receipt' },
+  earnings: { label: 'Pendapatan', tk: 'earnings', icon: 'wallet-outline', iconActive: 'wallet' },
+  account: { label: 'Akun', tk: 'account', icon: 'person-outline', iconActive: 'person' },
 }, colors.ride);
 
 export default function DriverLayout() {

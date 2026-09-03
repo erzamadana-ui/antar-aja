@@ -29,6 +29,7 @@ export const colors = {
   food: '#EB5757',
   send: '#7B61FF',
   pay: '#0E7C7B',
+  shop: '#0EA5E9',
 };
 
 /** Permukaan kaca: dipakai bersama BlurView (iOS/web) atau sebagai fallback translusen (Android). */

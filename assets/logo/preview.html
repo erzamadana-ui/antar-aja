@@ -1,0 +1,23 @@
+<html><head><meta charset="utf-8"><style>
+body{margin:0;background:#F3F6F8;font-family:Inter,system-ui,sans-serif;color:#0B1F2A;padding:32px}
+h1{margin:0 0 6px;font-size:26px}p.sub{margin:0 0 24px;color:#5B6B76}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.card{background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.9);border-radius:24px;padding:18px;box-shadow:0 10px 30px rgba(11,31,42,.08)}
+.card img{width:100%;display:block}
+.name{font-weight:900;font-size:16px;margin-top:12px}.num{display:inline-block;background:#0E7C7B;color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;margin-right:6px}
+.desc{font-size:12px;color:#5B6B76;margin-top:4px;line-height:1.4}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px}.row img{width:28px;height:28px;border-radius:9px}
+.wm{font-weight:900;font-size:15px;letter-spacing:-.3px}.small img{width:18px;height:18px;border-radius:5px}
+.ctx{margin-top:10px;background:#0B1F2A;border-radius:12px;padding:8px 10px;display:flex;gap:8px;align-items:center;color:#fff;font-size:12px}.ctx img{width:22px;height:22px;border-radius:6px}
+</style></head><body>
+<h1>Antar Aja — 5 Konsep Logo</h1><p class="sub">Pilih satu nomor. Semua dibuat sebagai SVG (tajam di ukuran apa pun) dengan palet teal + oranye tema aplikasi.</p>
+<div class="grid" id="g"></div>
+<script>
+const C=[["Panah Navigasi","Panah lokasi tegas di kotak teal, titik oranye = tujuan. Modern, mudah dikenali di ukuran kecil (favicon/app icon)."],
+["A Cepat","Huruf A sebagai jalan dengan garis kecepatan; bar oranye = 'jembatan' antar. Berkarakter kuat untuk wordmark."],
+["Helm Ceria","Helm pengendara dengan visor oranye & senyum — ramah, khas ojek, cocok untuk segmen keluarga."],
+["Dua Pin Terhubung","Dua pin (asal→tujuan) dihubungkan rute putus-putus; cerita 'mengantar dari A ke B'."],
+["Pin Bersayap","Pin lokasi dengan sayap kecepatan — menekankan cepat & sampai tujuan; lingkaran cocok untuk avatar/badge."]];
+const g=document.getElementById('g');
+C.forEach((c,i)=>{const n=i+1;g.innerHTML+=`<div class="card"><img src="concept-${n}.svg"><div class="name"><span class="num">${n}</span>${c[0]}</div><div class="desc">${c[1]}</div><div class="row"><img src="concept-${n}.svg"><span class="wm">Antar Aja</span></div><div class="ctx"><img src="concept-${n}.svg"><span>Thumbnail di header/tab</span></div></div>`});
+</script></body></html>

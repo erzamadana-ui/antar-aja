@@ -36,6 +36,8 @@ export default function DriverAccount() {
           <ListItem icon="car-outline" title="Data kendaraan & dokumen" onPress={() => router.push('/account/become-driver')} />
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="help-circle-outline" title="Bantuan" onPress={() => router.push('/account/help')} />
+          <Divider style={{ marginVertical: 0 }} />
+          <ListItem icon="language-outline" title="Bahasa / Language" onPress={() => router.push('/account/language')} />
         </View>
       </Card></Entrance>
       <Entrance index={2} style={{ marginTop: 16, gap: 10 }}>

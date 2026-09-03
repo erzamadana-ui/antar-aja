@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Row, Input, Button, toast } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
 import { useAuth } from '@/store/auth';
+import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
@@ -15,6 +16,7 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
   notes: string; onNotes: (v: string) => void; subtotal: number; service: ServiceType; onDiscount: (d: number) => void; notesPlaceholder?: string;
 }) {
   const wallet = useAuth((s) => s.wallet);
+  const router = useRouter();
   const [checking, setChecking] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -34,6 +36,11 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
         <PayOption active={method === 'cash'} onPress={() => onMethod('cash')} icon="cash-outline" title="Tunai" subtitle="Bayar ke driver" />
         <PayOption active={method === 'wallet'} onPress={() => onMethod('wallet')} icon="wallet-outline" title="AntarPay" subtitle={`Saldo ${rupiah(wallet?.balance ?? 0)}`} />
       </Row>
+      <PressableScale onPress={() => { onMethod('wallet'); router.push({ pathname: '/pay/gateway', params: { amount: String(Math.max(10000, Math.ceil(Math.max(0, subtotal + 5000 - (wallet?.balance ?? 0)) / 1000) * 1000)) } } as never); }} scaleTo={0.98} haptic={false} style={s.gwRow}>
+        <View style={s.gwIcons}>{['#00AA13', '#4C2A86', '#118EEA', '#EE4D2D'].map((c) => <View key={c} style={[s.gwDot, { backgroundColor: c }]} />)}</View>
+        <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }}>Bayar via GoPay / OVO / DANA / ShopeePay / QRIS / VA</Text><Text style={font.tiny}>Top up instan ke AntarPay lalu bayar dengan saldo.</Text></View>
+        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+      </PressableScale>
       <Row gap={8}>
         <View style={{ flex: 1 }}>
           <Input placeholder="Kode promo" value={promo} onChangeText={(v) => { onPromo(v.toUpperCase()); setPromoMsg(null); }} autoCapitalize="characters" icon="pricetag-outline" />
@@ -82,6 +89,9 @@ export function PriceSummary({ rows, total }: { rows: { label: string; value: nu
 const s = StyleSheet.create({
   pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
   payIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
+  gwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border },
+  gwIcons: { flexDirection: 'row', flexWrap: 'wrap', width: 34, gap: 3 },
+  gwDot: { width: 14, height: 14, borderRadius: 4 },
   notes: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.md, paddingHorizontal: 12 },
   notesInput: { flex: 1, height: 44, color: colors.text, fontSize: 14 },
 });

@@ -5,10 +5,10 @@ import { makeGlassTabBar } from '@/components/GlassTabBar';
 import { colors } from '@/lib/theme';
 
 const TabBar = makeGlassTabBar({
-  index: { label: 'Beranda', icon: 'home-outline', iconActive: 'home' },
-  orders: { label: 'Pesanan', icon: 'receipt-outline', iconActive: 'receipt' },
+  index: { label: 'Beranda', tk: 'home', icon: 'home-outline', iconActive: 'home' },
+  orders: { label: 'Pesanan', tk: 'orders', icon: 'receipt-outline', iconActive: 'receipt' },
   pay: { label: 'AntarPay', icon: 'wallet-outline', iconActive: 'wallet' },
-  account: { label: 'Akun', icon: 'person-outline', iconActive: 'person' },
+  account: { label: 'Akun', tk: 'account', icon: 'person-outline', iconActive: 'person' },
 }, colors.primary);
 
 export default function CustomerLayout() {

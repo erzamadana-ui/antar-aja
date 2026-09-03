@@ -29,13 +29,14 @@ export const serviceLabel: Record<ServiceType, string> = {
   ride_car: 'AntarCar',
   food: 'AntarFood',
   send: 'AntarSend',
+  shop: 'AntarShop',
 };
 
 export function statusLabel(status: OrderStatus, service: ServiceType, merchantStatus?: MerchantOrderStatus | null): string {
   switch (status) {
     case 'searching': return service === 'food' && merchantStatus === 'pending' ? 'Menunggu merchant & driver' : 'Mencari driver';
-    case 'accepted': return service === 'food' ? 'Driver menuju merchant' : 'Driver menuju lokasi jemput';
-    case 'arrived': return service === 'food' ? 'Driver di merchant' : 'Driver sudah tiba';
+    case 'accepted': return service === 'food' ? 'Driver menuju merchant' : service === 'shop' ? 'Driver menuju toko' : 'Driver menuju lokasi jemput';
+    case 'arrived': return service === 'food' ? 'Driver di merchant' : service === 'shop' ? 'Driver sedang belanja' : 'Driver sudah tiba';
     case 'in_progress': return service === 'ride_motor' || service === 'ride_car' ? 'Dalam perjalanan' : 'Sedang diantar';
     case 'completed': return 'Selesai';
     case 'cancelled': return 'Dibatalkan';
@@ -53,3 +54,6 @@ export const initials = (name?: string | null) =>
   (name ?? '?').split(' ').filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('') || '?';
 
 export const phoneDisplay = (p?: string | null) => (p ? p.replace(/^\+62/, '0') : '-');
+/** Nomor disamarkan (PDP): 0812••••789 — pihak lain tidak melihat nomor lengkap. */
+export const phoneMasked = (p?: string | null) => { if (!p) return '—'; const d = p.replace(/^\+62/, '0'); return d.length > 7 ? d.slice(0, 4) + '••••' + d.slice(-3) : '••••'; };
+export const extraKindLabel: Record<string, string> = { parking: 'Parkir', toll: 'Tol', waiting: 'Waktu tunggu', other: 'Lainnya' };

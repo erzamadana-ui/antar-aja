@@ -5,9 +5,9 @@ import { makeGlassTabBar } from '@/components/GlassTabBar';
 import { colors } from '@/lib/theme';
 
 const TabBar = makeGlassTabBar({
-  index: { label: 'Pesanan', icon: 'receipt-outline', iconActive: 'receipt' },
-  menu: { label: 'Menu', icon: 'restaurant-outline', iconActive: 'restaurant' },
-  store: { label: 'Toko', icon: 'storefront-outline', iconActive: 'storefront' },
+  index: { label: 'Pesanan', tk: 'orders', icon: 'receipt-outline', iconActive: 'receipt' },
+  menu: { label: 'Menu', tk: 'menu', icon: 'restaurant-outline', iconActive: 'restaurant' },
+  store: { label: 'Toko', tk: 'store', icon: 'storefront-outline', iconActive: 'storefront' },
 }, colors.food);
 
 export default function MerchantLayout() {
