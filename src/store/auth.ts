@@ -60,8 +60,11 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   signIn: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     if (error) throw new Error(friendlyError(error.message));
+    // Set sesi & muat profil sebelum navigasi agar tidak "memantul" kembali ke halaman masuk
+    set({ session: data.session });
+    await get().loadProfile();
   },
 
   signUp: async ({ email, password, full_name, phone }) => {
@@ -73,9 +76,11 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('Email sudah terdaftar, silakan masuk');
     if (!data.session) {
       // Email auto-terkonfirmasi oleh trigger DB; langsung masuk
-      const { error: e2 } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      const { data: d2, error: e2 } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       if (e2) throw new Error(friendlyError(e2.message));
-    }
+      set({ session: d2.session });
+    } else set({ session: data.session });
+    await get().loadProfile();
   },
 
   signOut: async () => {
