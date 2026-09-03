@@ -264,7 +264,7 @@ const s = StyleSheet.create({
   listItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   stepBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  toast: { position: 'absolute', bottom: 90, left: 20, right: 20, padding: 14, borderRadius: radius.md, zIndex: 1000, ...shadow.card },
+  toast: { position: 'absolute', bottom: 90, left: 20, right: 20, maxWidth: 520, alignSelf: 'center', width: '100%', padding: 14, borderRadius: radius.md, zIndex: 1000, ...shadow.card },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing.lg, ...shadow.sheet },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 12, marginTop: -6 },
 });

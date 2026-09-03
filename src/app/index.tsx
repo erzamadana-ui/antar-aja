@@ -17,6 +17,6 @@ export default function Index() {
   if (target === 'admin' && profile.role !== 'admin') target = 'customer';
   if (target === 'driver' && !driver) target = 'customer';
   if (target === 'merchant' && !merchant) target = 'customer';
-  if (!persisted && profile.role === 'admin') target = 'admin';
+  if (!persisted) { if (profile.role === 'admin') target = 'admin'; else if (profile.role === 'driver' && driver) target = 'driver'; else if (profile.role === 'merchant' && merchant) target = 'merchant'; }
   return <Redirect href={modeHome[target] as never} />;
 }

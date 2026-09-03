@@ -49,7 +49,7 @@ export default function Checkout() {
   if (!m || cart.lines.length === 0) {
     return <Screen title="Keranjang" back><Empty icon="cart-outline" title="Keranjang kosong" subtitle="Pilih menu dari merchant AntarFood." action={<Button title="Cari makanan" onPress={() => router.replace('/food')} />} /></Screen>;
   }
-  const total = fare ? Math.max(0, subtotal + fare.fare + fare.platform_fee - discount) : 0;
+  const total = fare ? Math.max(0, subtotal + fare.fare + fare.platform_fee - discount) : subtotal;
 
   const order = async () => {
     if (!dropoff || !fare) return;
