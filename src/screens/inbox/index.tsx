@@ -10,6 +10,7 @@ import { useAuth } from '@/store/auth';
 import { colors, font, radius, glass } from '@/lib/theme';
 import { timeAgo } from '@/lib/format';
 import { useT } from '@/lib/i18n';
+import { APP } from '@/lib/app';
 
 export default function Inbox() {
   const router = useRouter();
@@ -25,7 +26,14 @@ export default function Inbox() {
         <View style={{ gap: 10 }}>
           {items.map((n, i) => (
             <Entrance key={n.id} index={Math.min(i, 6)} from="up">
-              <PressableScale onPress={() => { if (!n.read_at) markRead([n.id]); if (n.merchant_id) router.push(`/food/${n.merchant_id}` as never); else if (n.promo_code) router.push('/food' as never); }} scaleTo={0.985} style={[s.card, !n.read_at && { borderColor: colors.primary + '66', backgroundColor: colors.primary + '08' }]}>
+              <PressableScale onPress={() => {
+                if (!n.read_at) markRead([n.id]);
+                const d = n.data ?? {};
+                if (typeof d.travel_request_id === 'string') router.push((APP === 'mitra' ? '/driver/travel' : `/travel/request/${d.travel_request_id}`) as never);
+                else if (d.payment_id) router.push((APP === 'mitra' ? '/(driver)/earnings' : '/(customer)/pay') as never);
+                else if (n.merchant_id) router.push(`/food/${n.merchant_id}` as never);
+                else if (n.promo_code) router.push('/food' as never);
+              }} scaleTo={0.985} style={[s.card, !n.read_at && { borderColor: colors.primary + '66', backgroundColor: colors.primary + '08' }]}>
                 {n.image_url && <Image source={{ uri: n.image_url }} style={s.img} />}
                 <View style={{ padding: 12, gap: 4 }}>
                   <Row between>
@@ -36,6 +44,8 @@ export default function Inbox() {
                   <Row gap={8} style={{ flexWrap: 'wrap' }}>
                     {n.promo_code && <Badge text={`Kode: ${n.promo_code}`} color={colors.accent} />}
                     {n.merchant_id && <Badge text="Lihat merchant →" color={colors.food} />}
+                    {typeof n.data?.travel_request_id === 'string' && <Badge text="Lihat permintaan travel →" color={colors.travel} />}
+                    {!!n.data?.payment_id && !n.data?.travel_request_id && <Badge text="Lihat AntarPay →" color={colors.pay} />}
                     <Text style={font.tiny}>{timeAgo(n.created_at)}</Text>
                   </Row>
                 </View>

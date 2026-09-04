@@ -4,7 +4,7 @@ export type ApprovalStatus = 'pending' | 'approved' | 'suspended' | 'rejected';
 export type ServiceType = 'ride_motor' | 'ride_car' | 'food' | 'send' | 'shop' | 'box' | 'travel' | 'market';
 export type Locale = 'id' | 'en' | 'zh' | 'ar';
 export interface OrderExtra { id: string; kind: 'parking' | 'toll' | 'waiting' | 'other'; amount: number; note?: string | null; status: 'pending' | 'approved' | 'rejected'; created_at: string; responded_at?: string }
-export interface ShoppingItem { name: string; qty: number; note?: string }
+export interface ShoppingItem { name: string; qty: number; note?: string; product_id?: string; item_id?: string; unit?: string; price?: number; ref_price?: number }
 export type OrderStatus = 'scheduled' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled';
 export type MerchantOrderStatus = 'pending' | 'accepted' | 'ready' | 'rejected';
 export type PaymentMethod = 'cash' | 'wallet';
@@ -72,6 +72,8 @@ export interface Order {
   tip?: number; extras?: OrderExtra[]; extras_total?: number; share_token?: string | null;
   city?: string | null; send_scope?: 'in_city' | 'intercity'; dest_city_id?: string | null; warehouse_id?: string | null; origin_warehouse_id?: string | null;
   weight_kg?: number | null; intercity_fare?: number; scheduled_at?: string | null; vehicle_class?: string | null; helpers?: number; purpose?: string | null; paid_via?: string | null;
+  // tahap 6: belanja katalog / pasar
+  shop_store_id?: string | null; market_id?: string | null; shop_vehicle?: 'motor' | 'car'; service_fee?: number; driver_service_share?: number; actual_items?: ShoppingItem[] | null;
   cancel_reason: string | null; created_at: string; accepted_at: string | null; arrived_at: string | null; started_at: string | null;
   completed_at: string | null; cancelled_at: string | null;
   // relasi opsional
@@ -156,7 +158,10 @@ export interface ExecReport {
 }
 // ---- AntarTravel ----
 export interface TravelRoute { id: string; from_city: string; to_city: string; distance_km: number; duration_h: number; seat_price: number; private_price: number; private_price_large: number | null; min_pax: number; active: boolean }
-export interface TravelPartner { id: string; company_name: string | null; vehicle_model: string; vehicle_plate: string; vehicle_year: number | null; seats: number; is_electric: boolean; photo_url: string | null; license_url: string | null; permit_url: string | null; status: ApprovalStatus; status_reason: string | null; rating_avg: number; rating_count: number; total_trips: number; created_at: string; profile?: Profile | null }
+export type TravelPartnerType = 'agency' | 'private';
+export type TravelAccommodation = 'customer' | 'self';
+export interface TravelPartner { id: string; company_name: string | null; vehicle_model: string; vehicle_plate: string; vehicle_year: number | null; seats: number; is_electric: boolean; photo_url: string | null; license_url: string | null; permit_url: string | null; status: ApprovalStatus; status_reason: string | null; rating_avg: number; rating_count: number; total_trips: number; created_at: string; profile?: Profile | null;
+  partner_type?: TravelPartnerType; offers_shared?: boolean; offers_charter?: boolean; offers_daily?: boolean; daily_rate?: number | null; overtime_rate?: number | null; charter_rate_km?: number | null; accommodation?: TravelAccommodation[]; accommodation_fee?: number; fuel_included?: boolean; base_city_id?: string | null; bio?: string | null; driver_name?: string | null }
 export type TravelTripStatus = 'open' | 'confirmed' | 'full' | 'departed' | 'arrived' | 'cancelled';
 export interface TravelTrip { id: string; partner_id: string; route_id: string; depart_at: string; seats_total: number; seats_booked: number; min_pax: number; seat_price: number; private_price: number; allow_private: boolean; is_private: boolean; status: TravelTripStatus; notes: string | null; created_at: string; route?: TravelRoute | null }
 export interface TravelSearchTrip { id: string; depart_at: string; seats_total: number; seats_booked: number; seats_left: number; min_pax: number; seat_price: number; private_price: number; allow_private: boolean; status: TravelTripStatus; notes: string | null; partner: { id: string; company: string | null; model: string; plate: string; seats: number; is_electric: boolean; photo_url: string | null; rating: number; rating_count: number; total_trips: number; name: string; avatar_url: string | null } }
@@ -164,3 +169,27 @@ export interface TravelSearch { route: TravelRoute | null; trips: TravelSearchTr
 export type TravelBookingStatus = 'booked' | 'confirmed' | 'picked_up' | 'completed' | 'cancelled';
 export interface TravelBooking { id: string; code: string; trip_id: string; customer_id: string; pax: number; is_private: boolean; pickup_address: string; pickup_lat: number | null; pickup_lng: number | null; dropoff_address: string | null; passengers: { name: string; phone?: string }[]; price: number; platform_fee: number; partner_earning: number; payment_method: PaymentMethod; paid_via: string | null; payment_status: 'unpaid' | 'paid' | 'refunded'; status: TravelBookingStatus; notes: string | null; rating: number | null; created_at: string; trip?: TravelTrip | null }
 export interface TravelManifestRow { id: string; code: string; pax: number; is_private: boolean; pickup_address: string; pickup_lat: number | null; pickup_lng: number | null; dropoff_address: string | null; passengers: { name: string }[]; price: number; payment_method: PaymentMethod; payment_status: string; status: TravelBookingStatus; notes: string | null; customer: { id: string; name: string; avatar_url: string | null } }
+
+// ---------- Tahap 6: AntarShop katalog & AntarMarket ----------
+export interface ShopStore { id: string; name: string; brand: 'indomaret' | 'alfamart' | 'alfamidi' | 'apotek' | 'supermarket' | 'lainnya' | string; category: 'minimarket' | 'apotek' | 'supermarket' | string; address: string | null; lat: number; lng: number; city_id?: string | null; open_hours: string | null; phone?: string | null; image_url: string | null; catalog_source?: string; active?: boolean; distance_km?: number; product_count?: number; is_open_now?: boolean; created_at?: string }
+export interface ShopProduct { id: string; store_id: string; sku: string | null; name: string; category: string; unit: string; price: number; image_url: string | null; in_stock: boolean; stock: number | null; active: boolean; updated_at: string }
+export interface Market { id: string; name: string; address: string | null; lat: number; lng: number; city_id?: string | null; open_hours: string | null; image_url: string | null; notes: string | null; active?: boolean; distance_km?: number; is_open_now?: boolean; created_at?: string }
+export type MarketCategory = 'sayur' | 'bumbu' | 'daging_ikan' | 'buah' | 'sembako' | 'lainnya';
+export interface MarketItem { id: string; name: string; category: MarketCategory | string; unit: string; image_url: string | null; sort: number; ref_price: number; price: number; price_source: string; price_updated_at: string; samples: number; active?: boolean }
+export interface MarketPriceStat { item_id: string; name: string; unit: string; ref_price: number; driver_median: number | null; driver_samples: number; last_seen: string | null }
+export interface ShoppingEstimate extends FareEstimate { service_fee: number; subtotal: number; fare_motor: number; fare_car: number; car_min_budget: number }
+export interface CartLine { key: string; name: string; qty: number; unit: string; price: number; product_id?: string; item_id?: string; note?: string }
+
+// ---------- Tahap 6: AntarTravel v2 (carter privat & sopir harian) ----------
+export type TravelRequestKind = 'charter' | 'daily';
+export type TravelRequestStatus = 'open' | 'offered' | 'accepted' | 'paid' | 'ongoing' | 'completed' | 'cancelled' | 'expired';
+export interface TravelPartnerCard { id: string; name: string; company_name: string | null; partner_type: TravelPartnerType; vehicle_model: string; vehicle_year: number | null; seats: number; is_electric: boolean; photo_url: string | null; avatar_url: string | null; rating_avg: number; rating_count: number; total_trips: number; daily_rate: number | null; overtime_rate: number | null; accommodation: TravelAccommodation[]; accommodation_fee: number; fuel_included: boolean; base_city: string | null; bio: string | null }
+export interface TravelOffer { id: string; request_id?: string; partner_id?: string; price: number; breakdown: { daily_rate?: number; days?: number; accommodation_nights?: number; accommodation_fee?: number; fuel_est?: number; overtime_rate?: number; notes?: string } | null; message: string | null; status: 'offered' | 'accepted' | 'rejected' | 'withdrawn'; created_at: string; partner?: TravelPartnerCard & { driver_name?: string | null; vehicle_plate?: string } }
+export interface TravelRequest { id: string; code: string; customer_id: string; kind: TravelRequestKind; partner_id: string | null; from_city: string | null; to_city: string | null; pickup_address: string; pickup_lat: number | null; pickup_lng: number | null; dropoff_address: string | null; dropoff_lat: number | null; dropoff_lng: number | null; depart_at: string; return_at: string | null; days: number; pax: number; luggage: string | null; accommodation: TravelAccommodation; fuel: 'customer' | 'partner'; vehicle_pref: string | null; notes: string | null; budget: number | null; status: TravelRequestStatus; accepted_offer_id: string | null; price: number; platform_fee: number; partner_earning: number; payment_method: PaymentMethod; paid_via: string; payment_status: 'unpaid' | 'paid' | 'refunded'; rating: number | null; rating_comment: string | null; created_at: string; updated_at?: string;
+  from_city_name?: string | null; to_city_name?: string | null; customer?: { id: string; name: string; avatar_url: string | null } | null; offers?: TravelOffer[] }
+export interface TravelOpenRequest { id: string; code: string; kind: TravelRequestKind; pickup_address: string; dropoff_address: string | null; depart_at: string; return_at: string | null; days: number; pax: number; luggage: string | null; accommodation: TravelAccommodation; fuel: 'customer' | 'partner'; vehicle_pref: string | null; notes: string | null; budget: number | null; status: TravelRequestStatus; from_city: string | null; to_city: string | null; customer_name: string; my_offer: TravelOffer | null; offers_count: number; created_at: string }
+export interface AdminTravelRequestRow { id: string; code: string; kind: TravelRequestKind; status: TravelRequestStatus; customer_name: string; partner_name: string | null; pickup_address: string; dropoff_address: string | null; depart_at: string; days: number; pax: number; price: number; platform_fee: number; payment_status: string; offers_count: number; created_at: string }
+
+// ---------- Tahap 6: payment gateway ----------
+export interface GatewayPublicConfig { provider: string; methods: string[]; topup_min: number; topup_max: number; configured: boolean; is_production: boolean; client_key: string | null }
+export interface GatewayStatus extends GatewayPublicConfig { server_key_masked: string | null; merchant_id: string | null; updated_at: string | null; updated_by: string | null; last_webhook_at: string | null; stats: { total: number; settlement: number; pending: number; failed: number; amount_settled: number; simulated: number; last_7d: number }; recent: (Payment & { user: string | null })[] }

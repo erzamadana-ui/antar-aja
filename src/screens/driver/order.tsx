@@ -38,7 +38,7 @@ export default function DriverOrder() {
 
   const markers = useMemo<MapMarker[]>(() => order ? [
     { id: 'me', lat: me.lat, lng: me.lng, kind: driver?.vehicle_type === 'car' ? 'car' : 'motor', heading: live?.heading ?? driver?.heading },
-    { id: 'pickup', lat: order.pickup_lat, lng: order.pickup_lng, kind: order.service === 'food' || order.service === 'shop' ? 'merchant' : 'pickup', label: order.service === 'food' ? 'Merchant' : order.service === 'shop' ? 'Toko' : 'Jemput' },
+    { id: 'pickup', lat: order.pickup_lat, lng: order.pickup_lng, kind: order.service === 'food' || order.service === 'shop' || order.service === 'market' ? 'merchant' : 'pickup', label: order.service === 'food' ? 'Merchant' : order.service === 'shop' ? 'Toko' : order.service === 'market' ? 'Pasar' : 'Jemput' },
     { id: 'dropoff', lat: order.dropoff_lat, lng: order.dropoff_lng, kind: 'dropoff', label: 'Tujuan' },
   ] : [], [order, me.lat, me.lng, driver, live?.heading]);
   const fitTo = useMemo(() => {
@@ -73,7 +73,8 @@ export default function DriverOrder() {
   const active = ['accepted', 'arrived', 'in_progress'].includes(order.status);
   const navTarget = order.status === 'in_progress' ? { lat: order.dropoff_lat, lng: order.dropoff_lng } : { lat: order.pickup_lat, lng: order.pickup_lng };
   const foodNotReady = order.service === 'food' && order.merchant_status !== 'ready';
-  const shopNotTotaled = order.service === 'shop' && !order.receipt_url && order.items_subtotal === (order.est_budget ?? 0) && !(events ?? []).some((e) => e.status === 'shop_total');
+  const isShopping = ['shop', 'market'].includes(order.service);
+  const shopNotTotaled = isShopping && !order.receipt_url && order.items_subtotal === (order.est_budget ?? 0) && !(events ?? []).some((e) => e.status === 'shop_total');
   const sc = statusColor(order.status);
 
   const header = (
@@ -113,6 +114,12 @@ export default function DriverOrder() {
             <View style={{ alignItems: 'flex-end' }}><Text style={s.earnLabel}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 17 }}>{order.payment_method === 'cash' ? rupiah(order.total) : '✓ Lunas'}</Text></View>
           </Row>
           {order.service === 'food' && order.payment_method === 'cash' && <Text style={[s.earnLabel, { marginTop: 6 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
+          {isShopping && (
+            <Row gap={8} style={{ marginTop: 8, flexWrap: 'wrap' }}>
+              {order.shop_vehicle === 'car' && <Badge text="Mobil" color="#FFFFFF" bg="rgba(255,255,255,0.22)" />}
+              {(order.driver_service_share ?? 0) > 0 && <Text style={s.earnLabel}>Jasa belanja Anda {rupiah(order.driver_service_share ?? 0)} + penggantian belanja setelah selesai</Text>}
+            </Row>
+          )}
         </Animated.View>
 
         <PinPrompt visible={pinAsk} onCancel={() => setPinAsk(false)} onSubmit={(pin) => update('in_progress', pin)} />
@@ -121,7 +128,7 @@ export default function DriverOrder() {
         {order.service === 'food' && order.merchant_status && (
           <Row gap={8} style={s.block}><Ionicons name="restaurant" size={18} color={colors.food} /><Text style={[font.small, { flex: 1 }]}>Merchant: <Text style={{ fontWeight: '700' }}>{order.merchant?.name}</Text></Text><Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} />{active && order.merchant?.owner_id && <CallButton peer={{ id: order.merchant.owner_id, name: order.merchant.name, role: 'merchant' }} orderId={order.id} size={36} color={colors.food} />}</Row>
         )}
-        {order.service === 'shop' && (order.status === 'arrived' || order.status === 'in_progress') && <ShopTotalCard order={order} onDone={reload} />}
+        {isShopping && (order.status === 'arrived' || order.status === 'in_progress') && <ShopTotalCard order={order} onDone={reload} />}
         {active && <ExtraRequest order={order} onDone={reload} />}
         <View style={s.block}>
           <RouteBlock order={order} />
@@ -130,8 +137,8 @@ export default function DriverOrder() {
         {order.service === 'send' && active && order.recipient_phone && <Button title={`Hubungi penerima (${order.recipient_name})`} variant="secondary" icon="call-outline" onPress={() => Linking.openURL(`tel:${order.recipient_phone}`)} />}
 
         <Animated.View key={`act-${order.status}-${order.merchant_status ?? ''}`} entering={FadeInDown.duration(motion.base)} style={{ gap: 8 }}>
-          {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : order.service === 'shop' ? 'Sudah tiba di toko' : 'Sudah tiba di titik jemput'} size="lg" color={colors.ride} onPress={() => update('arrived')} />}
-          {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : order.service === 'shop' ? (shopNotTotaled ? 'Masukkan total belanja dulu' : 'Belanja selesai, antar sekarang') : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady || shopNotTotaled} onPress={() => update('in_progress')} />}
+          {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : order.service === 'shop' ? 'Sudah tiba di toko' : order.service === 'market' ? 'Sudah tiba di pasar' : 'Sudah tiba di titik jemput'} size="lg" color={colors.ride} onPress={() => update('arrived')} />}
+          {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : isShopping ? (shopNotTotaled ? 'Masukkan total belanja dulu' : 'Belanja selesai, antar sekarang') : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady || shopNotTotaled} onPress={() => update('in_progress')} />}
           {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" color={colors.success} onPress={complete} />}
           {(order.status === 'accepted' || order.status === 'arrived') && <Button title="Lepas order" variant="ghost" color={colors.danger} onPress={cancel} />}
           {active && <Button title="Laporkan masalah / insiden" variant="ghost" color={colors.textSecondary} icon="flag-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}

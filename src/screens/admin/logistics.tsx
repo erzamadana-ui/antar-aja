@@ -5,8 +5,12 @@ import { AdminPage, Table, FilterBar, ReasonPrompt } from '@/components/admin';
 import { Card, Row, Input, Button, Chip, Badge, toast } from '@/components/ui';
 import { rpc, supabase } from '@/lib/supabase';
 import { colors, font } from '@/lib/theme';
-import { rupiah, formatDate, cityName } from '@/lib/format';
-import type { City, Warehouse, IntercityRate, TravelRoute, TravelPartner, Profile, ApprovalStatus } from '@/lib/types';
+import { rupiah, formatDate, formatSchedule, cityName, travelRequestStatusLabel, travelKindLabel } from '@/lib/format';
+import type { City, Warehouse, IntercityRate, TravelRoute, TravelPartner, Profile, ApprovalStatus, AdminTravelRequestRow, TravelRequestStatus } from '@/lib/types';
+
+const REQ_STATUSES: TravelRequestStatus[] = ['open', 'offered', 'accepted', 'paid', 'ongoing', 'completed', 'cancelled', 'expired'];
+const REQ_COLOR: Record<string, string> = { open: colors.warning, offered: colors.info, accepted: colors.travel, paid: colors.travel, ongoing: colors.primary, completed: colors.success, cancelled: colors.danger, expired: colors.textMuted };
+const partnerServices = (p: TravelPartner) => [p.offers_shared !== false && 'Kursi', p.offers_charter && 'Carter', p.offers_daily && 'Harian'].filter(Boolean).join(' · ') || '—';
 
 const emptyWh = { name: '', type: 'small', partner_name: '', address: '', lat: '', lng: '', phone: '', open_hours: '08:00-20:00', city_id: '' };
 const emptyRoute = { from_city: '', to_city: '', distance_km: '', duration_h: '', seat_price: '', private_price: '', private_price_large: '', min_pax: '4' };
@@ -22,14 +26,18 @@ export default function AdminLogistics() {
   const [rt, setRt] = useState({ ...emptyRoute });
   const [newCity, setNewCity] = useState({ name: '', province: '', lat: '', lng: '' });
   const [ask, setAsk] = useState<{ id: string; status: ApprovalStatus; name: string } | null>(null);
+  const [reqs, setReqs] = useState<AdminTravelRequestRow[]>([]);
+  const [reqStatus, setReqStatus] = useState<string>('all');
   const load = useCallback(async () => {
-    const [{ data: c }, { data: w }, { data: r }, { data: tr }, { data: tp }] = await Promise.all([
+    const [{ data: c }, { data: w }, { data: r }, { data: tr }, { data: tp }, rq] = await Promise.all([
       supabase.from('cities').select('*').order('name'), supabase.from('warehouses').select('*').order('name'),
       supabase.from('intercity_rates').select('*'), supabase.from('travel_routes').select('*'),
       supabase.from('travel_partners').select('*, profile:profiles(*)').order('created_at', { ascending: false }),
+      rpc<AdminTravelRequestRow[]>('admin_travel_requests', { p_status: null }).catch(() => [] as AdminTravelRequestRow[]),
     ]);
-    setCities((c as City[]) ?? []); setWhs((w as Warehouse[]) ?? []); setRates((r as IntercityRate[]) ?? []); setRoutes((tr as TravelRoute[]) ?? []); setPartners((tp as never) ?? []);
+    setCities((c as City[]) ?? []); setWhs((w as Warehouse[]) ?? []); setRates((r as IntercityRate[]) ?? []); setRoutes((tr as TravelRoute[]) ?? []); setPartners((tp as never) ?? []); setReqs(rq ?? []);
   }, []);
+  const filteredReqs = reqStatus === 'all' ? reqs : reqs.filter((q) => q.status === reqStatus);
   useEffect(() => { load(); }, [load]);
 
   const saveWh = async () => {
@@ -139,7 +147,10 @@ export default function AdminLogistics() {
           <View style={{ padding: 14 }}><Text style={font.label}>Mitra travel ({partners.length})</Text></View>
           <Table rows={partners as unknown as Record<string, unknown>[]} columns={[
             { key: 'name', label: 'Mitra', width: 220, render: (r) => { const p = r as unknown as TravelPartner & { profile: Profile | null }; return <View><Text style={{ fontWeight: '700' }}>{p.company_name ?? p.profile?.full_name}</Text><Text style={font.tiny}>{p.profile?.full_name} · {p.profile?.email}</Text></View>; } },
-            { key: 'vehicle', label: 'Armada', width: 220, render: (r) => { const p = r as unknown as TravelPartner; return <Text style={font.small}>{p.vehicle_model} ({p.vehicle_year ?? '—'}) · {p.vehicle_plate} · {p.seats} kursi{p.is_electric ? ' ⚡' : ''}</Text>; } },
+            { key: 'partner_type', label: 'Tipe', width: 100, render: (r) => { const p = r as unknown as TravelPartner; return <Badge text={p.partner_type === 'private' ? 'Sopir pribadi' : 'Agen travel'} color={p.partner_type === 'private' ? colors.info : colors.travel} />; } },
+            { key: 'services', label: 'Layanan', width: 150, render: (r) => <Text style={font.small}>{partnerServices(r as unknown as TravelPartner)}</Text> },
+            { key: 'daily_rate', label: 'Harga harian', width: 130, render: (r) => { const p = r as unknown as TravelPartner; return <Text style={font.small}>{p.daily_rate ? rupiah(p.daily_rate) : '—'}{p.overtime_rate ? `\n+${rupiah(p.overtime_rate)}/jam lembur` : ''}</Text>; } },
+            { key: 'vehicle', label: 'Armada', width: 220, render: (r) => { const p = r as unknown as TravelPartner; return <Text style={font.small}>{p.vehicle_model} ({p.vehicle_year ?? '—'}) · {p.vehicle_plate} · {p.seats} kursi{p.is_electric ? ' (listrik)' : ''}</Text>; } },
             { key: 'stats', label: 'Performa', width: 120, render: (r) => { const p = r as unknown as TravelPartner; return <Text style={font.small}>⭐ {Number(p.rating_avg).toFixed(1)} · {p.total_trips} trip</Text>; } },
             { key: 'status', label: 'Status', width: 150, render: (r) => { const p = r as unknown as TravelPartner; return <View><Badge text={p.status} color={p.status === 'approved' ? colors.success : p.status === 'pending' ? colors.warning : colors.danger} />{p.status_reason && p.status !== 'approved' ? <Text style={font.tiny} numberOfLines={2}>{p.status_reason}</Text> : null}</View>; } },
             { key: 'created_at', label: 'Daftar', width: 110, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at), false)}</Text> },
@@ -150,6 +161,29 @@ export default function AdminLogistics() {
                 {p.status === 'approved' && <Button size="sm" title="Tangguhkan" variant="outline" color={colors.danger} onPress={() => setPartner(p.id, 'suspended')} />}
               </Row>); } },
           ]} emptyText="Belum ada mitra travel" />
+        </Card>
+        <Card padded={false}>
+          <View style={{ padding: 14, gap: 8 }}>
+            <Text style={font.label}>Permintaan travel (carter & sopir harian) · {reqs.length}</Text>
+            <Row gap={6} style={{ flexWrap: 'wrap' }}>
+              <Chip label={`Semua (${reqs.length})`} active={reqStatus === 'all'} onPress={() => setReqStatus('all')} color={colors.travel} />
+              {REQ_STATUSES.map((st) => { const n = reqs.filter((q) => q.status === st).length; return <Chip key={st} label={`${travelRequestStatusLabel[st] ?? st} (${n})`} active={reqStatus === st} onPress={() => setReqStatus(st)} color={colors.travel} />; })}
+            </Row>
+          </View>
+          <Table rows={filteredReqs as unknown as Record<string, unknown>[]} emptyText="Belum ada permintaan travel" columns={[
+            { key: 'code', label: 'Kode', width: 120, render: (r) => { const q = r as unknown as AdminTravelRequestRow; return <View><Text style={{ fontWeight: '700', color: colors.text }}>{q.code}</Text><Text style={font.tiny}>{formatDate(q.created_at, false)}</Text></View>; } },
+            { key: 'kind', label: 'Jenis', width: 110, render: (r) => <Badge text={travelKindLabel[String(r.kind)] ?? String(r.kind)} color={colors.travel} /> },
+            { key: 'status', label: 'Status', width: 150, render: (r) => <Badge text={travelRequestStatusLabel[String(r.status)] ?? String(r.status)} color={REQ_COLOR[String(r.status)] ?? colors.textMuted} /> },
+            { key: 'customer_name', label: 'Pelanggan', width: 140, render: (r) => <Text style={font.small}>{String(r.customer_name ?? '—')}</Text> },
+            { key: 'partner_name', label: 'Mitra', width: 140, render: (r) => <Text style={font.small}>{String(r.partner_name ?? '—')}</Text> },
+            { key: 'route', label: 'Jemput → tujuan', width: 240, render: (r) => { const q = r as unknown as AdminTravelRequestRow; return <Text style={font.tiny} numberOfLines={2}>{q.pickup_address} → {q.dropoff_address ?? 'sesuai kebutuhan'}</Text>; } },
+            { key: 'depart_at', label: 'Jadwal', width: 150, render: (r) => <Text style={font.tiny}>{formatSchedule(String(r.depart_at))}</Text> },
+            { key: 'days', label: 'Hari / pax', width: 90, render: (r) => <Text style={font.small}>{String(r.days)} hari · {String(r.pax)} org</Text> },
+            { key: 'price', label: 'Harga', width: 110, render: (r) => <Text style={font.small}>{Number(r.price) ? rupiah(Number(r.price)) : '—'}</Text> },
+            { key: 'platform_fee', label: 'Fee platform', width: 110, render: (r) => <Text style={font.small}>{Number(r.platform_fee) ? rupiah(Number(r.platform_fee)) : '—'}</Text> },
+            { key: 'payment_status', label: 'Pembayaran', width: 110, render: (r) => <Badge text={r.payment_status === 'paid' ? 'Dibayar' : r.payment_status === 'refunded' ? 'Dikembalikan' : 'Belum bayar'} color={r.payment_status === 'paid' ? colors.success : r.payment_status === 'refunded' ? colors.info : colors.warning} /> },
+            { key: 'offers_count', label: 'Penawaran', width: 90, render: (r) => <Badge text={String(r.offers_count ?? 0)} /> },
+          ]} />
         </Card>
       </>)}
     </AdminPage>

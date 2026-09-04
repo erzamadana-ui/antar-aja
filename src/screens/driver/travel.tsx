@@ -12,16 +12,17 @@ import { useCities, usePartnerTrips } from '@/hooks/useTravel';
 import { useAuth } from '@/store/auth';
 import { supabase, rpc } from '@/lib/supabase';
 import { colors, font, radius, glass, shadow, motion } from '@/lib/theme';
-import { rupiah, formatSchedule, cityName, tripStatusLabel, travelStatusLabel } from '@/lib/format';
-import type { TravelPartner, TravelRoute, TravelManifestRow, TravelTrip } from '@/lib/types';
+import { rupiah, formatSchedule, cityName, tripStatusLabel, travelStatusLabel, travelKindLabel, travelRequestStatusLabel, accommodationLabel } from '@/lib/format';
+import type { TravelPartner, TravelRoute, TravelManifestRow, TravelTrip, TravelOpenRequest } from '@/lib/types';
 
 const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 const TIMES = ['05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '13:00', '15:00', '17:00', '19:00', '21:00', '23:00'];
 
 export default function TravelPartnerHome() {
   const router = useRouter();
-  const { session, wallet } = useAuth();
+  const { session, wallet, travelPartner } = useAuth();
   const uid = session?.user.id;
+  const [tab, setTab] = useState<'shared' | 'requests'>('shared');
   const cities = useCities();
   const [me, setMe] = useState<TravelPartner | null | undefined>(undefined);
   const [routes, setRoutes] = useState<TravelRoute[]>([]);
@@ -34,7 +35,7 @@ export default function TravelPartnerHome() {
   const [open, setOpen] = useState<string | null>(null);
   const [manifest, setManifest] = useState<Record<string, TravelManifestRow[]>>({});
 
-  useEffect(() => { if (uid) supabase.from('travel_partners').select('*').eq('id', uid).maybeSingle().then(({ data }) => setMe((data as TravelPartner) ?? null)); }, [uid]);
+  useEffect(() => { if (uid) supabase.from('travel_partners').select('*').eq('id', uid).maybeSingle().then(({ data }) => setMe((data as TravelPartner) ?? travelPartner ?? null)); }, [uid]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { supabase.from('travel_routes').select('*').eq('active', true).then(({ data }) => setRoutes((data as TravelRoute[]) ?? [])); }, []);
   const loadManifest = async (tripId: string) => { const m = await rpc<TravelManifestRow[]>('travel_trip_manifest', { p_trip: tripId }); setManifest((p) => ({ ...p, [tripId]: m })); };
   useEffect(() => { if (open) loadManifest(open); }, [open, trips]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -63,7 +64,7 @@ export default function TravelPartnerHome() {
   const earnings = past.filter((t) => t.status === 'arrived').length;
 
   return (
-    <Screen title="Mitra AntarTravel" back maxWidth={720}>
+    <Screen title="Mitra AntarTravel" subtitle="Kursi bersama · carter · sopir harian" band={colors.travel} back maxWidth={720}>
       <View style={{ gap: 14 }}>
         <Entrance index={0}><BrandGradient colors={[colors.travel, '#1E3A8A']} style={[s.hero, shadow.glow(colors.travel)]}>
           <Row between>
@@ -72,6 +73,20 @@ export default function TravelPartnerHome() {
           </Row>
         </BrandGradient></Entrance>
 
+        <View style={s.segment}>
+          {([['shared', 'Kursi bersama', 'people-outline'], ['requests', 'Permintaan carter & harian', 'car-outline']] as const).map(([k, l, ic]) => {
+            const active = tab === k;
+            return (
+              <PressableScale key={k} onPress={() => setTab(k)} scaleTo={0.96} style={[s.segItem, active && { backgroundColor: colors.travel, ...shadow.glow(colors.travel) }]}>
+                <Ionicons name={ic} size={14} color={active ? '#fff' : colors.textSecondary} />
+                <Text style={{ fontSize: 12, fontWeight: '800', color: active ? '#fff' : colors.textSecondary }} numberOfLines={1}>{l}</Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+
+        {tab === 'requests' ? <RequestsTab me={travelPartner ?? me} /> : (
+          <>
         <Entrance index={1}><Card style={{ gap: 10 }}>
           <Text style={font.label}>Buat jadwal keberangkatan</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
@@ -141,8 +156,139 @@ export default function TravelPartnerHome() {
             <Row between><Text style={font.small}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)} · {formatSchedule(t.depart_at)}</Text><Badge text={tripStatusLabel[t.status]} color={t.status === 'arrived' ? colors.success : colors.textMuted} /></Row>
           </View>
         ))}
+          </>
+        )}
       </View>
     </Screen>
+  );
+}
+
+// ---------- Permintaan carter privat & sopir harian (penawaran mitra) ----------
+const reqStatusColor = (st: TravelOpenRequest['status']) => st === 'completed' ? colors.success : st === 'cancelled' || st === 'expired' ? colors.danger : st === 'ongoing' ? colors.info : st === 'offered' ? colors.accent : colors.travel;
+const num = (v: string) => Number(v.replace(/\D/g, '')) || 0;
+
+function RequestsTab({ me }: { me: TravelPartner | null }) {
+  const [rows, setRows] = useState<TravelOpenRequest[] | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const load = async () => { try { setRows(await rpc<TravelOpenRequest[]>('travel_partner_open_requests')); } catch (e) { setRows([]); toast.error((e as Error).message); } };
+  useEffect(() => {
+    load();
+    const ch = supabase.channel('tp-open-requests').on('postgres_changes', { event: '*', schema: 'public', table: 'travel_requests' }, load).on('postgres_changes', { event: '*', schema: 'public', table: 'travel_offers' }, load).subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+  if (rows === null) return <Text style={font.small}>Memuat permintaan…</Text>;
+  const mine = rows.filter((r) => ['accepted', 'paid', 'ongoing'].includes(r.status));
+  const openReqs = rows.filter((r) => ['open', 'offered'].includes(r.status));
+  const done = rows.filter((r) => ['completed', 'cancelled', 'expired'].includes(r.status));
+  // fungsi render biasa (bukan komponen) agar state form penawaran tidak hilang saat data di-refresh
+  const section = (title: string, list: TravelOpenRequest[], hint?: string) => (
+    <View style={{ gap: 8 }}>
+      <Text style={font.label}>{title} ({list.length})</Text>
+      {list.length === 0 && hint && <Text style={font.small}>{hint}</Text>}
+      {list.map((r) => <RequestCard key={r.id} r={r} me={me} open={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} onDone={load} />)}
+    </View>
+  );
+  return (
+    <View style={{ gap: 14 }}>
+      {!me?.offers_charter && !me?.offers_daily && <Card><Text style={font.small}>Anda belum menandai layanan carter privat / sopir harian di data mitra. Perbarui di menu Akun → Mitra AntarTravel agar permintaan yang cocok tampil di sini.</Text></Card>}
+      {section('Perjalanan Anda', mine, 'Belum ada permintaan yang diterima pelanggan.')}
+      {section('Permintaan terbuka', openReqs, 'Belum ada permintaan carter/harian di sekitar Anda. Permintaan baru muncul otomatis.')}
+      {done.length > 0 && section('Riwayat', done.slice(0, 10))}
+    </View>
+  );
+}
+
+function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; me: TravelPartner | null; open: boolean; onToggle: () => void; onDone: () => void }) {
+  const nights = Math.max(0, r.days - 1);
+  const selfAcc = r.accommodation === 'self';
+  const [rate, setRate] = useState(String(me?.daily_rate ?? ''));
+  const [accFee, setAccFee] = useState(String(me?.accommodation_fee || 150000));
+  const [fuelEst, setFuelEst] = useState('');
+  const [overtime, setOvertime] = useState(String(me?.overtime_rate ?? ''));
+  const [price, setPrice] = useState('');
+  const [manual, setManual] = useState(false);
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const calc = num(rate) * r.days + (selfAcc ? num(accFee) * nights : 0) + (r.fuel === 'partner' ? num(fuelEst) : 0);
+  const total = manual ? num(price) : calc;
+  const active = ['accepted', 'paid', 'ongoing'].includes(r.status);
+  const canOffer = ['open', 'offered'].includes(r.status) && !r.my_offer;
+
+  const send = async () => {
+    if (total <= 0) return toast.error('Isi harga penawaran');
+    setBusy(true);
+    try {
+      const breakdown = { daily_rate: num(rate) || undefined, days: r.days, accommodation_nights: selfAcc ? nights : 0, accommodation_fee: selfAcc ? num(accFee) : 0, fuel_est: r.fuel === 'partner' ? num(fuelEst) : 0, overtime_rate: num(overtime) || undefined };
+      await rpc('travel_offer_create', { p_request: r.id, p_price: total, p_breakdown: breakdown, p_message: message || null });
+      toast.success('Penawaran terkirim'); onDone();
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  const setSt = (st: 'ongoing' | 'completed') => {
+    const msg = st === 'ongoing' ? 'Mulai perjalanan? Pastikan penumpang sudah dijemput.' : 'Tandai selesai? Pendapatan akan diteruskan ke AntarPay Anda.';
+    const doIt = async () => { try { await rpc('travel_request_set_status', { p_request: r.id, p_status: st, p_note: null }); toast.success('Status diperbarui'); onDone(); } catch (e) { toast.error((e as Error).message); } };
+    if (Platform.OS === 'web') { if (confirm(msg)) doIt(); return; }
+    Alert.alert('Konfirmasi', msg, [{ text: 'Batal' }, { text: 'Ya', onPress: doIt }]);
+  };
+
+  return (
+    <Animated.View layout={LinearTransition.springify().stiffness(300).damping(22)} style={[s.trip, active && { borderColor: colors.travel }]}>
+      <PressableScale onPress={onToggle} scaleTo={0.99} haptic={false}>
+        <Row between>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={font.h3} numberOfLines={1}>{travelKindLabel[r.kind]} · {r.customer_name}</Text>
+            <Text style={font.small} numberOfLines={1}>{r.pickup_address} → {r.dropoff_address ?? (r.kind === 'daily' ? 'keliling / rute bebas' : '—')}</Text>
+            <Text style={font.tiny}>{formatSchedule(r.depart_at)}{r.return_at ? ` · kembali ${formatSchedule(r.return_at)}` : ''} · {r.days} hari · {r.pax} pax</Text>
+            <Row gap={6} style={{ marginTop: 4, flexWrap: 'wrap' }}>
+              <Badge text={travelRequestStatusLabel[r.status]} color={reqStatusColor(r.status)} />
+              <Badge text={selfAcc ? 'Akomodasi mandiri' : 'Akomodasi ditanggung pelanggan'} color={selfAcc ? colors.accent : colors.info} />
+              <Badge text={r.fuel === 'partner' ? 'BBM termasuk harga' : 'BBM ditanggung pelanggan'} color={colors.textSecondary} />
+              {r.budget ? <Badge text={`Anggaran ${rupiah(r.budget)}`} color={colors.textMuted} /> : null}
+              <Badge text={`${r.offers_count} penawaran`} color={colors.travel} />
+              {r.my_offer && <Badge text={`Tawaran Anda ${rupiah(r.my_offer.price)}`} color={r.my_offer.status === 'accepted' ? colors.success : r.my_offer.status === 'rejected' ? colors.danger : colors.accent} />}
+            </Row>
+          </View>
+          <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        </Row>
+      </PressableScale>
+      {open && (
+        <Animated.View entering={FadeInDown.duration(motion.base)} style={{ gap: 10, marginTop: 10 }}>
+          {r.luggage || r.vehicle_pref || r.notes ? <Text style={font.tiny}>{[r.luggage ? `Bagasi ${r.luggage}` : null, r.vehicle_pref ? `Mobil ${r.vehicle_pref}` : null, r.notes ? `Catatan: ${r.notes}` : null].filter(Boolean).join(' · ')}</Text> : null}
+          <Text style={font.tiny}>{accommodationLabel[r.accommodation]}{selfAcc && nights > 0 ? ` — masukkan kompensasi ${nights} malam ke harga.` : ''}{r.fuel === 'customer' ? ' BBM/tol/parkir dibayar pelanggan langsung, jangan masukkan ke harga.' : ' Masukkan estimasi BBM/tol/parkir ke harga (all-in).'}</Text>
+
+          {active && (
+            <Row gap={8} style={{ flexWrap: 'wrap' }}>
+              {r.status !== 'ongoing' && <Button size="sm" title="Mulai perjalanan" color={colors.success} icon="play" onPress={() => setSt('ongoing')} />}
+              {r.status === 'ongoing' && <Button size="sm" title="Selesai" color={colors.success} icon="flag" onPress={() => setSt('completed')} />}
+              {r.my_offer && <Text style={font.tiny}>Harga disepakati {rupiah(r.my_offer.price)}{r.status === 'accepted' ? ' · tagih tunai saat berangkat' : ' · dibayar AntarPay'}</Text>}
+            </Row>
+          )}
+
+          {canOffer && (
+            <View style={{ gap: 8 }}>
+              <Text style={font.label}>Kalkulator penawaran</Text>
+              <Row gap={8}>
+                <Input label="Harga/hari (12 jam)" keyboardType="number-pad" value={rate} onChangeText={(v) => setRate(v.replace(/\D/g, ''))} containerStyle={{ flex: 1 }} />
+                <Input label="Overtime/jam" keyboardType="number-pad" value={overtime} onChangeText={(v) => setOvertime(v.replace(/\D/g, ''))} containerStyle={{ flex: 1 }} />
+              </Row>
+              {selfAcc && nights > 0 && <Input label={`Akomodasi mandiri per malam (× ${nights} malam)`} keyboardType="number-pad" value={accFee} onChangeText={(v) => setAccFee(v.replace(/\D/g, ''))} />}
+              {r.fuel === 'partner' && <Input label="Estimasi BBM/tol/parkir" keyboardType="number-pad" value={fuelEst} onChangeText={(v) => setFuelEst(v.replace(/\D/g, ''))} />}
+              <View style={s.calc}>
+                <Row between><Text style={font.tiny}>{rupiah(num(rate))} × {r.days} hari</Text><Text style={font.tiny}>{rupiah(num(rate) * r.days)}</Text></Row>
+                {selfAcc && nights > 0 && <Row between><Text style={font.tiny}>Akomodasi {rupiah(num(accFee))} × {nights} malam</Text><Text style={font.tiny}>{rupiah(num(accFee) * nights)}</Text></Row>}
+                {r.fuel === 'partner' && <Row between><Text style={font.tiny}>Estimasi BBM/tol/parkir</Text><Text style={font.tiny}>{rupiah(num(fuelEst))}</Text></Row>}
+                <Row between><Text style={{ fontWeight: '800', color: colors.text }}>Total penawaran</Text><Text style={{ fontWeight: '800', color: colors.travel, fontSize: 16 }}>{rupiah(total)}</Text></Row>
+              </View>
+              <Row gap={8}><Chip label="Pakai kalkulator" active={!manual} onPress={() => setManual(false)} color={colors.travel} /><Chip label="Harga total manual" active={manual} onPress={() => setManual(true)} color={colors.travel} /></Row>
+              {manual && <Input label="Harga total" keyboardType="number-pad" value={price} onChangeText={(v) => setPrice(v.replace(/\D/g, ''))} />}
+              <Input placeholder="Pesan untuk pelanggan (mobil, sopir, syarat)" value={message} onChangeText={setMessage} />
+              <Button title={`Kirim penawaran ${rupiah(total)}`} color={colors.travel} icon="paper-plane-outline" loading={busy} onPress={send} />
+              <Text style={font.tiny}>Komisi platform dipotong dari harga setelah perjalanan selesai. Pelanggan bebas memilih penawaran.</Text>
+            </View>
+          )}
+          {r.my_offer && !active && <Text style={font.small}>Tawaran Anda {rupiah(r.my_offer.price)} · {r.my_offer.status === 'offered' ? 'menunggu keputusan pelanggan' : r.my_offer.status}</Text>}
+        </Animated.View>
+      )}
+    </Animated.View>
   );
 }
 const s = StyleSheet.create({
@@ -150,4 +296,7 @@ const s = StyleSheet.create({
   day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.8)' },
   trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   pax: { padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
+  segment: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
+  segItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: radius.sm },
+  calc: { gap: 4, padding: 10, borderRadius: radius.md, backgroundColor: colors.bg },
 });

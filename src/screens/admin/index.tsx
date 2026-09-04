@@ -20,9 +20,17 @@ export default function AdminDashboard() {
   const [traffic, setTraffic] = useState<TrafficStats | null>(null);
   const [months, setMonths] = useState(6);
   const [refreshing, setRefreshing] = useState(false);
+  const [extra, setExtra] = useState<{ stores: number; markets: number; travelOpen: number } | null>(null);
   const load = useCallback(async () => {
-    const [s, { data }] = await Promise.all([rpc<Stats>('admin_dashboard_stats').catch(() => null), supabase.from('orders').select('*').in('status', ['searching', 'accepted', 'arrived', 'in_progress']).order('created_at', { ascending: false }).limit(10)]);
+    const [s, { data }, { count: stores }, { count: markets }, { count: travelOpen }] = await Promise.all([
+      rpc<Stats>('admin_dashboard_stats').catch(() => null),
+      supabase.from('orders').select('*').in('status', ['searching', 'accepted', 'arrived', 'in_progress']).order('created_at', { ascending: false }).limit(10),
+      supabase.from('shop_stores').select('id', { count: 'exact', head: true }).eq('active', true),
+      supabase.from('markets').select('id', { count: 'exact', head: true }).eq('active', true),
+      supabase.from('travel_requests').select('id', { count: 'exact', head: true }).in('status', ['open', 'offered']),
+    ]);
     if (s) setSt(s); setLive((data as Order[]) ?? []);
+    setExtra({ stores: stores ?? 0, markets: markets ?? 0, travelOpen: travelOpen ?? 0 });
   }, []);
   useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, [load]);
   useEffect(() => { rpc<TrafficStats>('admin_traffic_stats', { p_months: months }).then(setTraffic).catch(() => null); }, [months]);
@@ -36,6 +44,8 @@ export default function AdminDashboard() {
         <StatCard index={4} label="Driver online" value={`${st?.drivers_online ?? 0}/${st?.drivers_total ?? 0}`} hint={`${st?.drivers_pending ?? 0} menunggu verifikasi`} color={colors.ride} />
         <StatCard index={5} label="Merchant" value={st?.merchants_total ?? '…'} hint={`${st?.merchants_pending ?? 0} menunggu verifikasi`} color={colors.food} />
         <StatCard index={6} label="Pengguna" value={st?.users ?? '…'} color={colors.info} />
+        <StatCard index={7} label="Katalog belanja" value={extra ? `${extra.stores} toko · ${extra.markets} pasar` : '…'} hint="AntarShop & AntarMarket aktif" color={colors.shop} />
+        <StatCard index={8} label="Permintaan travel terbuka" value={extra?.travelOpen ?? '…'} hint="Menunggu / ada penawaran" color={colors.travel} />
       </Row>
       {((st?.topups_pending ?? 0) > 0 || (st?.withdrawals_pending ?? 0) > 0 || (st?.drivers_pending ?? 0) > 0 || (st?.merchants_pending ?? 0) > 0) && (
         <Card style={{ backgroundColor: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)' }}>

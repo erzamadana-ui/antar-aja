@@ -83,3 +83,14 @@ export const vehicleClassLabel: Record<string, string> = { motor_economy: 'Ride 
 export const travelStatusLabel: Record<string, string> = { booked: 'Dipesan', confirmed: 'Terkonfirmasi', picked_up: 'Dalam perjalanan', completed: 'Selesai', cancelled: 'Dibatalkan' };
 export const tripStatusLabel: Record<string, string> = { open: 'Menunggu penumpang', confirmed: 'Pasti berangkat', full: 'Penuh', departed: 'Berangkat', arrived: 'Tiba', cancelled: 'Dibatalkan' };
 export const cityName = (cities: { id: string; name: string }[], id: string) => cities.find((c) => c.id === id)?.name ?? '—';
+
+// ---------- Tahap 6 ----------
+export const travelRequestStatusLabel: Record<string, string> = { open: 'Menunggu penawaran', offered: 'Ada penawaran', accepted: 'Diterima (bayar tunai)', paid: 'Dibayar · menunggu jadwal', ongoing: 'Sedang berjalan', completed: 'Selesai', cancelled: 'Dibatalkan', expired: 'Kedaluwarsa' };
+export const travelKindLabel: Record<string, string> = { shared: 'Kursi bersama', charter: 'Carter privat', daily: 'Sopir harian' };
+export const marketCategoryLabel: Record<string, string> = { sayur: 'Sayur', bumbu: 'Bumbu', daging_ikan: 'Daging & ikan', buah: 'Buah', sembako: 'Sembako', lainnya: 'Lainnya' };
+export const storeBrandLabel: Record<string, string> = { indomaret: 'Indomaret', alfamart: 'Alfamart', alfamidi: 'Alfamidi', apotek: 'Apotek', supermarket: 'Supermarket', lainnya: 'Toko lain' };
+export const storeCategoryLabel: Record<string, string> = { minimarket: 'Minimarket', apotek: 'Apotek', supermarket: 'Supermarket' };
+export const productCategoryLabel: Record<string, string> = { sembako: 'Sembako', minuman: 'Minuman', snack: 'Camilan', obat: 'Obat & kesehatan', kebersihan: 'Kebersihan', bayi: 'Ibu & bayi', dapur: 'Dapur', lainnya: 'Lainnya' };
+export const accommodationLabel: Record<string, string> = { customer: 'Akomodasi ditanggung pelanggan', self: 'Akomodasi sopir mandiri' };
+/** Format tanggal + jam singkat: "Sab, 6 Sep 08.00" */
+export const formatDateTimeShort = (iso?: string | null) => iso ? new Date(iso).toLocaleString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';

@@ -8,7 +8,7 @@ import type { CallPeer } from '@/lib/call';
 import { PriceSummary } from '@/components/BookingSheet';
 import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah, km, formatTime, merchantStatusLabel, phoneDisplay, phoneMasked, extraKindLabel } from '@/lib/format';
-import type { Driver, Order, OrderEvent, Profile } from '@/lib/types';
+import type { Driver, Order, OrderEvent, Profile, ShoppingItem } from '@/lib/types';
 
 /** Kartu driver (untuk customer) atau kartu customer (untuk driver). */
 /** phone tidak lagi ditampilkan/dipakai (UU PDP) — telepon lewat aplikasi via `callPeer`. */
@@ -35,7 +35,7 @@ export function RouteBlock({ order }: { order: Order }) {
     <View style={{ gap: 8 }}>
       <Row gap={10} style={{ alignItems: 'flex-start' }}>
         <View style={[s.dot, { backgroundColor: colors.primary, marginTop: 4 }]} />
-        <View style={{ flex: 1 }}><Text style={font.tiny}>{order.service === 'food' ? 'Merchant' : order.service === 'send' ? 'Ambil dari' : 'Jemput'}</Text><Text style={s.addr}>{order.merchant?.name ?? order.pickup_address}</Text>{order.merchant?.address && <Text style={font.small}>{order.merchant.address}</Text>}</View>
+        <View style={{ flex: 1 }}><Text style={font.tiny}>{order.service === 'food' ? 'Merchant' : order.service === 'send' ? 'Ambil dari' : order.service === 'shop' ? 'Toko' : order.service === 'market' ? 'Pasar' : 'Jemput'}</Text><Text style={s.addr}>{order.merchant?.name ?? order.pickup_address}</Text>{order.merchant?.address && <Text style={font.small}>{order.merchant.address}</Text>}</View>
       </Row>
       <Row gap={10} style={{ alignItems: 'flex-start' }}>
         <View style={[s.dot, { backgroundColor: colors.danger, borderRadius: 2, marginTop: 4 }]} />
@@ -60,15 +60,7 @@ export function OrderExtras({ order }: { order: Order }) {
           ))}
         </View>
       )}
-      {order.service === 'shop' && (
-        <View style={{ gap: 6 }}>
-          <Row between><Text style={font.h3}>Daftar belanja</Text><Badge text={order.shop_store ?? 'Toko'} color={colors.shop} /></Row>
-          {(order.shopping_list ?? []).map((it, i) => (
-            <Row key={i} gap={8}><View style={s.bullet}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{it.qty}</Text></View><Text style={[font.body, { flex: 1 }]}>{it.name}{it.note ? <Text style={font.tiny}>  ({it.note})</Text> : null}</Text></Row>
-          ))}
-          <Row between><Text style={font.small}>{order.receipt_url || order.status === 'completed' || order.status === 'in_progress' ? 'Total belanja (struk)' : 'Perkiraan anggaran'}</Text><Text style={{ fontWeight: '700' }}>{rupiah(order.items_subtotal)}</Text></Row>
-        </View>
-      )}
+      {(order.service === 'shop' || order.service === 'market') && <ShoppingListBlock order={order} />}
       {(order.extras ?? []).length > 0 && (
         <View style={{ gap: 4 }}>
           <Text style={font.h3}>Biaya tambahan</Text>
@@ -92,6 +84,50 @@ export function OrderExtras({ order }: { order: Order }) {
   );
 }
 
+const fmtQty = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
+/** Daftar belanja AntarShop/AntarMarket: harga acuan per item, dan bila driver sudah mengisi nota, harga riil di sampingnya. */
+export function ShoppingListBlock({ order }: { order: Order }) {
+  const isMarket = order.service === 'market';
+  const color = isMarket ? colors.market : colors.shop;
+  const list = order.shopping_list ?? [];
+  const actual = order.actual_items ?? null;
+  const findActual = (it: ShoppingItem, i: number) => actual?.find((a, j) => (a.item_id && a.item_id === it.item_id) || (a.product_id && a.product_id === it.product_id) || (!a.item_id && !a.product_id && j === i)) ?? null;
+  const totaled = !!actual || !!order.receipt_url || (order.status === 'completed' || order.status === 'in_progress');
+  const hasPrice = list.some((it) => (it.price ?? it.ref_price ?? 0) > 0);
+  return (
+    <View style={{ gap: 6 }}>
+      <Row between><Text style={font.h3}>Daftar belanja</Text><Badge text={order.shop_store ?? (isMarket ? 'Pasar' : 'Toko')} color={color} /></Row>
+      {actual && hasPrice && (
+        <Row gap={8}><View style={{ flex: 1 }} /><Text style={[font.tiny, { minWidth: 76, textAlign: 'right' }]}>Acuan</Text><Text style={[font.tiny, { minWidth: 76, textAlign: 'right', color }]}>Nota driver</Text></Row>
+      )}
+      {list.map((it, i) => {
+        const ref = it.price ?? it.ref_price ?? 0;
+        const a = findActual(it, i);
+        const aQty = a?.qty ?? it.qty;
+        const aPrice = a?.price ?? null;
+        const unavailable = !!a && (a.price ?? 0) === 0;
+        return (
+          <Row key={i} gap={8} style={{ alignItems: 'flex-start' }}>
+            <View style={[s.bullet, { backgroundColor: color }]}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{fmtQty(it.qty)}</Text></View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[font.body, unavailable && { color: colors.textMuted, textDecorationLine: 'line-through' }]}>{it.name}{it.note ? <Text style={font.tiny}>  ({it.note})</Text> : null}</Text>
+              {ref > 0 && <Text style={font.tiny}>{it.unit ? `${it.unit} · ` : ''}{isMarket ? 'acuan' : 'katalog'} {rupiah(ref)}{a && !unavailable && a.qty != null && a.qty !== it.qty ? ` · dibeli ${fmtQty(aQty)} ${it.unit ?? ''}` : ''}{unavailable ? ' · tidak tersedia' : ''}</Text>}
+            </View>
+            {ref > 0 && <Text style={[font.small, { minWidth: 76, textAlign: 'right', fontWeight: '600', color: a ? colors.textMuted : colors.text }]}>{rupiah(ref * it.qty)}</Text>}
+            {actual && hasPrice && <Text style={{ minWidth: 76, textAlign: 'right', fontWeight: '700', color: unavailable ? colors.textMuted : colors.text, fontSize: 13 }}>{aPrice == null ? '—' : rupiah(aPrice * aQty)}</Text>}
+          </Row>
+        );
+      })}
+      <Row between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 6 }}>
+        <Text style={font.small}>{totaled ? (isMarket ? 'Belanja riil (nota)' : 'Total belanja (nota)') : isMarket ? 'Belanja (acuan + cadangan 10%)' : order.shop_store_id ? 'Belanja (katalog + cadangan 10%)' : 'Perkiraan anggaran'}</Text>
+        <Text style={{ fontWeight: '700' }}>{rupiah(order.items_subtotal)}</Text>
+      </Row>
+      {(order.service_fee ?? 0) > 0 && <Row between><Text style={font.small}>Jasa belanja</Text><Text style={{ fontWeight: '700' }}>{rupiah(order.service_fee ?? 0)}</Text></Row>}
+      {actual && <Text style={font.tiny}>Sumber harga nota: driver{isMarket ? ' — dipakai sebagai acuan harga pasar untuk pesanan berikutnya' : ''}.</Text>}
+    </View>
+  );
+}
+
 export function PriceBlock({ order, forDriver }: { order: Order; forDriver?: boolean }) {
   if (forDriver) {
     return (
@@ -99,7 +135,7 @@ export function PriceBlock({ order, forDriver }: { order: Order; forDriver?: boo
     );
   }
   return (
-    <PriceSummary rows={[{ label: order.service === 'shop' ? 'Belanja' : 'Harga makanan', value: order.items_subtotal }, { label: order.service === 'food' || order.service === 'send' ? 'Ongkos kirim' : order.service === 'shop' ? 'Jasa belanja & antar' : 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Biaya layanan', value: order.platform_fee }, { label: 'Biaya tambahan', value: order.extras_total ?? 0 }, { label: 'Tip driver', value: order.tip ?? 0 }, { label: `Diskon${order.promo_code ? ` (${order.promo_code})` : ''}`, value: order.discount, minus: true }]} total={order.total + (order.tip ?? 0)} />
+    <PriceSummary rows={[{ label: order.service === 'shop' || order.service === 'market' ? 'Belanja' : 'Harga makanan', value: order.items_subtotal }, { label: 'Jasa belanja', value: order.service === 'shop' || order.service === 'market' ? (order.service_fee ?? 0) : 0 }, { label: order.service === 'food' || order.service === 'send' ? 'Ongkos kirim' : order.service === 'shop' || order.service === 'market' ? `Ongkir${order.shop_vehicle === 'car' ? ' (mobil)' : ''}` : 'Tarif perjalanan', value: order.fare_delivery }, { label: 'Biaya layanan', value: order.platform_fee }, { label: 'Biaya tambahan', value: order.extras_total ?? 0 }, { label: 'Tip driver', value: order.tip ?? 0 }, { label: `Diskon${order.promo_code ? ` (${order.promo_code})` : ''}`, value: order.discount, minus: true }]} total={order.total + (order.tip ?? 0)} />
   );
 }
 
