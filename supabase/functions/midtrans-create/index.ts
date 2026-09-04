@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const base = isProd ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
     const body = {
       transaction_details: { order_id: externalId, gross_amount: amt },
-      item_details: [{ id: purpose, price: amt, quantity: 1, name: purpose === "topup" ? "Top up AntarPay" : "Pembayaran pesanan Antar Aja" }],
+      item_details: [{ id: purpose, price: amt, quantity: 1, name: purpose === "topup" ? "Top up AntarPay" : "Pembayaran pesanan AntarKita" }],
       customer_details: { first_name: prof?.full_name ?? "Pengguna", email: prof?.email ?? user.email, phone: prof?.phone ?? undefined },
       enabled_payments: METHODS[method]?.length ? METHODS[method] : undefined,
       expiry: { unit: "minutes", duration: 30 },

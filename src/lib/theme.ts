@@ -1,4 +1,4 @@
-// Design system Antar Aja 2026 — "Light Glass"
+// Design system AntarKita 2026 — "Light Glass"
 // Prinsip: permukaan tembus pandang (glass) di atas latar hidup, gerak yang bermakna, kontras tetap tinggi untuk pemakaian di luar ruangan.
 import { Easing } from 'react-native-reanimated';
 

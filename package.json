@@ -1,7 +1,7 @@
 {
-  "name": "antar-aja",
+  "name": "antarkita",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "dependencies": {
     "@config-plugins/react-native-webrtc": "^15.0.2",
     "@expo/vector-icons": "^15.1.1",
@@ -50,13 +50,20 @@
   },
   "scripts": {
     "start": "expo start",
+    "start:mitra": "APP=mitra expo start",
+    "start:admin": "APP=admin expo start",
+    "web": "expo start --web",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "postinstall": "node scripts/gen-leaflet.mjs",
-    "typecheck": "tsc --noEmit",
-    "build:web": "expo export --platform web"
+    "build:web": "node scripts/build-web.mjs",
+    "build:web:pelanggan": "APP=pelanggan expo export --platform web --output-dir dist",
+    "build:web:mitra": "APP=mitra expo export --platform web --output-dir dist/mitra",
+    "build:web:admin": "APP=admin expo export --platform web --output-dir dist/admin",
+    "prebuild:pelanggan": "APP=pelanggan expo prebuild --platform android --no-install",
+    "prebuild:mitra": "APP=mitra expo prebuild --platform android --no-install"
   },
   "private": true
 }

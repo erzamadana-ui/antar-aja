@@ -71,7 +71,7 @@ export function PaymentMethodsPanel({ compact }: { compact?: boolean }) {
             </View>
           ))}
         </View>
-        <Text style={font.tiny}>Saat memesan, bila saldo kurang, halaman bayar {ew ? EWALLETS.find((e) => e.key === ew)?.label : 'e-wallet'} dibuka otomatis untuk kekurangannya. Antar Aja tidak menyimpan data akun e-wallet Anda.</Text>
+        <Text style={font.tiny}>Saat memesan, bila saldo kurang, halaman bayar {ew ? EWALLETS.find((e) => e.key === ew)?.label : 'e-wallet'} dibuka otomatis untuk kekurangannya. AntarKita tidak menyimpan data akun e-wallet Anda.</Text>
       </Card></Entrance>
 
       {!compact && (

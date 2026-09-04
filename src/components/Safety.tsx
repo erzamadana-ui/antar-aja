@@ -31,7 +31,7 @@ export function SosButton({ orderId, compact, style }: { orderId?: string | null
     setHolding(false);
     try {
       await rpc('sos_trigger', { p_order: orderId ?? null, p_lat: location.lat, p_lng: location.lng, p_note: 'Tombol SOS ditekan' });
-      setSent(true); toast.error('🚨 SOS terkirim ke tim keamanan Antar Aja. Tetap tenang, CS akan menghubungi Anda.');
+      setSent(true); toast.error('🚨 SOS terkirim ke tim keamanan AntarKita. Tetap tenang, CS akan menghubungi Anda.');
       setTimeout(() => setSent(false), 60000);
     } catch (e) { toast.error((e as Error).message); }
   };
@@ -57,10 +57,10 @@ export function ShareTripButton({ order, size = 'md', variant = 'secondary' }: {
     const token = order.share_token ?? (await supabase.from('orders').select('share_token').eq('id', order.id).maybeSingle()).data?.share_token;
     if (!token) return toast.error('Tautan belum tersedia');
     const url = shareUrl(token);
-    const msg = `Saya sedang dalam perjalanan Antar Aja (${order.code}). Pantau posisi driver & status di sini: ${url}`;
+    const msg = `Saya sedang dalam perjalanan AntarKita (${order.code}). Pantau posisi driver & status di sini: ${url}`;
     if (Platform.OS === 'web') {
       const nav = navigator as Navigator & { share?: (d: { title: string; text: string; url: string }) => Promise<void> };
-      if (nav.share) { try { await nav.share({ title: 'Perjalanan Antar Aja', text: msg, url }); return; } catch { /* dibatalkan */ } }
+      if (nav.share) { try { await nav.share({ title: 'Perjalanan AntarKita', text: msg, url }); return; } catch { /* dibatalkan */ } }
       try { await navigator.clipboard.writeText(url); toast.success('Tautan pantau perjalanan disalin'); } catch { window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); }
       return;
     }
@@ -171,7 +171,7 @@ export function EmergencyContactCard() {
           <Button size="sm" variant="outline" color={colors.danger} title="Telepon" icon="call-outline" onPress={() => Linking.openURL(`tel:${profile?.emergency_contact_phone}`)} />
         </Row>
       )}
-      <Text style={font.tiny}>Saat Anda menekan SOS, CS Antar Aja akan menghubungi Anda dan kontak ini.</Text>
+      <Text style={font.tiny}>Saat Anda menekan SOS, CS AntarKita akan menghubungi Anda dan kontak ini.</Text>
     </Card>
   );
 }
@@ -183,7 +183,7 @@ export function DriverVerifyCard({ plate, vehicle, name, selfieAt }: { plate: st
       <Ionicons name="shield-checkmark" size={18} color={colors.success} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }}>Cocokkan sebelum naik: <Text style={{ color: colors.ride }}>{plate}</Text> · {vehicle}</Text>
-        <Text style={font.tiny}>{name} {selfieAt ? `· wajah terverifikasi ${formatDate(selfieAt)}` : '· mitra terverifikasi Antar Aja'}</Text>
+        <Text style={font.tiny}>{name} {selfieAt ? `· wajah terverifikasi ${formatDate(selfieAt)}` : '· mitra terverifikasi AntarKita'}</Text>
       </View>
     </Animated.View>
   );

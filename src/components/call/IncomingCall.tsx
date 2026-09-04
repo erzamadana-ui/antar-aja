@@ -40,7 +40,7 @@ export function IncomingCallOverlay() {
   );
 }
 
-export function roleLabel(r?: string) { return r === 'driver' ? 'Mitra Driver' : r === 'merchant' ? 'Merchant' : r === 'admin' ? 'Admin Antar Aja' : 'Pelanggan'; }
+export function roleLabel(r?: string) { return r === 'driver' ? 'Mitra Driver' : r === 'merchant' ? 'Merchant' : r === 'admin' ? 'Admin AntarKita' : 'Pelanggan'; }
 
 /** Tombol telepon dalam aplikasi (nomor tidak ditampilkan). */
 export function CallButton({ peer, orderId, size = 44, color = colors.success, label }: { peer: CallPeer | null | undefined; orderId?: string | null; size?: number; color?: string; label?: string }) {

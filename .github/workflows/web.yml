@@ -1,4 +1,4 @@
-name: Web → GitHub Pages
+name: Web (3 aplikasi) → GitHub Pages
 
 on:
   push:
@@ -29,16 +29,14 @@ jobs:
         run: |
           REPO="${{ github.event.repository.name }}"
           if [[ "$REPO" == *.github.io ]]; then echo "url=" >> "$GITHUB_OUTPUT"; else echo "url=/$REPO" >> "$GITHUB_OUTPUT"; fi
-      - name: Export web (SPA)
+      - name: Export 3 aplikasi web (Pelanggan → /, Mitra → /mitra, Admin → /admin)
         env:
           EXPO_PUBLIC_BASE_URL: ${{ steps.base.outputs.url }}
-          EXPO_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io${{ steps.base.outputs.url }}
+          EXPO_PUBLIC_SITE_ROOT: https://${{ github.repository_owner }}.github.io${{ steps.base.outputs.url }}
+          EXPO_PUBLIC_APK_URL: https://github.com/${{ github.repository }}/releases/latest
           EXPO_NO_TELEMETRY: 1
           CI: 1
-        run: |
-          npx expo export --platform web
-          cp dist/index.html dist/404.html
-          touch dist/.nojekyll
+        run: node scripts/build-web.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

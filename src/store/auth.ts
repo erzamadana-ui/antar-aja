@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, friendlyError } from '@/lib/supabase';
-import type { Profile, Driver, Merchant, Wallet } from '@/lib/types';
+import type { Profile, Driver, Merchant, Wallet, TravelPartner } from '@/lib/types';
 
 interface AuthState {
   session: Session | null;
   profile: Profile | null;
   driver: Driver | null;
   merchant: Merchant | null;
+  travelPartner: TravelPartner | null;
   wallet: Wallet | null;
   loading: boolean;       // inisialisasi awal
   ready: boolean;
@@ -23,7 +24,7 @@ interface AuthState {
 let subscribed = false;
 
 export const useAuth = create<AuthState>((set, get) => ({
-  session: null, profile: null, driver: null, merchant: null, wallet: null, loading: true, ready: false,
+  session: null, profile: null, driver: null, merchant: null, travelPartner: null, wallet: null, loading: true, ready: false,
 
   init: async () => {
     const { data } = await supabase.auth.getSession();
@@ -35,7 +36,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       supabase.auth.onAuthStateChange((_event, session) => {
         set({ session });
         if (session) get().loadProfile();
-        else set({ profile: null, driver: null, merchant: null, wallet: null });
+        else set({ profile: null, driver: null, merchant: null, travelPartner: null, wallet: null });
       });
     }
   },
@@ -43,13 +44,14 @@ export const useAuth = create<AuthState>((set, get) => ({
   loadProfile: async () => {
     const uid = get().session?.user.id;
     if (!uid) return;
-    const [{ data: profile }, { data: driver }, { data: merchant }, { data: wallet }] = await Promise.all([
+    const [{ data: profile }, { data: driver }, { data: merchant }, { data: travel }, { data: wallet }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
       supabase.from('drivers').select('*').eq('id', uid).maybeSingle(),
       supabase.from('merchants').select('*').eq('owner_id', uid).maybeSingle(),
+      supabase.from('travel_partners').select('*').eq('id', uid).maybeSingle(),
       supabase.from('wallets').select('*').eq('user_id', uid).maybeSingle(),
     ]);
-    set({ profile: (profile as Profile) ?? null, driver: (driver as Driver) ?? null, merchant: (merchant as Merchant) ?? null, wallet: (wallet as Wallet) ?? null });
+    set({ profile: (profile as Profile) ?? null, driver: (driver as Driver) ?? null, merchant: (merchant as Merchant) ?? null, travelPartner: (travel as TravelPartner) ?? null, wallet: (wallet as Wallet) ?? null });
   },
 
   refreshWallet: async () => {

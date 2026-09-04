@@ -1,99 +1,47 @@
-// Logo Antar Aja — 6 konsep (lihat assets/logo/preview.html). Varian 6 = kombinasi helm + mobil (default).
+// Logo AntarKita — konsep C29 "Dua Tetes Bersatu": dua tetes air saling mengunci membentuk lingkaran utuh (semangat yin-yang).
+// Sumber: kanvas "AntarKita Logo Concepts" (pilihan Erza, 4 Sep 2026). Latar lingkaran berbeda per aplikasi: pelanggan teal, mitra tinta, admin abu-hijau.
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, useReducedMotion } from 'react-native-reanimated';
 import { colors, font, shadow } from '@/lib/theme';
+import { APP, BRAND } from '@/lib/app';
 
-export type LogoVariant = 1 | 2 | 3 | 4 | 5 | 6;
-export const LOGO_VARIANT: LogoVariant = 6;
+export const LOGO_BG: Record<string, string> = { pelanggan: '#0E9488', mitra: '#0F2A28', admin: '#1F3A38' };
 
-export function BrandLogo({ size = 48, variant = LOGO_VARIANT, style }: { size?: number; variant?: LogoVariant; style?: object }) {
-  return <View style={[{ width: size, height: size, borderRadius: size * 0.28, overflow: 'hidden' }, shadow.glow(colors.primary), style]}><LogoSvg size={size} variant={variant} /></View>;
+/** Ikon logo: lingkaran berwarna + dua tetes (putih & mint). */
+export function BrandLogo({ size = 48, tone, style, flat }: { size?: number; tone?: 'pelanggan' | 'mitra' | 'admin' | 'white'; style?: object; flat?: boolean }) {
+  const bg = tone === 'white' ? '#FFFFFF' : LOGO_BG[tone ?? APP] ?? LOGO_BG.pelanggan;
+  const dropA = tone === 'white' ? '#0E9488' : '#FFFFFF';
+  const dropB = tone === 'white' ? '#0B6E64' : '#BFF3EA';
+  return (
+    <View style={[{ width: size, height: size, borderRadius: size / 2 }, !flat && shadow.glow(bg === '#FFFFFF' ? colors.primary : bg), style]}>
+      <Svg width={size} height={size} viewBox="0 0 96 96">
+        <Circle cx="48" cy="48" r="48" fill={bg} />
+        <Path d="M48 18C48 18 66 26 66 44C66 53 59 60 50 60C43 60 38 55 38 48C38 43 41 40 46 40C49 40 51 42 51 45" fill={dropA} />
+        <Path d="M48 78C48 78 30 70 30 52C30 43 37 36 46 36C53 36 58 41 58 48C58 53 55 56 50 56C47 56 45 54 45 51" fill={dropB} />
+      </Svg>
+    </View>
+  );
 }
 
-function LogoSvg({ size, variant }: { size: number; variant: LogoVariant }) {
-  const s = size;
-  switch (variant) {
-    case 1: return (
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs><LinearGradient id="l1" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#14A39F" /><Stop offset="1" stopColor="#0A5C5B" /></LinearGradient><LinearGradient id="l1o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFB547" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient></Defs>
-        <Rect x="16" y="16" width="224" height="224" rx="64" fill="url(#l1)" />
-        <Path d="M128 40 L200 196 L128 164 L56 196 Z" fill="#fff" opacity={0.96} /><Path d="M128 40 L200 196 L128 164 Z" fill="#E6F4F3" />
-        <Circle cx="186" cy="70" r="20" fill="url(#l1o)" /><Path d="M60 210 h136" stroke="#fff" strokeOpacity={0.35} strokeWidth="6" strokeLinecap="round" />
-      </Svg>
-    );
-    case 2: return (
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs><LinearGradient id="l2" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#0E7C7B" /><Stop offset="1" stopColor="#0A5C5B" /></LinearGradient><LinearGradient id="l2o" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#FFB547" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient></Defs>
-        <Circle cx="128" cy="128" r="112" fill="url(#l2)" />
-        <Path d="M74 190 L128 62 L182 190" fill="none" stroke="#fff" strokeWidth="26" strokeLinecap="round" strokeLinejoin="round" />
-        <Path d="M98 150 H158" stroke="url(#l2o)" strokeWidth="18" strokeLinecap="round" />
-        <Path d="M26 128 H58" stroke="#fff" strokeOpacity={0.6} strokeWidth="10" strokeLinecap="round" /><Path d="M14 152 H50" stroke="#fff" strokeOpacity={0.35} strokeWidth="10" strokeLinecap="round" /><Path d="M38 104 H60" stroke="#fff" strokeOpacity={0.35} strokeWidth="10" strokeLinecap="round" />
-      </Svg>
-    );
-    case 3: return (
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs><LinearGradient id="l3" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#17B3AE" /><Stop offset="1" stopColor="#0E7C7B" /></LinearGradient><LinearGradient id="l3o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFC15E" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient></Defs>
-        <Rect x="16" y="16" width="224" height="224" rx="72" fill="#F3F6F8" /><Rect x="16" y="16" width="224" height="224" rx="72" fill="none" stroke="#0E7C7B" strokeOpacity={0.18} strokeWidth="4" />
-        <Path d="M48 140 a80 80 0 0 1 160 0 v34 a14 14 0 0 1 -14 14 h-132 a14 14 0 0 1 -14 -14 z" fill="url(#l3)" />
-        <Path d="M48 140 a80 80 0 0 1 160 0 h-24 a56 56 0 0 0 -112 0 z" fill="#fff" opacity={0.18} />
-        <Path d="M66 134 h124 a10 10 0 0 1 10 10 v14 a24 24 0 0 1 -24 24 h-96 a24 24 0 0 1 -24 -24 v-14 a10 10 0 0 1 10 -10 z" fill="url(#l3o)" />
-        <Path d="M84 150 h60" stroke="#fff" strokeOpacity={0.7} strokeWidth="8" strokeLinecap="round" />
-        <Path d="M104 206 q24 16 48 0" fill="none" stroke="#0E7C7B" strokeWidth="8" strokeLinecap="round" /><Circle cx="200" cy="82" r="8" fill="#F58A1F" />
-      </Svg>
-    );
-    case 4: return (
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs><LinearGradient id="l4" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#0E7C7B" /><Stop offset="1" stopColor="#12938F" /></LinearGradient></Defs>
-        <Rect x="16" y="16" width="224" height="224" rx="60" fill="url(#l4)" />
-        <Path d="M70 176 C60 120, 120 120, 128 84 C136 120, 196 120, 186 176" fill="none" stroke="#fff" strokeOpacity={0.35} strokeWidth="10" strokeLinecap="round" strokeDasharray="2 18" />
-        <Path d="M70 200 c-22 -30 -30 -44 -30 -60 a30 30 0 0 1 60 0 c0 16 -8 30 -30 60z" fill="#fff" /><Circle cx="70" cy="140" r="12" fill="#0E7C7B" />
-        <Path d="M186 200 c-22 -30 -30 -44 -30 -60 a30 30 0 0 1 60 0 c0 16 -8 30 -30 60z" fill="#F5A524" /><Circle cx="186" cy="140" r="12" fill="#fff" />
-        <Path d="M128 60 l14 26 h-28 z" fill="#FFC15E" />
-      </Svg>
-    );
-    case 5: return (
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs><LinearGradient id="l5" x1="0" y1="1" x2="1" y2="0"><Stop offset="0" stopColor="#0A5C5B" /><Stop offset="1" stopColor="#17B3AE" /></LinearGradient><LinearGradient id="l5o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFC15E" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient></Defs>
-        <Circle cx="128" cy="128" r="112" fill="url(#l5)" />
-        <Path d="M30 118 h58" stroke="#fff" strokeOpacity={0.9} strokeWidth="12" strokeLinecap="round" /><Path d="M44 142 h44" stroke="#fff" strokeOpacity={0.55} strokeWidth="12" strokeLinecap="round" /><Path d="M58 166 h30" stroke="#fff" strokeOpacity={0.3} strokeWidth="12" strokeLinecap="round" />
-        <Path d="M158 206 c-30 -40 -42 -58 -42 -80 a42 42 0 0 1 84 0 c0 22 -12 40 -42 80z" fill="#fff" /><Circle cx="158" cy="126" r="20" fill="url(#l5o)" /><Circle cx="158" cy="126" r="7" fill="#fff" />
-      </Svg>
-    );
-    default: return (   // 6 · Helm + Mobil: mobil tersenyum memakai helm (motor & mobil dalam satu ikon)
-      <Svg width={s} height={s} viewBox="0 0 256 256">
-        <Defs>
-          <LinearGradient id="l6" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#17B3AE" /><Stop offset="1" stopColor="#0E7C7B" /></LinearGradient>
-          <LinearGradient id="l6c" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#0F8F8B" /><Stop offset="1" stopColor="#0A5C5B" /></LinearGradient>
-          <LinearGradient id="l6o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFC15E" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient>
-        </Defs>
-        <Rect x="16" y="16" width="224" height="224" rx="72" fill="#F3F6F8" /><Rect x="16" y="16" width="224" height="224" rx="72" fill="none" stroke="#0E7C7B" strokeOpacity={0.18} strokeWidth="4" />
-        <Path d="M30 96 h22" stroke="#0E7C7B" strokeOpacity={0.45} strokeWidth="8" strokeLinecap="round" /><Path d="M22 118 h26" stroke="#0E7C7B" strokeOpacity={0.28} strokeWidth="8" strokeLinecap="round" />
-        <Path d="M36 208 v-44 a26 26 0 0 1 26 -26 h132 a26 26 0 0 1 26 26 v44 a10 10 0 0 1 -10 10 h-164 a10 10 0 0 1 -10 -10 z" fill="url(#l6c)" />
-        <Circle cx="70" cy="214" r="17" fill="#0B1F2A" /><Circle cx="70" cy="214" r="6" fill="#fff" opacity={0.9} />
-        <Circle cx="186" cy="214" r="17" fill="#0B1F2A" /><Circle cx="186" cy="214" r="6" fill="#fff" opacity={0.9} />
-        <Circle cx="62" cy="180" r="11" fill="url(#l6o)" /><Circle cx="194" cy="180" r="11" fill="url(#l6o)" />
-        <Circle cx="59" cy="177" r="4" fill="#fff" opacity={0.8} /><Circle cx="191" cy="177" r="4" fill="#fff" opacity={0.8} />
-        <Path d="M104 188 q24 16 48 0" fill="none" stroke="#fff" strokeWidth="8" strokeLinecap="round" />
-        <Path d="M60 138 a68 68 0 0 1 136 0 v10 a12 12 0 0 1 -12 12 h-112 a12 12 0 0 1 -12 -12 z" fill="url(#l6)" />
-        <Path d="M60 138 a68 68 0 0 1 136 0 h-22 a46 46 0 0 0 -92 0 z" fill="#fff" opacity={0.2} />
-        <Path d="M74 126 h108 a10 10 0 0 1 10 10 v10 a20 20 0 0 1 -20 20 h-88 a20 20 0 0 1 -20 -20 v-10 a10 10 0 0 1 10 -10 z" fill="url(#l6o)" />
-        <Path d="M90 140 h52" stroke="#fff" strokeOpacity={0.7} strokeWidth="7" strokeLinecap="round" />
-        <Circle cx="200" cy="72" r="8" fill="#F58A1F" />
-      </Svg>
-    );
-  }
+/** Wordmark "AntarKita": "Antar" tinta, "Kita" teal (atau putih/mint di latar gelap). */
+export function Wordmark({ size = 22, dark }: { size?: number; dark?: boolean }) {
+  return (
+    <Text style={{ fontSize: size, fontWeight: '800', letterSpacing: -size * 0.02, color: dark ? '#fff' : colors.text, lineHeight: size * 1.2 }}>
+      Antar<Text style={{ color: dark ? '#BFF3EA' : colors.primary }}>Kita</Text>
+    </Text>
+  );
 }
 
 /** Logo + nama merek (untuk header/welcome). */
-export function LogoLockup({ size = 40, dark }: { size?: number; dark?: boolean }) {
+export function LogoLockup({ size = 40, dark, sub }: { size?: number; dark?: boolean; sub?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <BrandLogo size={size} />
       <View>
-        <Text style={[font.display, { fontSize: size * 0.5, color: dark ? '#fff' : colors.text, lineHeight: size * 0.58 }]}>Antar Aja</Text>
-        <Text style={{ fontSize: size * 0.26, color: dark ? 'rgba(255,255,255,0.8)' : colors.textSecondary, fontWeight: '600', letterSpacing: 0.8 }}>ANTAR APA AJA</Text>
+        <Wordmark size={size * 0.52} dark={dark} />
+        <Text style={{ fontSize: Math.max(11, size * 0.26), color: dark ? 'rgba(255,255,255,0.8)' : colors.textSecondary, fontWeight: '600', letterSpacing: 0.6 }}>{sub ?? (APP === 'mitra' ? 'APLIKASI MITRA' : APP === 'admin' ? 'PANEL ADMIN' : 'ANTAR APA SAJA, BERSAMA')}</Text>
       </View>
     </View>
   );
@@ -109,7 +57,7 @@ export function LogoPulse({ size = 72, text }: { size?: number; text?: string })
   return (
     <View style={{ alignItems: 'center', gap: 14 }}>
       <View style={{ width: size * 1.8, height: size * 1.8, alignItems: 'center', justifyContent: 'center' }}>
-        <Animated.View style={[{ position: 'absolute', width: size, height: size, borderRadius: size * 0.28, borderWidth: 2, borderColor: colors.primary }, ring]} />
+        <Animated.View style={[{ position: 'absolute', width: size, height: size, borderRadius: size / 2, borderWidth: 2, borderColor: colors.primary }, ring]} />
         <Animated.View style={logo}><BrandLogo size={size} /></Animated.View>
       </View>
       {text ? <Text style={s.text}>{text}</Text> : null}
@@ -117,4 +65,5 @@ export function LogoPulse({ size = 72, text }: { size?: number; text?: string })
   );
 }
 
+export { BRAND };
 const s = StyleSheet.create({ text: { color: colors.textSecondary, fontWeight: '600', fontSize: 14 } });

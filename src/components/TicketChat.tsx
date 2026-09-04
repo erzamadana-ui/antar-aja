@@ -13,7 +13,7 @@ import { formatTime, formatDate, ticketStatusLabel, ticketStatusColor } from '@/
 import type { Ticket, TicketMessage } from '@/lib/types';
 
 const QUICK_USER = ['Masih belum selesai', 'Sudah beres, terima kasih 🙏', 'Mohon dicek lagi'];
-const QUICK_CS = ['Halo, saya CS Antar Aja. Bisa dibantu?', 'Sedang kami cek, mohon tunggu ±10 menit.', 'Sudah kami selesaikan ya. Ada lagi yang bisa dibantu?', 'Mohon kirim tangkapan layar / bukti transaksi.'];
+const QUICK_CS = ['Halo, saya CS AntarKita. Bisa dibantu?', 'Sedang kami cek, mohon tunggu ±10 menit.', 'Sudah kami selesaikan ya. Ada lagi yang bisa dibantu?', 'Mohon kirim tangkapan layar / bukti transaksi.'];
 
 export function TicketChat({ ticket, messages, onSend, asCs, footer, style }: {
   ticket: Ticket | null; messages: TicketMessage[];
@@ -58,7 +58,7 @@ export function TicketChat({ ticket, messages, onSend, asCs, footer, style }: {
                 <Animated.View entering={last ? (mine ? FadeInUp : FadeInDown).springify().stiffness(280).damping(18) : undefined} layout={LinearTransition.springify().stiffness(280).damping(20)}
                   style={[s.bubble, mine ? s.mine : s.theirs, m.is_internal && s.internal]}>
                   {mine && !m.is_internal && <BrandGradient colors={asCs ? [colors.info, '#1D4ED8'] : undefined} style={StyleSheet.absoluteFill} />}
-                  {!mine && <Text style={[font.tiny, { fontWeight: '800', color: m.sender_role === 'cs' ? colors.info : colors.textSecondary, marginBottom: 2 }]}>{m.sender_role === 'cs' ? 'CS Antar Aja' : 'Pengguna'}</Text>}
+                  {!mine && <Text style={[font.tiny, { fontWeight: '800', color: m.sender_role === 'cs' ? colors.info : colors.textSecondary, marginBottom: 2 }]}>{m.sender_role === 'cs' ? 'CS AntarKita' : 'Pengguna'}</Text>}
                   {m.is_internal && <Text style={[font.tiny, { fontWeight: '800', color: colors.warning, marginBottom: 2 }]}>Catatan internal (tak terlihat pengguna)</Text>}
                   <Text style={{ color: mine && !m.is_internal ? '#fff' : colors.text, fontSize: 15, lineHeight: 21 }}>{m.body}</Text>
                   {m.attachment_url && (
