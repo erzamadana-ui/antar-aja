@@ -1,5 +1,5 @@
 // Edge Function: notifikasi Midtrans (HTTP notification) → verifikasi signature → payment_settle().
-// Juga menerima {simulate: external_id} dari aplikasi HANYA saat MIDTRANS_SERVER_KEY belum diisi (mode simulasi).
+// Juga menerima {simulate: external_id} dari aplikasi HANYA saat server key belum diisi (mode simulasi).
 // verify_jwt = false karena Midtrans memanggil tanpa JWT; keaslian dicek lewat signature_key (SHA-512 server key).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -13,7 +13,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
+    // Server key: secret → tabel gateway_secrets (diisi admin dari panel)
+    let serverKey = Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
+    if (!serverKey) { const { data } = await admin.from("gateway_secrets").select("server_key").eq("provider", "midtrans").maybeSingle(); serverKey = (data?.server_key as string) ?? ""; }
 
     // ---- Simulasi (hanya jika belum ada server key) ----
     if (body.simulate) {

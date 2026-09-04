@@ -130,3 +130,58 @@ insert into promos (code, title, description, discount_type, value, max_discount
 ('TOPUP50', 'Top Up Bonus 5%', 'Top up AntarPay via e-wallet · s.d. Rp25.000', 'percent', 5, 25000, 100000, null, 500, true, 'https://erzamadana-ui.github.io/antar-aja/promos/TOPUP50.jpg', 19),
 ('AJAKTEMAN', 'Ajak Teman Rp15.000', 'Teman baru pakai kode ini, kamu dapat bonus', 'fixed', 15000, null, 20000, null, 500, true, 'https://erzamadana-ui.github.io/antar-aja/promos/AJAKTEMAN.jpg', 20)
 on conflict (code) do update set title = excluded.title, description = excluded.description, image_url = excluded.image_url, sort_order = excluded.sort_order;
+-- ===== Tahap 6: seed toko katalog, produk, pasar tradisional, bahan masak (harga acuan = perkiraan, wajib disurvei admin) =====
+insert into shop_stores (name, brand, category, address, lat, lng, open_hours, catalog_source) values
+  ('Indomaret Sudirman Pekanbaru', 'indomaret', 'minimarket', 'Jl. Jend. Sudirman No. 199, Pekanbaru', 0.5168, 101.4463, '07:00-23:00', 'admin'),
+  ('Alfamart Nangka Pekanbaru', 'alfamart', 'minimarket', 'Jl. Tuanku Tambusai (Nangka), Pekanbaru', 0.4985, 101.4197, '07:00-23:00', 'admin'),
+  ('Apotek K-24 Arifin Ahmad', 'apotek', 'apotek', 'Jl. Arifin Ahmad, Pekanbaru', 0.4813, 101.4275, '00:00-24:00', 'admin'),
+  ('Hypermart Mal SKA Pekanbaru', 'supermarket', 'supermarket', 'Mal SKA, Jl. Soekarno-Hatta, Pekanbaru', 0.4795, 101.4194, '10:00-22:00', 'admin'),
+  ('Indomaret Khatib Sulaiman Padang', 'indomaret', 'minimarket', 'Jl. Khatib Sulaiman, Padang', -0.9219, 100.3574, '07:00-23:00', 'admin'),
+  ('Alfamart Veteran Padang', 'alfamart', 'minimarket', 'Jl. Veteran, Padang', -0.9401, 100.3611, '07:00-23:00', 'admin'),
+  ('Apotek Kimia Farma Padang', 'apotek', 'apotek', 'Jl. Proklamasi, Padang', -0.9463, 100.3651, '07:00-22:00', 'admin'),
+  ('Transmart Padang', 'supermarket', 'supermarket', 'Jl. Khatib Sulaiman, Padang', -0.9152, 100.3588, '10:00-22:00', 'admin')
+on conflict do nothing;
+update shop_stores set city_id = nearest_city(lat, lng) where city_id is null;
+
+-- katalog dasar (harga toko: perkiraan Sep 2026 — admin memperbarui lewat panel / impor CSV)
+with items(sku, name, category, unit, price) as (values
+  ('beras-setra-5', 'Beras Setra Ramos 5 kg', 'sembako', 'karung', 74500), ('minyak-bimoli-2l', 'Minyak Goreng Bimoli 2 L', 'sembako', 'pouch', 39900), ('minyakita-1l', 'MinyaKita 1 L', 'sembako', 'pouch', 17000),
+  ('gula-gulaku-1', 'Gula Pasir Gulaku 1 kg', 'sembako', 'pack', 18900), ('telur-1kg', 'Telur Ayam 1 kg', 'sembako', 'kg', 30500), ('tepung-segitiga-1', 'Tepung Terigu Segitiga Biru 1 kg', 'sembako', 'pack', 13500),
+  ('indomie-goreng', 'Indomie Goreng', 'sembako', 'pcs', 3500), ('indomie-kari', 'Indomie Kari Ayam', 'sembako', 'pcs', 3600), ('kecap-bango-220', 'Kecap Manis Bango 220 ml', 'dapur', 'btl', 12900),
+  ('susu-uht-ultra-1l', 'Susu UHT Ultra Milk 1 L', 'minuman', 'pack', 21500), ('aqua-600', 'Aqua 600 ml', 'minuman', 'btl', 4000), ('aqua-galon', 'Aqua Galon 19 L (isi ulang)', 'minuman', 'galon', 22000),
+  ('teh-pucuk-350', 'Teh Pucuk Harum 350 ml', 'minuman', 'btl', 4000), ('kopi-kapal-api-165', 'Kopi Kapal Api Special 165 g', 'minuman', 'pack', 16500),
+  ('sabun-lifebuoy', 'Sabun Lifebuoy 85 g', 'kebersihan', 'pcs', 5200), ('rinso-770', 'Rinso Anti Noda 770 g', 'kebersihan', 'pack', 24500), ('sunlight-700', 'Sunlight Jeruk Nipis 700 ml', 'kebersihan', 'pouch', 16900),
+  ('pepsodent-190', 'Pepsodent 190 g', 'kebersihan', 'pcs', 15500), ('tisu-paseo-250', 'Tisu Paseo 250 lembar', 'kebersihan', 'pack', 18900),
+  ('chitato-68', 'Chitato 68 g', 'snack', 'pcs', 11500), ('roti-sari-roti', 'Sari Roti Tawar', 'snack', 'pcs', 16000), ('biskuit-roma-300', 'Roma Kelapa 300 g', 'snack', 'pack', 12500),
+  ('pampers-m', 'Popok Bayi Merries M 34', 'bayi', 'pack', 89000), ('sgm-900', 'Susu SGM Eksplor 1+ 900 g', 'bayi', 'box', 96000),
+  ('paracetamol', 'Paracetamol 500 mg (strip 10)', 'obat', 'strip', 4000), ('tolak-angin', 'Tolak Angin Cair (5 sachet)', 'obat', 'pack', 21000), ('betadine-15', 'Betadine 15 ml', 'obat', 'btl', 19500),
+  ('vitamin-c-ipi', 'Vitamin C IPI (tube 50)', 'obat', 'tube', 8500), ('minyak-kayu-putih-60', 'Minyak Kayu Putih Cap Lang 60 ml', 'obat', 'btl', 27000), ('masker-50', 'Masker Medis 3-ply (50)', 'obat', 'box', 32000)
+)
+insert into shop_products (store_id, sku, name, category, unit, price, in_stock)
+select s.id, i.sku, i.name, i.category, i.unit,
+  case when s.category = 'supermarket' then round(i.price * 0.96 / 100) * 100 when s.brand = 'alfamart' then i.price + 200 else i.price end,
+  not (i.sku in ('telur-1kg') and s.brand = 'indomaret' and s.name like '%Sudirman%')
+from shop_stores s cross join items i
+where (s.category in ('minimarket','supermarket') and i.category <> 'obat') or (s.category = 'apotek' and i.category in ('obat','kebersihan','bayi')) or (s.category = 'supermarket' and i.category = 'obat')
+on conflict (store_id, sku) do nothing;
+
+-- pasar tradisional
+insert into markets (name, address, lat, lng, open_hours, notes) values
+  ('Pasar Bawah Pekanbaru', 'Jl. Saleh Abbas, Senapelan, Pekanbaru', 0.5345, 101.4407, '05:00-16:00', 'Pasar tertua Pekanbaru; ikan & bumbu lengkap pagi hari'),
+  ('Pasar Cik Puan', 'Jl. Tuanku Tambusai, Pekanbaru', 0.5029, 101.4269, '05:00-14:00', 'Sayur, ayam, daging'),
+  ('Pasar Pagi Arengka', 'Jl. Soekarno-Hatta (Arengka), Pekanbaru', 0.4778, 101.4029, '04:30-12:00', 'Pasar pagi, ramai jam 06.00–09.00'),
+  ('Pasar Raya Padang', 'Jl. Pasar Raya, Padang', -0.9497, 100.3597, '05:00-17:00', 'Pasar induk kota Padang'),
+  ('Pasar Lubuk Buaya', 'Jl. Adinegoro, Lubuk Buaya, Padang', -0.8557, 100.3453, '05:00-13:00', 'Sayur & ikan segar'),
+  ('Pasar Siteba', 'Jl. Siteba, Nanggalo, Padang', -0.9146, 100.3789, '05:00-13:00', null)
+on conflict do nothing;
+update markets set city_id = nearest_city(lat, lng) where city_id is null;
+
+-- bahan masak & harga acuan (perkiraan; kategori PIHPS + bahan umum) — WAJIB disurvei admin sebelum dipakai komersial
+insert into market_items (name, category, unit, ref_price, price_source, sort) values
+  ('Beras medium', 'sembako', 'kg', 14500, 'admin', 10), ('Beras premium', 'sembako', 'kg', 16500, 'admin', 11), ('Gula pasir', 'sembako', 'kg', 18000, 'admin', 12), ('Minyak goreng curah', 'sembako', 'liter', 17000, 'admin', 13), ('Telur ayam ras', 'sembako', 'kg', 29000, 'admin', 14), ('Tepung terigu', 'sembako', 'kg', 12500, 'admin', 15),
+  ('Cabai merah keriting', 'bumbu', 'kg', 42000, 'admin', 20), ('Cabai merah besar', 'bumbu', 'kg', 40000, 'admin', 21), ('Cabai rawit merah', 'bumbu', 'kg', 55000, 'admin', 22), ('Cabai rawit hijau', 'bumbu', 'kg', 45000, 'admin', 23), ('Bawang merah', 'bumbu', 'kg', 38000, 'admin', 24), ('Bawang putih', 'bumbu', 'kg', 40000, 'admin', 25), ('Bawang bombay', 'bumbu', 'kg', 30000, 'admin', 26), ('Jahe', 'bumbu', 'kg', 35000, 'admin', 27), ('Kunyit', 'bumbu', 'kg', 20000, 'admin', 28), ('Lengkuas', 'bumbu', 'kg', 15000, 'admin', 29), ('Serai', 'bumbu', 'ikat', 5000, 'admin', 30), ('Daun salam & jeruk', 'bumbu', 'ikat', 3000, 'admin', 31), ('Kelapa parut', 'bumbu', 'butir', 8000, 'admin', 32), ('Kemiri', 'bumbu', 'ons', 6000, 'admin', 33),
+  ('Ayam potong (broiler)', 'daging_ikan', 'ekor', 45000, 'admin', 40), ('Ayam kampung', 'daging_ikan', 'ekor', 85000, 'admin', 41), ('Daging sapi', 'daging_ikan', 'kg', 140000, 'admin', 42), ('Ikan tongkol', 'daging_ikan', 'kg', 38000, 'admin', 43), ('Ikan kembung', 'daging_ikan', 'kg', 40000, 'admin', 44), ('Ikan nila', 'daging_ikan', 'kg', 36000, 'admin', 45), ('Ikan lele', 'daging_ikan', 'kg', 28000, 'admin', 46), ('Udang', 'daging_ikan', 'kg', 90000, 'admin', 47), ('Tahu', 'daging_ikan', 'papan', 7000, 'admin', 48), ('Tempe', 'daging_ikan', 'papan', 7000, 'admin', 49),
+  ('Tomat', 'sayur', 'kg', 14000, 'admin', 50), ('Kentang', 'sayur', 'kg', 18000, 'admin', 51), ('Wortel', 'sayur', 'kg', 16000, 'admin', 52), ('Kol / kubis', 'sayur', 'kg', 10000, 'admin', 53), ('Sawi hijau', 'sayur', 'ikat', 5000, 'admin', 54), ('Kangkung', 'sayur', 'ikat', 4000, 'admin', 55), ('Bayam', 'sayur', 'ikat', 4000, 'admin', 56), ('Kacang panjang', 'sayur', 'ikat', 6000, 'admin', 57), ('Buncis', 'sayur', 'kg', 16000, 'admin', 58), ('Terong', 'sayur', 'kg', 12000, 'admin', 59), ('Timun', 'sayur', 'kg', 10000, 'admin', 60), ('Labu siam', 'sayur', 'kg', 9000, 'admin', 61), ('Daun singkong', 'sayur', 'ikat', 3000, 'admin', 62), ('Nangka muda', 'sayur', 'kg', 12000, 'admin', 63), ('Jagung manis', 'sayur', 'buah', 5000, 'admin', 64), ('Toge', 'sayur', 'kg', 12000, 'admin', 65),
+  ('Pisang', 'buah', 'sisir', 18000, 'admin', 70), ('Jeruk medan', 'buah', 'kg', 30000, 'admin', 71), ('Pepaya', 'buah', 'buah', 15000, 'admin', 72), ('Semangka', 'buah', 'kg', 9000, 'admin', 73), ('Apel fuji', 'buah', 'kg', 40000, 'admin', 74), ('Mangga', 'buah', 'kg', 25000, 'admin', 75), ('Alpukat', 'buah', 'kg', 30000, 'admin', 76),
+  ('Santan instan (Kara 200 ml)', 'lainnya', 'pcs', 8000, 'admin', 80), ('Garam', 'lainnya', 'bungkus', 4000, 'admin', 81), ('Kerupuk', 'lainnya', 'bungkus', 10000, 'admin', 82), ('Gas LPG 3 kg (isi ulang)', 'lainnya', 'tabung', 22000, 'admin', 83)
+on conflict do nothing;
