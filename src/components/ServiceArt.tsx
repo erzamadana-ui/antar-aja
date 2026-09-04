@@ -5,7 +5,7 @@ import { View, StyleSheet } from 'react-native';
 import Svg, { Path, Circle, Rect, Ellipse, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import { shadow } from '@/lib/theme';
 
-export type ArtKind = 'rider' | 'car' | 'food' | 'send' | 'shop' | 'pay' | 'box' | 'travel';
+export type ArtKind = 'rider' | 'car' | 'food' | 'send' | 'shop' | 'pay' | 'box' | 'travel' | 'market';
 
 /** Hanya gambar (tanpa bingkai). */
 export function ServiceIllustration({ kind, size = 56 }: { kind: ArtKind; size?: number }) {
@@ -144,6 +144,27 @@ export function ServiceIllustration({ kind, size = 56 }: { kind: ArtKind; size?:
         <Circle cx="56" cy="16" r="3.5" fill="#F5A524" />
         {/* wajah dompet */}
         <Circle cx="20" cy="42" r="1.5" fill="#fff" /><Circle cx="28" cy="42" r="1.5" fill="#fff" /><Path d="M21 45.5 q3 2.5 6 0" stroke="#fff" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+      </Svg>
+    );
+    case 'market': return (
+      <Svg width={s} height={s} viewBox="0 0 64 64">
+        {/* tenda kios pasar */}
+        <Path d="M8 26 L14 12 H50 L56 26 Z" fill="#1FA363" />
+        <Path d="M8 26 q6 6 12 0 q6 6 12 0 q6 6 12 0 q6 6 12 0 v-2 H8 Z" fill="#E4F6EC" />
+        <Path d="M20 12 L18 26 M32 12 V26 M44 12 L46 26" stroke="#0B1F2A" strokeWidth="1.2" opacity="0.25" />
+        {/* meja */}
+        <Rect x="12" y="34" width="40" height="14" rx="3" fill="#D97706" />
+        <Rect x="12" y="34" width="40" height="4" rx="2" fill="#B45309" />
+        <Path d="M16 48 v8 M48 48 v8" stroke="#8B4513" strokeWidth="3" strokeLinecap="round" />
+        {/* sayur & buah di keranjang */}
+        <Rect x="16" y="28" width="12" height="8" rx="2" fill="#F5A524" />
+        <Circle cx="19" cy="29" r="3" fill="#E5484D" /><Circle cx="25" cy="29" r="3" fill="#E5484D" />
+        <Rect x="36" y="28" width="12" height="8" rx="2" fill="#F5A524" />
+        <Path d="M38 29 q4 -8 8 0" fill="#1FA363" /><Path d="M40 30 q2 -5 4 0" fill="#0E9488" />
+        {/* cabai */}
+        <Path d="M28 44 q4 -6 8 -2" stroke="#E5484D" strokeWidth="3" strokeLinecap="round" fill="none" />
+        {/* wajah kios */}
+        <Circle cx="26" cy="42" r="1.4" fill="#fff" /><Circle cx="38" cy="42" r="1.4" fill="#fff" />
       </Svg>
     );
   }

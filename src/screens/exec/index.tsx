@@ -75,7 +75,7 @@ export default function ExecPortal() {
       <View style={{ gap: 16 }}>
         <BrandGradient colors={['#0B1F2A', '#1F3A4A']} style={[s.hero, shadow.card]}>
           <Row between style={{ flexWrap: 'wrap', gap: 8 }}>
-            <View><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}>LAPORAN MANAJEMEN & PEMEGANG SAHAM · {execLevelLabel[sess.level].toUpperCase()}</Text><Text style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>AntarKita — {months} bulan terakhir</Text><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Dibuat {r ? formatDate(r.generated_at) : '…'} · sesi s.d. {new Date(sess.expires_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text></View>
+            <View><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}>LAPORAN MANAJEMEN & PEMEGANG SAHAM · {execLevelLabel[sess.level].toUpperCase()}</Text><Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>AntarKita — {months} bulan terakhir</Text><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Dibuat {r ? formatDate(r.generated_at) : '…'} · sesi s.d. {new Date(sess.expires_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text></View>
             <Row gap={6}>{[3, 6, 12].map((m) => <Chip key={m} label={`${m} bln`} active={months === m} onPress={() => setMonths(m)} color={colors.accent} />)}{Platform.OS === 'web' && <Button size="sm" title="CSV" icon="download-outline" color="#fff" variant="glass" onPress={exportCsv} />}</Row>
           </Row>
         </BrandGradient>
@@ -140,7 +140,7 @@ export default function ExecPortal() {
 function KV({ k, v, danger }: { k: string; v: string; danger?: boolean }) { return <Row between><Text style={font.small}>{k}</Text><Text style={{ fontWeight: '800', color: danger ? colors.danger : colors.text }}>{v}</Text></Row>; }
 const s = StyleSheet.create({
   login: { alignItems: 'center', gap: 12, padding: 24, borderRadius: radius.xl, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: glass.border, maxWidth: 420, alignSelf: 'center', width: '100%' },
-  pin: { fontSize: 30, fontWeight: '900', letterSpacing: 14, textAlign: 'center', color: colors.text, borderBottomWidth: 2, borderBottomColor: '#0B1F2A', paddingVertical: 8, width: 220 },
+  pin: { fontSize: 30, fontWeight: '800', letterSpacing: 14, textAlign: 'center', color: colors.text, borderBottomWidth: 2, borderBottomColor: '#0B1F2A', paddingVertical: 8, width: 220 },
   hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' },
   th: { paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: 'rgba(11,31,42,0.03)' },
   tr: { paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border },

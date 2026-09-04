@@ -51,4 +51,4 @@ export default function TicketDetail() {
     </Screen>
   );
 }
-const s = StyleSheet.create({ closeBox: { marginHorizontal: 12, marginBottom: 8, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: glass.border } });
+const s = StyleSheet.create({ closeBox: { marginHorizontal: 12, marginBottom: 8, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border } });

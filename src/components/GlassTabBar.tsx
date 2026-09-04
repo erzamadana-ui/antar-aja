@@ -52,10 +52,10 @@ export function makeGlassTabBar(spec: TabSpec, accent = colors.primary) {
 
 const s = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingHorizontal: 16 },
-  bar: { flexDirection: 'row', padding: 6, borderRadius: radius.xxl, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.card },
+  bar: { flexDirection: 'row', padding: 6, borderRadius: radius.xxl, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.card },
   pill: { position: 'absolute', top: 6, bottom: 6, left: 6, borderRadius: radius.xxl },
   tab: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, gap: 2 },
-  label: { fontSize: 11, fontWeight: '700' },
+  label: { fontSize: 12, fontWeight: '700' },
 });
 
 /** Ruang bawah agar konten tidak tertutup tab bar mengambang. */

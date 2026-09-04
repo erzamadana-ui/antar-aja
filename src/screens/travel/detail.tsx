@@ -41,7 +41,7 @@ export default function TravelBookingDetail() {
       <View style={{ gap: 14 }}>
         <Entrance index={0}>
           <BrandGradient colors={[colors.travel, '#1E3A8A']} style={[s.hero, shadow.glow(colors.travel)]}>
-            <Row between><Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)}</Text><Badge text={travelStatusLabel[b.status]} color="#fff" bg="rgba(255,255,255,0.2)" /></Row>
+            <Row between><Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)}</Text><Badge text={travelStatusLabel[b.status]} color="#fff" bg="rgba(255,255,255,0.2)" /></Row>
             <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Berangkat {formatSchedule(t.depart_at)} · {b.pax} penumpang{b.is_private ? ' · private 1 keluarga' : ''}</Text>
             <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 2 }}>Status mobil: {tripStatusLabel[t.status]} · {t.seats_booked}/{t.seats_total} kursi terisi{t.status === 'open' ? ` (min. ${t.min_pax} agar berangkat)` : ''}</Text>
           </BrandGradient>

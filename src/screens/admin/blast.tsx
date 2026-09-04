@@ -92,4 +92,4 @@ export default function AdminBlast() {
     </AdminPage>
   );
 }
-const s = StyleSheet.create({ notif: { gap: 4, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: glass.border } });
+const s = StyleSheet.create({ notif: { gap: 4, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border } });

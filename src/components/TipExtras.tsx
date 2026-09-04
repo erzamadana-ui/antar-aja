@@ -62,7 +62,7 @@ export function ExtrasApproval({ order, onDone }: { order: Order; onDone: () => 
         <View key={e.id} style={{ gap: 8 }}>
           <Row between>
             <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text }}>{extraKindLabel[e.kind]}{e.note ? ` · ${e.note}` : ''}</Text><Text style={font.tiny}>{order.payment_method === 'wallet' ? 'Dipotong dari saldo AntarPay' : 'Dibayar tunai ke driver'}</Text></View>
-            <Text style={{ fontWeight: '900', fontSize: 18, color: colors.text }}>{rupiah(e.amount)}</Text>
+            <Text style={{ fontWeight: '800', fontSize: 18, color: colors.text }}>{rupiah(e.amount)}</Text>
           </Row>
           <Row gap={8}>
             <Button title="Tolak" size="sm" variant="outline" color={colors.danger} loading={busy === e.id} onPress={() => respond(e, false)} />
@@ -112,7 +112,7 @@ export function ExtraRequest({ order, onDone }: { order: Order; onDone: () => vo
 }
 
 const s = StyleSheet.create({
-  card: { gap: 10, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
+  card: { gap: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
   input: { flex: 1, height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, color: colors.text },
   plus: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
 });

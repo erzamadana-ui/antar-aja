@@ -112,16 +112,16 @@ function Bar({ height, color, delay }: { height: number; color: string; delay: n
 const s = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(11,31,42,0.45)', alignItems: 'center', justifyContent: 'center', padding: 20 },
   dialog: { backgroundColor: '#fff', borderRadius: radius.xl, padding: 20, gap: 12, ...shadow.card },
-  stat: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 14, paddingLeft: 18, borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.card, ...(Platform.OS === 'web' ? ({ cursor: 'default' } as object) : {}) },
+  stat: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, padding: 14, paddingLeft: 18, borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.card, ...(Platform.OS === 'web' ? ({ cursor: 'default' } as object) : {}) },
   statBar: { position: 'absolute', left: 0, top: 12, bottom: 12, width: 4, borderRadius: 2 },
   statGlow: { position: 'absolute', right: -30, top: -30, width: 90, height: 90, borderRadius: 45, opacity: 0.08 },
-  statValue: { fontSize: 24, fontWeight: '900', color: colors.text, marginTop: 2, letterSpacing: -0.3 },
-  table: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: glass.border, ...shadow.card },
+  statValue: { fontSize: 24, fontWeight: '800', color: colors.text, marginTop: 2, letterSpacing: -0.3 },
+  table: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: glass.border, ...shadow.card },
   tr: { flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 10, minHeight: 48, alignItems: 'center' },
   th: { backgroundColor: colors.primary + '14' },
-  thText: { fontSize: 11, fontWeight: '800', color: colors.primaryDark, textTransform: 'uppercase', letterSpacing: 0.6 },
+  thText: { fontSize: 12, fontWeight: '800', color: colors.primaryDark, textTransform: 'uppercase', letterSpacing: 0.6 },
   td: { fontSize: 13, color: colors.text },
-  filter: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  filter: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
 });
 
 // ---- Tahap 5 ----

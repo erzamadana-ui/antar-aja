@@ -23,7 +23,7 @@ export default function DriverEarnings() {
             <Row between style={{ alignItems: 'flex-start' }}>
               <View style={{ flex: 1 }}>
                 <Row gap={6}><Ionicons name="sunny" size={14} color="rgba(255,255,255,0.85)" /><Text style={s.lbl}>Hari ini</Text></Row>
-                <AnimatedNumber value={sum?.today ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: -0.5, marginTop: 2 }} />
+                <AnimatedNumber value={sum?.today ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 32, fontWeight: '800', letterSpacing: -0.5, marginTop: 2 }} />
                 <Text style={s.lbl}>{sum?.today_trips ?? 0} trip selesai</Text>
               </View>
               <View style={{ gap: 8 }}>

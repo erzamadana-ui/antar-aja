@@ -96,7 +96,7 @@ export default function OrderTracking() {
           <Animated.Text key={`t-${order.status}-${order.merchant_status ?? ''}`} entering={FadeIn.duration(motion.base)} style={font.h3} numberOfLines={1}>{statusLabel(order.status, order.service, order.merchant_status)}</Animated.Text>
           <Text style={font.tiny} numberOfLines={1}>{serviceLabel[order.service]} · {subtitle(order)}</Text>
         </View>
-        <Text style={{ fontWeight: '900', fontSize: 16, color: colors.text }}>{rupiah(order.total)}</Text>
+        <Text style={{ fontWeight: '800', fontSize: 16, color: colors.text }}>{rupiah(order.total)}</Text>
       </Row>
       {order.status !== 'cancelled' && <StatusStepper status={order.status} color={sc} />}
     </View>
@@ -201,7 +201,7 @@ function StatusStepper({ status, color }: { status: OrderStatus; color: string }
               <Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.step, done && { backgroundColor: color, borderColor: color }, cur && { borderColor: color, backgroundColor: color + '22' }]}>
                 <Ionicons name={st.icon as never} size={12} color={done ? '#fff' : cur ? color : colors.textMuted} />
               </Animated.View>
-              <Text style={[font.tiny, { fontSize: 10, fontWeight: cur || done ? '700' : '500', color: cur ? color : done ? colors.text : colors.textMuted }]} numberOfLines={1}>{st.label}</Text>
+              <Text style={[font.tiny, { fontSize: 12, fontWeight: cur || done ? '700' : '500', color: cur ? color : done ? colors.text : colors.textMuted }]} numberOfLines={1}>{st.label}</Text>
             </View>
           );
         })}
@@ -213,9 +213,9 @@ function StatusStepper({ status, color }: { status: OrderStatus; color: string }
 export { PressableScale };
 const s = StyleSheet.create({
   statusIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  step: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.12)', backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' },
-  radarBox: { alignItems: 'center', gap: 4, padding: 12, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
-  rateBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
-  block: { backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
+  step: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.12)', backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
+  radarBox: { alignItems: 'center', gap: 4, padding: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
+  rateBox: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
+  block: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
   comment: { marginTop: 10, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, height: 42, color: colors.text },
 });

@@ -67,8 +67,8 @@ export default function TravelPartnerHome() {
       <View style={{ gap: 14 }}>
         <Entrance index={0}><BrandGradient colors={[colors.travel, '#1E3A8A']} style={[s.hero, shadow.glow(colors.travel)]}>
           <Row between>
-            <View><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' }}>{me.company_name ?? 'MITRA TRAVEL'}</Text><Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>{me.vehicle_model} · {me.vehicle_plate}</Text><Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12 }}>{me.seats} kursi{me.is_electric ? ' · ⚡ listrik' : ''} · ⭐ {Number(me.rating_avg).toFixed(1)} · {me.total_trips} trip selesai</Text></View>
-            <View style={{ alignItems: 'flex-end' }}><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>Saldo AntarPay</Text><Text style={{ color: '#fff', fontWeight: '900', fontSize: 18 }}>{rupiah(wallet?.balance ?? 0)}</Text></View>
+            <View><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' }}>{me.company_name ?? 'MITRA TRAVEL'}</Text><Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{me.vehicle_model} · {me.vehicle_plate}</Text><Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12 }}>{me.seats} kursi{me.is_electric ? ' · ⚡ listrik' : ''} · ⭐ {Number(me.rating_avg).toFixed(1)} · {me.total_trips} trip selesai</Text></View>
+            <View style={{ alignItems: 'flex-end' }}><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>Saldo AntarPay</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 18 }}>{rupiah(wallet?.balance ?? 0)}</Text></View>
           </Row>
         </BrandGradient></Entrance>
 
@@ -78,7 +78,7 @@ export default function TravelPartnerHome() {
             {routes.map((r) => <Chip key={r.id} label={`${cityName(cities, r.from_city)} → ${cityName(cities, r.to_city)} · ${rupiah(r.seat_price)}`} active={routeId === r.id} onPress={() => setRouteId(r.id)} color={colors.travel} />)}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {days.map((d, i) => <Pressable key={i} onPress={() => setDay(i)} style={[s.day, day === i && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 11, fontWeight: '700', color: day === i ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text><Text style={{ fontSize: 18, fontWeight: '900', color: day === i ? '#fff' : colors.text }}>{d.getDate()}</Text></Pressable>)}
+            {days.map((d, i) => <Pressable key={i} onPress={() => setDay(i)} style={[s.day, day === i && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 12, fontWeight: '700', color: day === i ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text><Text style={{ fontSize: 18, fontWeight: '800', color: day === i ? '#fff' : colors.text }}>{d.getDate()}</Text></Pressable>)}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>{TIMES.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} color={colors.travel} />)}</ScrollView>
           <Row gap={8}><Chip label={allowPrivate ? '✓ Terima carter private' : 'Tanpa carter private'} active={allowPrivate} onPress={() => setAllowPrivate(!allowPrivate)} color={colors.accent} /></Row>
@@ -148,6 +148,6 @@ export default function TravelPartnerHome() {
 const s = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
   day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.8)' },
-  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
-  pax: { padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: glass.border },
+  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
+  pax: { padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
 });

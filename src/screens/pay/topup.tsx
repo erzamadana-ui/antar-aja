@@ -65,7 +65,7 @@ export default function TopUp() {
               <View style={s.bank}>
                 <Text style={font.tiny}>{bank.bank} a.n. {bank.name}</Text>
                 <Row between>
-                  <Text style={{ fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: 1 }}>{bank.number}</Text>
+                  <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: 1 }}>{bank.number}</Text>
                   <Pressable onPress={async () => { await Clipboard.setStringAsync(bank.number); toast.show('Nomor rekening disalin'); }} style={s.copy}><Ionicons name="copy-outline" size={18} color={colors.primary} /></Pressable>
                 </Row>
               </View>

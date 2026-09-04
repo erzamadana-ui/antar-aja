@@ -56,7 +56,7 @@ export function WalletView({ allowWithdraw, bottomSpace = 40 }: { allowWithdraw?
             <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' }}>Saldo AntarPay</Text>
             <Ionicons name="wallet" size={20} color="rgba(255,255,255,0.8)" />
           </Row>
-          <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 36, fontWeight: '900', marginVertical: 8, letterSpacing: -0.5 }} />
+          <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 36, fontWeight: '800', marginVertical: 8, letterSpacing: -0.5 }} />
           <Row gap={10} style={{ marginTop: 8 }}>
             <WalletAction icon="add" label="Top Up" onPress={() => router.push('/pay/topup')} />
             {allowWithdraw && <WalletAction icon="arrow-up" label="Tarik Saldo" onPress={() => router.push('/pay/withdraw')} />}

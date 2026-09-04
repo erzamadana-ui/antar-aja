@@ -140,5 +140,5 @@ const s = StyleSheet.create({
   close: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
   cols: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   col: { flexGrow: 1, flexBasis: 320, gap: 8 },
-  doc: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  doc: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
 });

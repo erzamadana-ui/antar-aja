@@ -89,11 +89,11 @@ export default function TravelScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{cities.filter((c) => c.id !== from).map((c) => <Chip key={c.id} label={c.name} active={to === c.id} onPress={() => setTo(c.id)} color={colors.travel} />)}</ScrollView>
           <Text style={font.label}>Tanggal berangkat</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <Pressable onPress={() => setDay(null)} style={[s.day, !day && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 11, fontWeight: '700', color: !day ? '#fff' : colors.textMuted }}>Semua</Text><Text style={{ fontSize: 16, fontWeight: '900', color: !day ? '#fff' : colors.text }}>10 hr</Text></Pressable>
+            <Pressable onPress={() => setDay(null)} style={[s.day, !day && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 12, fontWeight: '700', color: !day ? '#fff' : colors.textMuted }}>Semua</Text><Text style={{ fontSize: 16, fontWeight: '800', color: !day ? '#fff' : colors.text }}>10 hr</Text></Pressable>
             {days.map((d, i) => { const active = day && d.getTime() === day.getTime(); return (
               <Pressable key={i} onPress={() => setDay(d)} style={[s.day, active && { backgroundColor: colors.travel, borderColor: colors.travel }]}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
-                <Text style={{ fontSize: 18, fontWeight: '900', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
               </Pressable>); })}
           </ScrollView>
           {route && <Row gap={6} style={{ flexWrap: 'wrap' }}><Badge text={`${route.distance_km} km · ±${route.duration_h} jam`} color={colors.info} /><Badge text={`Kursi ${rupiah(route.seat_price)}/orang`} color={colors.travel} /><Badge text={`Private mulai ${rupiah(route.private_price)}`} color={colors.accent} /><Badge text={`Min. ${route.min_pax} penumpang berangkat`} color={colors.textMuted} /></Row>}
@@ -111,7 +111,7 @@ export default function TravelScreen() {
                   <Row gap={10}>
                     <Avatar name={p.company ?? p.name} url={p.photo_url ?? p.avatar_url} size={44} />
                     <View style={{ flex: 1, minWidth: 0 }}>
-                      <Row between><Text style={{ fontWeight: '900', color: colors.text, fontSize: 16 }}>{new Date(t.depart_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</Text><Text style={{ fontWeight: '900', color: colors.travel }}>{rupiah(t.seat_price)}<Text style={font.tiny}>/kursi</Text></Text></Row>
+                      <Row between><Text style={{ fontWeight: '800', color: colors.text, fontSize: 16 }}>{new Date(t.depart_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</Text><Text style={{ fontWeight: '800', color: colors.travel }}>{rupiah(t.seat_price)}<Text style={font.tiny}>/kursi</Text></Text></Row>
                       <Text style={font.tiny}>{new Date(t.depart_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })} · {p.company ?? p.name}</Text>
                       <Row gap={6} style={{ flexWrap: 'wrap', marginTop: 4 }}>
                         <Badge text={`${p.model} · ${p.plate}`} color={colors.textSecondary} />
@@ -171,8 +171,8 @@ export default function TravelScreen() {
   );
 }
 const s = StyleSheet.create({
-  hero: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  group: { gap: 10, backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  hero: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  group: { gap: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
   day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.8)' },
-  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
 });

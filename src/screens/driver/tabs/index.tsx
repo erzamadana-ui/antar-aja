@@ -82,7 +82,7 @@ export default function DriverHome() {
         <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{profile?.full_name}</Text>
         <Row gap={4}>
           <LiveDot color={online ? colors.success : colors.textMuted} size={6} />
-          <Text style={{ fontSize: 11, fontWeight: '700', color: online ? colors.success : colors.textMuted }}>{online ? 'ONLINE' : 'OFFLINE'}</Text>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: online ? colors.success : colors.textMuted }}>{online ? 'ONLINE' : 'OFFLINE'}</Text>
         </Row>
       </View>
       <Switch value={online} onValueChange={toggle} disabled={busy} trackColor={{ true: colors.success, false: 'rgba(11,31,42,0.2)' }} thumbColor="#fff" style={Platform.OS === 'ios' ? { transform: [{ scale: 0.8 }] } : undefined} />
@@ -144,7 +144,7 @@ export default function DriverHome() {
               </Row>
               <PressableScale onPress={() => setSelected(null)} scaleTo={0.9} style={s.closeBtn}><Ionicons name="close" size={20} color={colors.textSecondary} /></PressableScale>
             </Row>
-            <AnimatedNumber value={selected.driver_earning} format={rupiah} style={{ fontSize: 30, fontWeight: '900', color: colors.success, marginTop: 6, letterSpacing: -0.5 }} duration={500} />
+            <AnimatedNumber value={selected.driver_earning} format={rupiah} style={{ fontSize: 30, fontWeight: '800', color: colors.success, marginTop: 6, letterSpacing: -0.5 }} duration={500} />
             <Text style={font.tiny}>Pendapatan bersih · {selected.payment_method === 'cash' ? `Tunai, tagih ${rupiah(selected.total)}` : 'Dibayar AntarPay'}</Text>
             <View style={{ marginTop: 12, gap: 8 }}>
               <Row gap={8}><View style={[s.dotIcon, { backgroundColor: colors.primary + '1A' }]}><Ionicons name="navigate" size={14} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>{km(selected.distance_to_pickup_km)} ke titik jemput · {selected.merchant_name ?? selected.pickup_address}</Text></Row>
@@ -166,7 +166,7 @@ export default function DriverHome() {
               <PressableScale onPress={() => setSelected(o)} scaleTo={0.98} style={s.orderRow}>
                 <BrandGradient colors={[serviceDef(o.service).color, serviceDef(o.service).color + 'BB']} style={s.svcIcon}><Ionicons name={serviceDef(o.service).icon as never} size={20} color="#fff" /></BrandGradient>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Row between><Text style={{ fontWeight: '700', color: colors.text }}>{serviceLabel[o.service]}</Text><Text style={{ fontWeight: '900', color: colors.success }}>{rupiah(o.driver_earning)}</Text></Row>
+                  <Row between><Text style={{ fontWeight: '700', color: colors.text }}>{serviceLabel[o.service]}</Text><Text style={{ fontWeight: '800', color: colors.success }}>{rupiah(o.driver_earning)}</Text></Row>
                   <Text style={font.small} numberOfLines={1}>{o.merchant_name ?? o.pickup_address}</Text>
                   <Text style={font.tiny} numberOfLines={1}>{km(o.distance_to_pickup_km)} dari Anda · {km(o.distance_km)} · {o.scheduled_at ? `📅 ${formatSchedule(o.scheduled_at)}` : timeAgo(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai' : 'AntarPay'}{o.vehicle_class ? ` · ${vehicleClassLabel[o.vehicle_class] ?? ''}` : ''}</Text>
                 </View>
@@ -182,12 +182,12 @@ export default function DriverHome() {
 }
 
 const s = StyleSheet.create({
-  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 6, paddingRight: 6, paddingVertical: 5, borderRadius: radius.full, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden' },
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 6, paddingRight: 6, paddingVertical: 5, borderRadius: radius.full, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden' },
   activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14 },
   offer: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: radius.xl, padding: 16, borderWidth: 1.5, borderColor: colors.success + '66' },
   closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
   dotIcon: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  radarBox: { alignItems: 'center', gap: 4, padding: 14, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
-  orderRow: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  radarBox: { alignItems: 'center', gap: 4, padding: 14, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
+  orderRow: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
   svcIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

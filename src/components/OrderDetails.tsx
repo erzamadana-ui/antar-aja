@@ -64,7 +64,7 @@ export function OrderExtras({ order }: { order: Order }) {
         <View style={{ gap: 6 }}>
           <Row between><Text style={font.h3}>Daftar belanja</Text><Badge text={order.shop_store ?? 'Toko'} color={colors.shop} /></Row>
           {(order.shopping_list ?? []).map((it, i) => (
-            <Row key={i} gap={8}><View style={s.bullet}><Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{it.qty}</Text></View><Text style={[font.body, { flex: 1 }]}>{it.name}{it.note ? <Text style={font.tiny}>  ({it.note})</Text> : null}</Text></Row>
+            <Row key={i} gap={8}><View style={s.bullet}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{it.qty}</Text></View><Text style={[font.body, { flex: 1 }]}>{it.name}{it.note ? <Text style={font.tiny}>  ({it.note})</Text> : null}</Text></Row>
           ))}
           <Row between><Text style={font.small}>{order.receipt_url || order.status === 'completed' || order.status === 'in_progress' ? 'Total belanja (struk)' : 'Perkiraan anggaran'}</Text><Text style={{ fontWeight: '700' }}>{rupiah(order.items_subtotal)}</Text></Row>
         </View>
@@ -138,7 +138,7 @@ export function customerSubtitle(p: Profile | null) { return p ? `Nomor tersembu
 
 export { Divider };
 const s = StyleSheet.create({
-  person: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 12, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, padding: 12, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
   circle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5 },
   bullet: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, backgroundColor: colors.shop, alignItems: 'center', justifyContent: 'center' },

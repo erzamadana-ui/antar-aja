@@ -78,6 +78,6 @@ export function GlassPill({ children }: { children: React.ReactNode }) {
 
 const s = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, paddingTop: 8 },
-  fab: { width: 44, height: 44, borderRadius: 22, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: glass.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...shadow.card },
-  pill: { borderRadius: radius.full, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.soft },
+  fab: { width: 44, height: 44, borderRadius: 22, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...shadow.card },
+  pill: { borderRadius: radius.full, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', ...shadow.soft },
 });

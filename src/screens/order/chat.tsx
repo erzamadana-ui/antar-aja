@@ -53,7 +53,7 @@ export default function OrderChat() {
               <Animated.View key={m.id} entering={last ? (mine ? FadeInUp : FadeInDown).springify().stiffness(280).damping(18) : undefined} layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.bubble, mine ? s.mine : s.theirs]}>
                 {mine && <BrandGradient style={StyleSheet.absoluteFill} />}
                 <Text style={{ color: mine ? '#fff' : colors.text, fontSize: 15, lineHeight: 21 }}>{m.body}</Text>
-                <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>
+                <Text style={{ fontSize: 12, color: mine ? 'rgba(255,255,255,0.92)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>
               </Animated.View>
             );
           })}
@@ -82,7 +82,7 @@ const s = StyleSheet.create({
   bubble: { maxWidth: '80%', padding: 12, borderRadius: radius.lg, overflow: 'hidden' },
   mine: { alignSelf: 'flex-end', borderBottomRightRadius: 6, ...shadow.soft },
   theirs: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.8)', borderBottomLeftRadius: 6, borderWidth: 1, borderColor: glass.border },
-  composer: { padding: 12, backgroundColor: 'rgba(255,255,255,0.7)', borderTopWidth: 1, borderTopColor: glass.border },
+  composer: { padding: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderTopWidth: 1, borderTopColor: glass.border },
   input: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: radius.full, paddingHorizontal: 16, height: 46, color: colors.text, borderWidth: 1, borderColor: glass.border, fontSize: 15 },
   send: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });

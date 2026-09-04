@@ -160,12 +160,12 @@ function PlaceRow({ icon, color, title, subtitle, onPress }: { icon: React.Compo
 }
 
 const s = StyleSheet.create({
-  header: { overflow: 'hidden', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.55)', borderBottomWidth: 1, borderBottomColor: glass.border, zIndex: 5 },
+  header: { overflow: 'hidden', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderBottomWidth: 1, borderBottomColor: glass.border, zIndex: 5 },
   headerInner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, height: 54, width: '100%', maxWidth: 720, alignSelf: 'center' },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11,31,42,0.05)' },
   modeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primary + '14', borderWidth: 1, borderColor: colors.primary + '33', paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.7)', padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.72)', borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.92)', padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.92)', borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
   pinWrap: { position: 'absolute', left: '50%', top: '50%', marginLeft: -16, marginTop: -44, alignItems: 'center', zIndex: 5 },
   pinHead: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#fff', ...shadow.card },
   pinDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },

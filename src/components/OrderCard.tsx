@@ -23,7 +23,7 @@ export function OrderCard({ order, href, compact }: { order: Order; href?: strin
         <View style={{ flex: 1, minWidth: 0 }}>
           <Row between>
             <Text style={[font.h3, { fontSize: 15 }]}>{serviceLabel[order.service]}</Text>
-            <Text style={{ fontWeight: '900', color: colors.text }}>{rupiah(order.total)}</Text>
+            <Text style={{ fontWeight: '800', color: colors.text }}>{rupiah(order.total)}</Text>
           </Row>
           <Text style={font.tiny}>{order.code} · {formatDate(order.created_at)}</Text>
         </View>
@@ -47,6 +47,6 @@ export function OrderCard({ order, href, compact }: { order: Order; href?: strin
 }
 
 const s = StyleSheet.create({
-  card: { marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, padding: 14, borderWidth: 1, borderColor: glass.border, ...shadow.card },
+  card: { marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, padding: 14, borderWidth: 1, borderColor: glass.border, ...shadow.card },
   dot: { width: 8, height: 8, borderRadius: 4 },
 });

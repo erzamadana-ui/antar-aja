@@ -7,7 +7,7 @@ import { useAuth } from '@/store/auth';
 import { useMyOrders } from '@/hooks/useOrder';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { supabase } from '@/lib/supabase';
-import { SERVICES } from '@/lib/services';
+import { HOME_SERVICES } from '@/lib/services';
 import { colors, font, radius, shadow, spacing, glass } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { Merchant, Promo, FrequentData } from '@/lib/types';
@@ -20,7 +20,7 @@ import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
 import { Entrance, PressableScale, AnimatedNumber, Skeleton } from '@/components/motion';
 import { ServiceArt, ServiceIllustration } from '@/components/ServiceArt';
 import { ActiveOrderBubbles } from '@/components/ActiveOrderBubbles';
-import { BrandLogo } from '@/components/Logo';
+import { BrandLogo, Wordmark } from '@/components/Logo';
 import { useT } from '@/lib/i18n';
 import { useNotifications } from '@/hooks/useNotifications';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
@@ -62,76 +62,76 @@ export default function CustomerHome() {
   const greet = hour < 11 ? t('greeting_morning') : hour < 15 ? t('greeting_noon') : hour < 18 ? t('greeting_afternoon') : t('greeting_evening');
 
   return (
-    <View style={{ flex: 1 }}>
-      <AmbientBackground tint="mixed" />
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE + 16 }} showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
-          <View style={s.inner}>
-            {/* Sapaan */}
-            <Entrance index={0}>
-              <Row between style={{ marginTop: 8 }}>
-                <Row gap={10}>
-                  <BrandLogo size={40} />
-                  <View>
-                    <Text style={font.small}>{greet},</Text>
-                    <Text style={[font.h1, { fontSize: 22 }]}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
-                  </View>
-                </Row>
-                <Row gap={8}>
-                  <PressableScale onPress={() => router.push('/inbox' as never)} scaleTo={0.9} style={s.bell}>
-                    <Ionicons name={unread > 0 ? 'notifications' : 'notifications-outline'} size={20} color={unread > 0 ? colors.primary : colors.textSecondary} />
-                    {unread > 0 && <View style={s.bellBadge}><Text style={{ color: '#fff', fontSize: 9, fontWeight: '900' }}>{unread > 9 ? '9+' : unread}</Text></View>}
-                  </PressableScale>
-                  <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.9}>
-                    <Avatar name={profile?.full_name} url={profile?.avatar_url} size={40} />
-                  </PressableScale>
-                </Row>
-              </Row>
-            </Entrance>
-
-            {/* Pencarian */}
-            <Entrance index={1}>
-              <PressableScale onPress={() => router.push('/food')} scaleTo={0.985} style={{ marginTop: 16 }}>
-                <Glass variant="strong" radius={radius.lg}>
-                  <Row gap={10} style={{ paddingHorizontal: 14, height: 50 }}>
-                    <Ionicons name="search" size={18} color={colors.primary} />
-                    <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }}>{t('search_placeholder')}</Text>
-                    <View style={s.kbd}><Ionicons name="mic-outline" size={16} color={colors.textSecondary} /></View>
-                  </Row>
-                </Glass>
-              </PressableScale>
-            </Entrance>
-
-            {/* Kartu AntarPay */}
-            <Entrance index={2}>
-              <BrandGradient colors={[colors.primary, '#13A29F', '#0E7C7B']} style={s.payCard}>
-                <View style={s.payGlow} />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AmbientBackground tint="teal" />
+      <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE + 16 }} showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
+        {/* Band header teal — logo, sapaan, lonceng, saldo ringkas */}
+        <View style={s.band}>
+          <SafeAreaView edges={['top']}>
+            <View style={s.inner}>
+              <Entrance index={0}>
                 <Row between>
-                  <View>
-                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', letterSpacing: 0.6 }}>{t('balance').toUpperCase()}</Text>
-                    <AnimatedNumber value={wallet?.balance ?? 0} format={(n) => rupiah(n)} style={{ color: '#fff', fontSize: 28, fontWeight: '900', marginTop: 2, letterSpacing: -0.5 }} />
-                  </View>
+                  <Row gap={10}>
+                    <BrandLogo size={40} flat />
+                    <View>
+                      <Wordmark size={19} dark />
+                      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' }}>{greet}, {profile?.full_name?.split(' ')[0] ?? 'Kawan'}</Text>
+                    </View>
+                  </Row>
                   <Row gap={8}>
-                    <PayAction icon="add" label={t('topup')} onPress={() => router.push('/pay/topup')} />
-                    <PayAction icon="time-outline" label={t('history')} onPress={() => router.push('/(customer)/pay')} />
+                    <PressableScale onPress={() => router.push('/(customer)/pay')} scaleTo={0.94} style={s.balanceChip}>
+                      <Ionicons name="wallet-outline" size={14} color="#fff" />
+                      <AnimatedNumber value={wallet?.balance ?? 0} format={(n) => rupiah(n)} style={{ color: '#fff', fontSize: 12, fontWeight: '800' }} />
+                    </PressableScale>
+                    <PressableScale onPress={() => router.push('/inbox' as never)} scaleTo={0.9} style={s.bell}>
+                      <Ionicons name={unread > 0 ? 'notifications' : 'notifications-outline'} size={20} color="#fff" />
+                      {unread > 0 && <View style={s.bellBadge}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{unread > 9 ? '9+' : unread}</Text></View>}
+                    </PressableScale>
                   </Row>
                 </Row>
-              </BrandGradient>
-            </Entrance>
-
-            {/* Layanan — ilustrasi kartun berbingkai warna layanan */}
-            <View style={s.grid}>
-              {SERVICES.map((sv, i) => (
-                <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '33.33%', alignItems: 'stretch' }}>
-                  <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
-                    <ServiceArt kind={sv.art} color={sv.color} size={58} />
-                    <Text style={s.serviceLabel}>{sv.label.replace('Antar', '')}</Text>
-                    <Text style={s.serviceTag} numberOfLines={2}>{t(`tag_${sv.id}` as never)}</Text>
-                  </PressableScale>
-                </Entrance>
-              ))}
+              </Entrance>
+              <Entrance index={1}><Text style={s.bandTitle}>{t('home_question')}</Text></Entrance>
             </View>
+          </SafeAreaView>
+        </View>
+
+        <View style={[s.inner, { marginTop: -40 }]}>
+          {/* Kartu pencarian + tempat tersimpan (menumpuk di atas band) */}
+          <Entrance index={2}>
+            <View style={s.searchCard}>
+              <PressableScale onPress={() => router.push('/food')} scaleTo={0.985}>
+                <Row gap={10} style={s.searchRow}>
+                  <Ionicons name="search" size={18} color={colors.textMuted} />
+                  <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }} numberOfLines={1}>{t('search_placeholder')}</Text>
+                </Row>
+              </PressableScale>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 10 }}>
+                {(freq?.recent ?? []).slice(0, 4).map((r, i) => (
+                  <PressableScale key={i} onPress={() => goRoute(r)} scaleTo={0.95} style={[s.placeChip, i === 0 && s.placeChipOn]}>
+                    <Ionicons name="location" size={13} color={i === 0 ? colors.mint : colors.primary} />
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: i === 0 ? '#fff' : colors.text }} numberOfLines={1}>{r.address.split(',')[0]}</Text>
+                  </PressableScale>
+                ))}
+                <PressableScale onPress={() => router.push('/account/places')} scaleTo={0.95} style={s.placeChip}>
+                  <Ionicons name="bookmark-outline" size={13} color={colors.primary} />
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }}>{t('saved_places')}</Text>
+                </PressableScale>
+              </ScrollView>
+            </View>
+          </Entrance>
+
+          {/* Layanan — 8 tile, ikon dalam kotak tint padat */}
+          <View style={s.grid}>
+            {HOME_SERVICES.map((sv, i) => (
+              <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '25%', alignItems: 'stretch' }}>
+                <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
+                  <View style={[s.serviceIcon, { backgroundColor: sv.color + '14' }]}><ServiceIllustration kind={sv.art} size={44} /></View>
+                  <Text style={s.serviceLabel} numberOfLines={1}>{sv.label.replace('Antar', '')}</Text>
+                </PressableScale>
+              </Entrance>
+            ))}
+          </View>
 
             {/* Order aktif → bubble */}
             {active.length > 0 && (
@@ -221,38 +221,31 @@ export default function CustomerHome() {
                 {merchants && merchants.length === 0 && <Text style={font.small}>Belum ada merchant di sekitar lokasi Anda.</Text>}
               </ScrollView>
             </Entrance>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+      </ScrollView>
     </View>
-  );
-}
-
-function PayAction({ icon, label, onPress }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void }) {
-  return (
-    <PressableScale onPress={onPress} scaleTo={0.9} style={s.payAction}>
-      <Ionicons name={icon} size={20} color="#fff" />
-      <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{label}</Text>
-    </PressableScale>
   );
 }
 
 const s = StyleSheet.create({
   inner: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: spacing.lg },
-  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, alignItems: 'center', justifyContent: 'center' },
+  band: { backgroundColor: colors.primary, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl, paddingTop: 8, paddingBottom: 60, ...shadow.glow(colors.primary) },
+  bandTitle: { color: '#fff', fontSize: 24, fontWeight: '800', letterSpacing: -0.4, lineHeight: 30, marginTop: 18 },
+  balanceChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)' },
+  bell: { width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
+  searchCard: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  searchRow: { height: 48, borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14 },
+  placeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, maxWidth: 170 },
+  placeChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  serviceIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   bellBadge: { position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
-  kbd: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
-  payCard: { marginTop: 14, borderRadius: radius.xl, padding: 18, overflow: 'hidden', ...shadow.glow(colors.primary) },
-  payGlow: { position: 'absolute', right: -40, top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.14)' },
-  payAction: { alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, minWidth: 64 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 18, rowGap: 12 },
-  serviceTile: { alignItems: 'center', gap: 3, width: '100%', paddingHorizontal: 4, paddingVertical: 6 },
-  serviceLabel: { fontSize: 13.5, fontWeight: '800', color: colors.text, marginTop: 3 },
-  serviceTag: { fontSize: 11, color: colors.textMuted, textAlign: 'center', lineHeight: 14, minHeight: 28 },
-  freq: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 236, padding: 8, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 20, rowGap: 16 },
+  serviceTile: { alignItems: 'center', gap: 8, width: '100%', paddingHorizontal: 2 },
+  serviceLabel: { fontSize: 12.5, fontWeight: '700', color: colors.text },
+  freq: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 236, padding: 8, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   freqImg: { width: 52, height: 52, borderRadius: 12, backgroundColor: 'rgba(11,31,42,0.06)' },
   reorder: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  recent: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, maxWidth: 180 },
+  recent: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, maxWidth: 180 },
   merchantImg: { width: '100%', height: 86, backgroundColor: 'rgba(11,31,42,0.06)' },
   glassBorder: { borderColor: glass.border },
 });

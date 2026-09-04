@@ -108,7 +108,7 @@ export default function MerchantScreen() {
 const s = StyleSheet.create({
   hero: { width: '100%', height: 200, backgroundColor: 'rgba(11,31,42,0.06)' },
   info: { backgroundColor: 'rgba(255,255,255,0.78)', padding: 16, marginHorizontal: 16, marginTop: -28, borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border, ...shadow.card },
-  item: { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
+  item: { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
   thumb: { width: 72, height: 72, borderRadius: radius.md, backgroundColor: 'rgba(11,31,42,0.06)' },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full, overflow: 'hidden' },
 });

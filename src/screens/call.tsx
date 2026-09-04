@@ -79,7 +79,7 @@ function Ctrl({ icon, label, active, onPress }: { icon: React.ComponentProps<typ
 const s = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', padding: 24 },
   live: { position: 'absolute', bottom: 22, right: 22, backgroundColor: '#fff', borderRadius: 12, padding: 3 },
-  ctrl: { width: 62, height: 62, borderRadius: 31, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', ...shadow.soft },
+  ctrl: { width: 62, height: 62, borderRadius: 31, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', ...shadow.soft },
   end: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center' },
   card: { borderRadius: radius.xl },
 });

@@ -64,7 +64,7 @@ export function TicketChat({ ticket, messages, onSend, asCs, footer, style }: {
                   {m.attachment_url && (
                     <Pressable onPress={() => openAttachment(m.attachment_url!)} style={s.attach}><Ionicons name="image-outline" size={14} color={mine && !m.is_internal ? '#fff' : colors.info} /><Text style={{ fontSize: 12, fontWeight: '700', color: mine && !m.is_internal ? '#fff' : colors.info }}>Lihat lampiran</Text></Pressable>
                   )}
-                  <Text style={{ fontSize: 10, color: mine && !m.is_internal ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>
+                  <Text style={{ fontSize: 12, color: mine && !m.is_internal ? 'rgba(255,255,255,0.92)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>
                 </Animated.View>
               )}
             </View>
@@ -102,7 +102,7 @@ const s = StyleSheet.create({
   internal: { backgroundColor: 'rgba(245,158,11,0.14)', borderWidth: 1, borderColor: colors.warning + '66' },
   system: { flexDirection: 'row', gap: 6, alignItems: 'center', alignSelf: 'center', maxWidth: '90%', backgroundColor: 'rgba(11,31,42,0.05)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full },
   attach: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  composer: { padding: 12, backgroundColor: 'rgba(255,255,255,0.7)', borderTopWidth: 1, borderTopColor: glass.border },
+  composer: { padding: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderTopWidth: 1, borderTopColor: glass.border },
   input: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: radius.full, paddingHorizontal: 16, height: 46, color: colors.text, borderWidth: 1, borderColor: glass.border, fontSize: 15 },
   send: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   attachBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11,31,42,0.06)' },

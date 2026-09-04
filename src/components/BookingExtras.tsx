@@ -81,7 +81,7 @@ export function VehicleClassPicker({ options, value, onChange, accent, loading }
               <Text style={[font.tiny, { color: none ? colors.warning : colors.success, fontWeight: '700' }]}>{none ? 'Belum ada driver online di dekat Anda' : `${o.drivers_nearby} driver di dekat Anda`}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ fontWeight: '900', color: active ? accent : colors.text, fontSize: 16 }}>{rupiah(o.total)}</Text>
+              <Text style={{ fontWeight: '800', color: active ? accent : colors.text, fontSize: 16 }}>{rupiah(o.total)}</Text>
               {o.multiplier !== 1 && <Text style={font.tiny}>{o.multiplier < 1 ? `hemat ${Math.round((1 - o.multiplier) * 100)}%` : `+${Math.round((o.multiplier - 1) * 100)}%`}</Text>}
             </View>
           </PressableScale>
@@ -116,8 +116,8 @@ export function SchedulePicker({ value, onChange, accent }: { value: Date | null
               const active = d.getTime() === day.getTime();
               return (
                 <Pressable key={i} onPress={() => { setDay(d); const t = new Date(d); t.setHours(value?.getHours() ?? 8, value?.getMinutes() ?? 0, 0, 0); if (t.getTime() < Date.now() + 30 * 60000) t.setTime(Date.now() + 60 * 60000); onChange(t); }} style={[s.day, active && { backgroundColor: accent, borderColor: accent }]}>
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
-                  <Text style={{ fontSize: 18, fontWeight: '900', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
                 </Pressable>
               );
             })}
@@ -155,7 +155,7 @@ export function MerchantAds({ near, title, max = 6 }: { near: { lat: number; lng
             <View style={{ padding: 8, gap: 2 }}>
               <Row between><Text style={{ fontWeight: '800', color: colors.text, fontSize: 12.5, flex: 1 }} numberOfLines={1}>{m.name}</Text><HalalBadge merchant={m} /></Row>
               <Text style={font.tiny} numberOfLines={1}>⭐ {Number(m.rating_avg).toFixed(1)} · {m.distance_km} km · ongkir {rupiah(m.delivery_fee ?? 0)}</Text>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.food }}>Pesan makanan →</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.food }}>Pesan makanan →</Text>
             </View>
           </PressableScale>
         ))}
@@ -184,14 +184,14 @@ export function RoutePreview({ pickup, dropoff, polyline, accent }: { pickup: Pl
 }
 
 const s = StyleSheet.create({
-  sugg: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border },
+  sugg: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   suggIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  cls: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  cls: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   clsIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  schedBox: { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: radius.lg, padding: 10, borderWidth: 1, borderColor: glass.border },
+  schedBox: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 10, borderWidth: 1, borderColor: glass.border },
   day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.8)' },
   ad: { width: 170, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: glass.border },
   adImg: { width: '100%', height: 72, backgroundColor: 'rgba(11,31,42,0.06)' },
-  mapToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border },
+  mapToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   mapBox: { height: 220, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: glass.border },
 });

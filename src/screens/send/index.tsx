@@ -197,8 +197,8 @@ function ScopeBtn({ active, onPress, icon, title, sub }: { active: boolean; onPr
 }
 
 const s = StyleSheet.create({
-  hero: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  scope: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.65)' },
-  group: { gap: 10, backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  wh: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  hero: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  scope: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
+  group: { gap: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  wh: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
 });

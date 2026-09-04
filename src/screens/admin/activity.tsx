@@ -115,7 +115,7 @@ export default function AdminActivity() {
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.68)', borderWidth: 1, borderColor: glass.border },
+  row: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   icon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  detail: { fontFamily: 'monospace', fontSize: 11, color: colors.textSecondary, backgroundColor: 'rgba(11,31,42,0.05)', padding: 8, borderRadius: 8, marginTop: 6 },
+  detail: { fontFamily: 'monospace', fontSize: 12, color: colors.textSecondary, backgroundColor: 'rgba(11,31,42,0.05)', padding: 8, borderRadius: 8, marginTop: 6 },
 });

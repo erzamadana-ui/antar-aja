@@ -119,5 +119,5 @@ export default function Checkout() {
 const s = StyleSheet.create({
   addr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 },
   line: { borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)', paddingVertical: 10, gap: 6 },
-  noteInput: { backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.sm, paddingHorizontal: 10, height: 36, fontSize: 13, color: colors.text },
+  noteInput: { backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.sm, paddingHorizontal: 10, height: 36, fontSize: 13, color: colors.text },
 });

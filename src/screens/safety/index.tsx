@@ -43,7 +43,7 @@ export default function SafetyCenter() {
           <BrandGradient colors={['#0B1F2A', '#1F3A4A']} style={[s.hero, shadow.card]}>
             <Row gap={12}>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>Anda dilindungi</Text>
+                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>Anda dilindungi</Text>
                 <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 2 }}>Panggilan tersamar, PIN penjemputan, bagikan perjalanan, SOS 24 jam, dan asuransi perjalanan mitra.</Text>
               </View>
               <SosButton />

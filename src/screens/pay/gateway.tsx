@@ -81,7 +81,7 @@ export default function Gateway() {
           <Entrance index={0}>
             <BrandGradient colors={[colors.primary, colors.primaryDark]} style={[s.hero, shadow.glow(colors.primary)]}>
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '600', fontSize: 12 }}>{t('balance')}</Text>
-              <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 28, fontWeight: '900' }} />
+              <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 28, fontWeight: '800' }} />
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 }}>{params.reason === 'order' ? 'Lengkapi kekurangan saldo untuk pesanan ini — setelah berhasil, kembali dan tekan Pesan.' : 'Top up instan lewat e-wallet, QRIS, atau virtual account bank.'}</Text>
             </BrandGradient>
           </Entrance>
@@ -114,7 +114,7 @@ export default function Gateway() {
               : status === 'pending' ? <Radar color={m.color} size={130}><Ionicons name={m.icon as never} size={30} color={m.color} /></Radar>
               : <View style={[s.big, { backgroundColor: colors.danger }]}><Ionicons name="close" size={44} color="#fff" /></View>}
             <Text style={font.h2}>{status === 'settlement' ? t('payment_success') : status === 'pending' ? t('payment_pending') : 'Pembayaran dibatalkan'}</Text>
-            <Text style={{ fontSize: 26, fontWeight: '900', color: colors.text }}>{rupiah(resp.payment.amount)}</Text>
+            <Text style={{ fontSize: 26, fontWeight: '800', color: colors.text }}>{rupiah(resp.payment.amount)}</Text>
             <Row gap={8}><Badge text={m.label} color={m.color} /><Badge text={resp.simulated ? t('simulation') : resp.is_production ? 'Midtrans' : 'Midtrans Sandbox'} color={resp.simulated ? colors.warning : colors.info} /></Row>
             <Text style={[font.tiny, { textAlign: 'center' }]}>ID: {resp.payment.external_id}</Text>
             {status === 'pending' && !resp.simulated && (
@@ -142,7 +142,7 @@ export default function Gateway() {
 const s = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
-  method: { width: '100%', alignItems: 'center', gap: 6, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  method: { width: '100%', alignItems: 'center', gap: 6, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   mIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   big: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center' },
   simBox: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: 'rgba(245,158,11,0.12)', borderRadius: radius.md, padding: 10 },

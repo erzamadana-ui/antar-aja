@@ -44,7 +44,7 @@ export function PaymentMethodsPanel({ compact }: { compact?: boolean }) {
           <Row between>
             <View>
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', letterSpacing: 0.5 }}>SALDO ANTARPAY</Text>
-              <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.5 }} />
+              <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }} />
             </View>
             <Button title="Top up" size="sm" color="#0B1F2A" icon="add" onPress={() => router.push('/pay/gateway' as never)} />
           </Row>
@@ -103,8 +103,8 @@ function MethodRow({ active, onPress, icon, color, title, subtitle }: { active: 
 
 const s = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  method: { width: '100%', alignItems: 'center', gap: 6, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  method: { width: '100%', alignItems: 'center', gap: 6, padding: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   mIcon: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 });

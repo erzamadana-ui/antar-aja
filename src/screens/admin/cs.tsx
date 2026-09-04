@@ -66,7 +66,7 @@ export default function AdminSupport() {
       right={<Row gap={6}><LiveDot color={colors.success} size={8} /><Text style={font.tiny}>Realtime</Text></Row>}>
       {openSos.length > 0 && (
         <Animated.View entering={FadeInDown.duration(motion.base)} style={[s.sos, shadow.glow(colors.danger)]}>
-          <Row gap={10}><Ionicons name="warning" size={22} color="#fff" /><Text style={{ color: '#fff', fontWeight: '900', fontSize: 15, flex: 1 }}>🚨 {openSos.length} SOS AKTIF — segera hubungi & tangani</Text></Row>
+          <Row gap={10}><Ionicons name="warning" size={22} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 15, flex: 1 }}>🚨 {openSos.length} SOS AKTIF — segera hubungi & tangani</Text></Row>
           {openSos.map((a) => (
             <Row key={a.id} between style={s.sosRow}>
               <View style={{ flex: 1 }}>
@@ -173,8 +173,8 @@ function TicketPanel({ id, onClose, onChanged }: { id: string; onClose: () => vo
 const s = StyleSheet.create({
   sos: { backgroundColor: colors.danger, borderRadius: radius.xl, padding: 14, gap: 8 },
   sosRow: { backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: radius.md, padding: 10, flexWrap: 'wrap', gap: 8 },
-  row: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border },
+  row: { flexDirection: 'row', gap: 10, alignItems: 'center', padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   panel: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border, overflow: 'hidden', minHeight: 520 },
-  panelHead: { padding: 14, borderBottomWidth: 1, borderBottomColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  panelHead: { padding: 14, borderBottomWidth: 1, borderBottomColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   close: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
 });

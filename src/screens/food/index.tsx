@@ -69,7 +69,7 @@ export default function FoodHome() {
                   <PressableScale onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.98} style={s.card}>
                     <View>
                       <Image source={{ uri: m.image_url ?? undefined }} style={s.img} />
-                      {!m.is_open && <View style={s.closed}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>TUTUP</Text></View>}
+                      {!m.is_open && <View style={s.closed}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>TUTUP</Text></View>}
                     </View>
                     <View style={{ flex: 1, padding: 12, gap: 3, minWidth: 0 }}>
                       <Row between><Text style={[font.h3, { flex: 1 }]} numberOfLines={1}>{m.name}</Text><HalalBadge merchant={m} /></Row>
@@ -96,7 +96,7 @@ export default function FoodHome() {
 }
 
 const s = StyleSheet.create({
-  card: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: glass.border, ...shadow.card },
+  card: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: glass.border, ...shadow.card },
   img: { width: 110, height: 110, backgroundColor: 'rgba(11,31,42,0.06)' },
   closed: { position: 'absolute', left: 8, top: 8, backgroundColor: 'rgba(11,31,42,0.7)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
 });

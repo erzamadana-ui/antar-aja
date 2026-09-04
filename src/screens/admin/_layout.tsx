@@ -58,7 +58,7 @@ export default function AdminLayout() {
                   {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
                   <View style={s.brand}>
                     <BrandLogo size={36} />
-                    <View><Text style={{ color: colors.text, fontSize: 17, fontWeight: '900' }}>AntarKita</Text><Text style={font.tiny}>Panel Admin</Text></View>
+                    <View><Text style={{ color: colors.text, fontSize: 17, fontWeight: '800' }}>AntarKita</Text><Text style={font.tiny}>Panel Admin</Text></View>
                   </View>
                   <View style={{ paddingHorizontal: 10, gap: 4 }}>
                     <Animated.View style={[s.indicator, indicator]} />
@@ -113,7 +113,7 @@ export default function AdminLayout() {
 
 const s = StyleSheet.create({
   sidebarWrap: { width: 250, padding: 12, paddingRight: 0 },
-  sidebar: { flex: 1, borderRadius: radius.xl, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.62)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', paddingBottom: 8 },
+  sidebar: { flex: 1, borderRadius: radius.xl, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden', paddingBottom: 8 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 18 },
   logo: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   logoSm: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
@@ -121,8 +121,8 @@ const s = StyleSheet.create({
   side: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, height: ITEM_H, borderRadius: radius.md },
   footer: { padding: 14, gap: 6, borderTopWidth: 1, borderTopColor: glass.border, marginTop: 8 },
   footBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
-  topbar: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.55)', borderBottomWidth: 1, borderBottomColor: glass.border, overflow: 'hidden' },
+  topbar: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderBottomWidth: 1, borderBottomColor: glass.border, overflow: 'hidden' },
   iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadow.glow(colors.primary) },
 });

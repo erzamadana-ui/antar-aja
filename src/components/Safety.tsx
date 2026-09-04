@@ -44,7 +44,7 @@ export function SosButton({ orderId, compact, style }: { orderId?: string | null
         <BrandGradient colors={['#EF4444', '#B91C1C']} style={StyleSheet.absoluteFill} />
         <Animated.View style={[s.sosBar, bar]} />
         <Ionicons name="alert-circle" size={compact ? 18 : 22} color="#fff" />
-        {!compact && <Text style={{ color: '#fff', fontWeight: '900', letterSpacing: 1 }}>{sent ? 'SOS TERKIRIM' : holding ? 'TAHAN…' : 'SOS'}</Text>}
+        {!compact && <Text style={{ color: '#fff', fontWeight: '800', letterSpacing: 1 }}>{sent ? 'SOS TERKIRIM' : holding ? 'TAHAN…' : 'SOS'}</Text>}
       </Pressable>
       {!compact && <Text style={[font.tiny, { textAlign: 'center', marginTop: 4 }]}>Tahan 2 detik · darurat 112</Text>}
     </View>
@@ -81,7 +81,7 @@ export function PinCard({ orderId, status }: { orderId: string; status: string }
         <Row gap={6}><Ionicons name="shield-checkmark" size={16} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>PIN penjemputan</Text></Row>
         <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 2 }}>Sebutkan ke driver sebelum naik. Pastikan plat nomor sesuai aplikasi.</Text>
       </View>
-      <Row gap={6}>{pin.split('').map((d, i) => <View key={i} style={s.pinDigit}><Text style={{ fontSize: 22, fontWeight: '900', color: colors.ride }}>{d}</Text></View>)}</Row>
+      <Row gap={6}>{pin.split('').map((d, i) => <View key={i} style={s.pinDigit}><Text style={{ fontSize: 22, fontWeight: '800', color: colors.ride }}>{d}</Text></View>)}</Row>
     </Animated.View>
   );
 }
@@ -214,8 +214,8 @@ const s = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(11,31,42,0.45)', alignItems: 'center', justifyContent: 'center', padding: 20 },
   dialog: { backgroundColor: '#fff', borderRadius: radius.xl, padding: 20, gap: 12, alignItems: 'center', ...shadow.card },
   pinIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  pinInput: { fontSize: 32, fontWeight: '900', letterSpacing: 16, textAlign: 'center', color: colors.text, borderBottomWidth: 2, borderBottomColor: colors.ride, paddingVertical: 8, width: 200 },
+  pinInput: { fontSize: 32, fontWeight: '800', letterSpacing: 16, textAlign: 'center', color: colors.text, borderBottomWidth: 2, borderBottomColor: colors.ride, paddingVertical: 8, width: 200 },
   input: { backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, height: 44, color: colors.text },
   verify: { flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: colors.success + '12', borderRadius: radius.md, padding: 10, borderWidth: 1, borderColor: colors.success + '44' },
-  safetyRow: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  safetyRow: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
 });

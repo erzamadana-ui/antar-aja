@@ -109,7 +109,7 @@ export default function DriverOrder() {
         <Animated.View entering={ZoomIn.duration(motion.base)} style={[s.earnCard, shadow.glow(colors.success)]}>
           <BrandGradient colors={[colors.success, '#047857']} angle="horizontal" style={StyleSheet.absoluteFill} />
           <Row between>
-            <View><Text style={s.earnLabel}>Pendapatan Anda</Text><AnimatedNumber value={order.driver_earning} format={rupiah} style={{ color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: -0.5 }} duration={600} /></View>
+            <View><Text style={s.earnLabel}>Pendapatan Anda</Text><AnimatedNumber value={order.driver_earning} format={rupiah} style={{ color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }} duration={600} /></View>
             <View style={{ alignItems: 'flex-end' }}><Text style={s.earnLabel}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 17 }}>{order.payment_method === 'cash' ? rupiah(order.total) : '✓ Lunas'}</Text></View>
           </Row>
           {order.service === 'food' && order.payment_method === 'cash' && <Text style={[s.earnLabel, { marginTop: 6 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
@@ -147,5 +147,5 @@ const s = StyleSheet.create({
   navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 44, borderRadius: 22, overflow: 'hidden' },
   earnCard: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
   earnLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' },
-  block: { backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
+  block: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
 });

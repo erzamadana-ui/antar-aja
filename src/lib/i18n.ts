@@ -22,7 +22,7 @@ const id = {
   create_account: 'Buat Akun', start_now: 'Mulai sekarang', start_sub: 'Daftar gratis, pesan dalam hitungan detik.', welcome_tag: 'Ojek, mobil, makanan, kirim barang, dan belanja.\nSatu aplikasi untuk semua kebutuhan harian.',
   partner_hint: 'Ingin jadi mitra driver atau merchant? Daftar akun lalu buka menu Akun.',
   greeting_morning: 'Selamat pagi', greeting_noon: 'Selamat siang', greeting_afternoon: 'Selamat sore', greeting_evening: 'Selamat malam',
-  search_placeholder: 'Cari makanan, restoran, tempat…', balance: 'Saldo AntarPay', topup: 'Top Up', withdraw: 'Tarik Saldo', active_orders: 'Pesanan berjalan', promo_for_you: 'Promo untukmu', trending_food: 'Lagi laris di AntarFood', see_all: 'Lihat semua',
+  home_question: 'Mau ke mana hari ini?', search_placeholder: 'Cari tujuan, makanan, atau toko…', balance: 'Saldo AntarPay', topup: 'Top Up', withdraw: 'Tarik Saldo', active_orders: 'Pesanan berjalan', promo_for_you: 'Promo untukmu', trending_food: 'Lagi laris di AntarFood', see_all: 'Lihat semua',
   track: 'Lacak', chat: 'Chat', call: 'Telepon', driver: 'Driver', customer: 'Pelanggan', merchant: 'Merchant', admin: 'Admin', cash: 'Tunai', wallet: 'AntarPay',
   pickup: 'Titik jemput', destination: 'Tujuan', where_to: 'Mau ke mana?', my_location: 'Lokasi saya', pick_destination: 'Pilih tujuan untuk melihat tarif.', estimate: 'Estimasi biaya', payment: 'Pembayaran', order_now: 'Pesan',
   tip: 'Tip driver', give_tip: 'Beri tip', extra_fee: 'Biaya tambahan', approve: 'Setujui', reject: 'Tolak', parking: 'Parkir', toll: 'Tol', waiting: 'Waktu tunggu', other: 'Lainnya',
@@ -35,7 +35,7 @@ const id = {
   become_driver: 'Daftar jadi Mitra Driver', become_merchant: 'Daftar jadi Merchant AntarFood', switch_driver: 'Beralih ke Mode Driver', switch_merchant: 'Beralih ke Mode Merchant', switch_customer: 'Beralih ke Mode Pelanggan', admin_panel: 'Panel Admin',
   status_searching: 'Mencari driver', status_accepted: 'Driver menuju lokasi', status_arrived: 'Driver sudah tiba', status_in_progress: 'Dalam perjalanan', status_completed: 'Selesai', status_cancelled: 'Dibatalkan',
   online: 'ONLINE', offline: 'OFFLINE', orders_available: 'order tersedia', accept_order: 'Terima Order', active_order: 'Order aktif',
-  tag_ride_motor: 'Ojek motor cepat & hemat', tag_ride_car: 'Mobil nyaman untuk keluarga', tag_food: 'Makanan favorit diantar', tag_send: 'Paket dalam & antar kota', tag_shop: 'Titip belanja Alfamart, Indomaret & lainnya', tag_box: 'Mobil box / pick up, pindahan', tag_travel: 'Travel antar kota, jemput di rumah', tag_pay: 'Saldo & metode bayar', notifications: 'Notifikasi', payment_methods: 'Pembayaran', tap_detail: 'ketuk untuk detail',
+  tag_ride_motor: 'Ojek motor cepat & hemat', tag_ride_car: 'Mobil nyaman untuk keluarga', tag_food: 'Makanan favorit diantar', tag_send: 'Paket dalam & antar kota', tag_shop: 'Indomaret, Alfamart, apotek & supermarket', tag_market: 'Bahan masak dari pasar terdekat', tag_box: 'Mobil box / pick up, pindahan', tag_travel: 'Travel antar kota, jemput di rumah', tag_pay: 'Saldo & metode bayar', notifications: 'Notifikasi', payment_methods: 'Pembayaran', tap_detail: 'ketuk untuk detail',
 };
 export type TKey = keyof typeof id;
 
@@ -47,7 +47,7 @@ const en: Partial<Record<TKey, string>> = {
   create_account: 'Create Account', start_now: 'Get started', start_sub: 'Free to join, order in seconds.', welcome_tag: 'Rides, cars, food, parcels and shopping.\nOne app for everyday needs.',
   partner_hint: 'Want to be a driver or merchant partner? Sign up, then open Account.',
   greeting_morning: 'Good morning', greeting_noon: 'Good afternoon', greeting_afternoon: 'Good afternoon', greeting_evening: 'Good evening',
-  search_placeholder: 'Search food, restaurants, places…', balance: 'AntarPay balance', topup: 'Top Up', withdraw: 'Withdraw', active_orders: 'Active orders', promo_for_you: 'Promos for you', trending_food: 'Trending on AntarFood', see_all: 'See all',
+  home_question: 'Where to today?', search_placeholder: 'Search destination, food, or store…', balance: 'AntarPay balance', topup: 'Top Up', withdraw: 'Withdraw', active_orders: 'Active orders', promo_for_you: 'Promos for you', trending_food: 'Trending on AntarFood', see_all: 'See all',
   track: 'Track', chat: 'Chat', call: 'Call', driver: 'Driver', customer: 'Customer', merchant: 'Merchant', admin: 'Admin', cash: 'Cash',
   pickup: 'Pickup', destination: 'Destination', where_to: 'Where to?', my_location: 'My location', pick_destination: 'Pick a destination to see the fare.', estimate: 'Estimated fare', payment: 'Payment', order_now: 'Order',
   tip: 'Driver tip', give_tip: 'Give a tip', extra_fee: 'Extra fee', approve: 'Approve', reject: 'Reject', parking: 'Parking', toll: 'Toll', waiting: 'Waiting time', other: 'Other',
@@ -60,7 +60,7 @@ const en: Partial<Record<TKey, string>> = {
   become_driver: 'Become a Driver Partner', become_merchant: 'Become an AntarFood Merchant', switch_driver: 'Switch to Driver Mode', switch_merchant: 'Switch to Merchant Mode', switch_customer: 'Switch to Customer Mode', admin_panel: 'Admin Panel',
   status_searching: 'Finding a driver', status_accepted: 'Driver on the way', status_arrived: 'Driver has arrived', status_in_progress: 'On the way', status_completed: 'Completed', status_cancelled: 'Cancelled',
   online: 'ONLINE', offline: 'OFFLINE', orders_available: 'orders available', accept_order: 'Accept Order', active_order: 'Active order',
-  tag_ride_motor: 'Fast & cheap motorbike rides', tag_ride_car: 'Comfortable cars for families', tag_food: 'Favorite food delivered', tag_send: 'Parcels in-city & intercity', tag_shop: 'Shopping from Alfamart, Indomaret & more', tag_box: 'Box truck / pickup, moving', tag_travel: 'Intercity travel, home pickup', tag_pay: 'Balance & payment methods', notifications: 'Notifications', payment_methods: 'Payment', tap_detail: 'tap for details',
+  tag_ride_motor: 'Fast & cheap motorbike rides', tag_ride_car: 'Comfortable cars for families', tag_food: 'Favorite food delivered', tag_send: 'Parcels in-city & intercity', tag_shop: 'Indomaret, Alfamart, pharmacy & supermarket', tag_market: 'Groceries from the nearest wet market', tag_box: 'Box truck / pickup, moving', tag_travel: 'Intercity travel, home pickup', tag_pay: 'Balance & payment methods', notifications: 'Notifications', payment_methods: 'Payment', tap_detail: 'tap for details',
 };
 
 const zh: Partial<Record<TKey, string>> = {
@@ -71,7 +71,7 @@ const zh: Partial<Record<TKey, string>> = {
   create_account: '创建账户', start_now: '立即开始', start_sub: '免费注册，几秒下单。', welcome_tag: '摩托、汽车、外卖、快递与代购。\n一个应用满足日常所需。',
   partner_hint: '想成为司机或商家合作伙伴？注册后打开“账户”。',
   greeting_morning: '早上好', greeting_noon: '中午好', greeting_afternoon: '下午好', greeting_evening: '晚上好',
-  search_placeholder: '搜索美食、餐厅、地点…', balance: 'AntarPay 余额', topup: '充值', withdraw: '提现', active_orders: '进行中的订单', promo_for_you: '为您推荐的优惠', trending_food: 'AntarFood 热门', see_all: '查看全部',
+  home_question: '今天想去哪里？', search_placeholder: '搜索目的地、美食或商店…', balance: 'AntarPay 余额', topup: '充值', withdraw: '提现', active_orders: '进行中的订单', promo_for_you: '为您推荐的优惠', trending_food: 'AntarFood 热门', see_all: '查看全部',
   track: '追踪', chat: '聊天', call: '通话', driver: '司机', customer: '顾客', merchant: '商家', admin: '管理员', cash: '现金',
   pickup: '上车点', destination: '目的地', where_to: '去哪里？', my_location: '我的位置', pick_destination: '选择目的地查看价格。', estimate: '预估费用', payment: '支付', order_now: '下单',
   tip: '司机小费', give_tip: '给小费', extra_fee: '附加费用', approve: '同意', reject: '拒绝', parking: '停车费', toll: '过路费', waiting: '等候时间', other: '其他',
@@ -84,7 +84,7 @@ const zh: Partial<Record<TKey, string>> = {
   become_driver: '成为司机合作伙伴', become_merchant: '成为 AntarFood 商家', switch_driver: '切换到司机模式', switch_merchant: '切换到商家模式', switch_customer: '切换到顾客模式', admin_panel: '管理面板',
   status_searching: '正在寻找司机', status_accepted: '司机正在前来', status_arrived: '司机已到达', status_in_progress: '行程中', status_completed: '已完成', status_cancelled: '已取消',
   online: '在线', offline: '离线', orders_available: '个可接订单', accept_order: '接单', active_order: '进行中的订单',
-  tag_ride_motor: '快捷实惠的摩托出行', tag_ride_car: '舒适的家庭用车', tag_food: '最爱美食送到家', tag_send: '同城及跨城包裹', tag_shop: '代购 Alfamart、Indomaret 等', tag_box: '厢式车/皮卡，搬家', tag_travel: '城际拼车，上门接送', tag_pay: '余额与支付方式', notifications: '通知', payment_methods: '支付', tap_detail: '点击查看详情',
+  tag_ride_motor: '快捷实惠的摩托出行', tag_ride_car: '舒适的家庭用车', tag_food: '最爱美食送到家', tag_send: '同城及跨城包裹', tag_shop: '代购 Indomaret、Alfamart、药店、超市', tag_market: '就近传统市场食材代购', tag_box: '厢式车/皮卡，搬家', tag_travel: '城际拼车，上门接送', tag_pay: '余额与支付方式', notifications: '通知', payment_methods: '支付', tap_detail: '点击查看详情',
 };
 
 const ar: Partial<Record<TKey, string>> = {
@@ -95,7 +95,7 @@ const ar: Partial<Record<TKey, string>> = {
   create_account: 'إنشاء حساب', start_now: 'ابدأ الآن', start_sub: 'التسجيل مجاني، اطلب في ثوانٍ.', welcome_tag: 'دراجات، سيارات، طعام، طرود وتسوّق.\nتطبيق واحد لكل احتياجاتك اليومية.',
   partner_hint: 'تريد أن تصبح سائقًا أو تاجرًا شريكًا؟ أنشئ حسابًا ثم افتح "الحساب".',
   greeting_morning: 'صباح الخير', greeting_noon: 'طاب يومك', greeting_afternoon: 'مساء الخير', greeting_evening: 'مساء الخير',
-  search_placeholder: 'ابحث عن طعام أو مطعم أو مكان…', balance: 'رصيد AntarPay', topup: 'شحن الرصيد', withdraw: 'سحب', active_orders: 'الطلبات الجارية', promo_for_you: 'عروض لك', trending_food: 'الأكثر طلبًا في AntarFood', see_all: 'عرض الكل',
+  home_question: 'إلى أين اليوم؟', search_placeholder: 'ابحث عن طعام أو مطعم أو مكان…', balance: 'رصيد AntarPay', topup: 'شحن الرصيد', withdraw: 'سحب', active_orders: 'الطلبات الجارية', promo_for_you: 'عروض لك', trending_food: 'الأكثر طلبًا في AntarFood', see_all: 'عرض الكل',
   track: 'تتبّع', chat: 'دردشة', call: 'اتصال', driver: 'السائق', customer: 'العميل', merchant: 'التاجر', admin: 'المشرف', cash: 'نقدًا',
   pickup: 'نقطة الانطلاق', destination: 'الوجهة', where_to: 'إلى أين؟', my_location: 'موقعي', pick_destination: 'اختر الوجهة لعرض السعر.', estimate: 'التكلفة التقديرية', payment: 'الدفع', order_now: 'اطلب',
   tip: 'إكرامية السائق', give_tip: 'أعطِ إكرامية', extra_fee: 'رسوم إضافية', approve: 'موافقة', reject: 'رفض', parking: 'موقف السيارات', toll: 'رسوم الطريق', waiting: 'وقت الانتظار', other: 'أخرى',
@@ -108,7 +108,7 @@ const ar: Partial<Record<TKey, string>> = {
   become_driver: 'كن سائقًا شريكًا', become_merchant: 'كن تاجرًا في AntarFood', switch_driver: 'التبديل إلى وضع السائق', switch_merchant: 'التبديل إلى وضع التاجر', switch_customer: 'التبديل إلى وضع العميل', admin_panel: 'لوحة المشرف',
   status_searching: 'جارٍ البحث عن سائق', status_accepted: 'السائق في الطريق', status_arrived: 'وصل السائق', status_in_progress: 'في الطريق', status_completed: 'مكتمل', status_cancelled: 'ملغى',
   online: 'متصل', offline: 'غير متصل', orders_available: 'طلبات متاحة', accept_order: 'قبول الطلب', active_order: 'طلب نشط',
-  tag_ride_motor: 'رحلات دراجة سريعة واقتصادية', tag_ride_car: 'سيارات مريحة للعائلة', tag_food: 'طعامك المفضل يصل إليك', tag_send: 'طرود داخل المدينة وبين المدن', tag_shop: 'تسوّق من Alfamart وIndomaret وغيرها', tag_box: 'شاحنة صندوق/بيك أب، نقل أثاث', tag_travel: 'سفر بين المدن مع توصيل من المنزل', tag_pay: 'الرصيد وطرق الدفع', notifications: 'الإشعارات', payment_methods: 'الدفع', tap_detail: 'اضغط للتفاصيل',
+  tag_ride_motor: 'رحلات دراجة سريعة واقتصادية', tag_ride_car: 'سيارات مريحة للعائلة', tag_food: 'طعامك المفضل يصل إليك', tag_send: 'طرود داخل المدينة وبين المدن', tag_shop: 'تسوّق من Indomaret وAlfamart والصيدليات', tag_market: 'مكوّنات الطبخ من أقرب سوق شعبي', tag_box: 'شاحنة صندوق/بيك أب، نقل أثاث', tag_travel: 'سفر بين المدن مع توصيل من المنزل', tag_pay: 'الرصيد وطرق الدفع', notifications: 'الإشعارات', payment_methods: 'الدفع', tap_detail: 'اضغط للتفاصيل',
 };
 
 const DICT: Record<Locale, Partial<Record<TKey, string>>> = { id, en, zh, ar };

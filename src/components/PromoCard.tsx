@@ -31,7 +31,7 @@ export function PromoCard({ promo, index = 0, onPress, width = 260, height = Mat
       {!promo.image_url && <View style={s.art}><ServiceIllustration kind={def?.art ?? 'pay'} size={66} /></View>}
       {!promo.image_url && <BrandGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']} angle="vertical" style={s.shade} />}
       {!promo.image_url && <View style={s.body}>
-        <View style={s.code}><Ionicons name="pricetag" size={11} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 11, letterSpacing: 0.5 }}>{promo.code}</Text></View>
+        <View style={s.code}><Ionicons name="pricetag" size={11} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 }}>{promo.code}</Text></View>
         <Text style={s.title} numberOfLines={2}>{promoHeadline(promo)}</Text>
         <Text style={s.desc} numberOfLines={1}>{promo.min_total > 0 ? `Min. ${rupiah(promo.min_total)} · ` : ''}{def ? def.label : 'Semua layanan'}</Text>
       </View>}
@@ -46,6 +46,6 @@ const s = StyleSheet.create({
   shade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 90 },
   body: { position: 'absolute', left: 14, right: 14, bottom: 12, gap: 3 },
   code: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.45)', borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2 },
-  title: { color: '#fff', fontWeight: '900', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, textShadowColor: 'rgba(0,0,0,0.35)', textShadowRadius: 6 },
-  desc: { color: 'rgba(255,255,255,0.92)', fontSize: 11, fontWeight: '600' },
+  title: { color: '#fff', fontWeight: '800', fontSize: 17, letterSpacing: -0.3, lineHeight: 21, textShadowColor: 'rgba(0,0,0,0.35)', textShadowRadius: 6 },
+  desc: { color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: '600' },
 });

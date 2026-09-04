@@ -37,7 +37,7 @@ export default function Support() {
         <Entrance index={0}>
           <BrandGradient colors={[colors.info, '#1D4ED8']} style={[s.hero, shadow.glow(colors.info)]}>
             <Row gap={8}><LiveDot color={csOnline ? '#4ADE80' : '#FCD34D'} size={9} /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 }}>{csOnline ? 'CS ONLINE · 07.00–22.00 WIB' : 'CS OFFLINE · buka 07.00 WIB'}</Text></Row>
-            <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900', marginTop: 6 }}>Ada kendala? Kami bantu.</Text>
+            <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 6 }}>Ada kendala? Kami bantu.</Text>
             <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 2 }}>Buat tiket aduan, CS online membalas langsung di aplikasi. Rata-rata balasan pertama &lt; 15 menit.</Text>
             <Row gap={8} style={{ marginTop: 12, flexWrap: 'wrap' }}>
               <Button title="Chat CS online" icon="chatbubbles" color="#0B1F2A" onPress={() => router.push({ pathname: '/support/new', params: { category: 'other', subject: 'Chat dengan CS' } } as never)} />
@@ -85,6 +85,6 @@ export default function Support() {
 
 const s = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' },
-  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border, marginBottom: 8 },
+  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, marginBottom: 8 },
   catIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

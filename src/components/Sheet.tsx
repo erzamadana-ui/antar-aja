@@ -77,9 +77,9 @@ export function DraggableSheet({ children, minHeight = 220, maxHeight, header, i
 }
 
 const s = StyleSheet.create({
-  sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.72)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
+  sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
   panel: { backgroundColor: colors.bg, borderLeftWidth: 1, borderLeftColor: colors.border },
-  panelHeader: { padding: 16, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.7)', borderBottomWidth: 1, borderBottomColor: colors.border },
+  panelHeader: { padding: 16, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderBottomWidth: 1, borderBottomColor: colors.border },
   grab: { paddingTop: 10, paddingHorizontal: 16, paddingBottom: 6, ...(Platform.OS === 'web' ? ({ cursor: 'grab' } as object) : {}) },
   handleHit: { alignSelf: 'center', paddingHorizontal: 40, paddingVertical: 4, marginBottom: 4, ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : {}) },
   handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.18)' },

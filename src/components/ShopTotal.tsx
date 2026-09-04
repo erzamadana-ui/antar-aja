@@ -39,6 +39,6 @@ export function ShopTotalCard({ order, onDone }: { order: Order; onDone: () => v
   );
 }
 const s = StyleSheet.create({
-  card: { gap: 10, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.shop + '55' },
+  card: { gap: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.shop + '55' },
   input: { flex: 1, height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, color: colors.text },
 });

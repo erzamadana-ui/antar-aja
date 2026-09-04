@@ -1,7 +1,7 @@
 export type UserRole = 'customer' | 'driver' | 'merchant' | 'admin';
 export type VehicleType = 'motor' | 'car' | 'box' | 'pickup';
 export type ApprovalStatus = 'pending' | 'approved' | 'suspended' | 'rejected';
-export type ServiceType = 'ride_motor' | 'ride_car' | 'food' | 'send' | 'shop' | 'box' | 'travel';
+export type ServiceType = 'ride_motor' | 'ride_car' | 'food' | 'send' | 'shop' | 'box' | 'travel' | 'market';
 export type Locale = 'id' | 'en' | 'zh' | 'ar';
 export interface OrderExtra { id: string; kind: 'parking' | 'toll' | 'waiting' | 'other'; amount: number; note?: string | null; status: 'pending' | 'approved' | 'rejected'; created_at: string; responded_at?: string }
 export interface ShoppingItem { name: string; qty: number; note?: string }

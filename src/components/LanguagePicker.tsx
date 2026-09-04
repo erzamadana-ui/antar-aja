@@ -59,8 +59,8 @@ export function LanguageList() {
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 6 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   chipActive: { borderColor: colors.primary, backgroundColor: colors.primary + '14' },
-  chipText: { fontSize: 11, fontWeight: '800', color: colors.textSecondary },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  chipText: { fontSize: 12, fontWeight: '800', color: colors.textSecondary },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
 });

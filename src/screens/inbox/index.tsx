@@ -48,7 +48,7 @@ export default function Inbox() {
   );
 }
 const s = StyleSheet.create({
-  card: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border },
+  card: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   img: { width: '100%', height: 120, backgroundColor: 'rgba(11,31,42,0.06)' },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary },
 });

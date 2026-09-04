@@ -38,7 +38,7 @@ export function DocUpload({ label, hint, value, onChange, required, camera, colo
 }
 
 const s = StyleSheet.create({
-  box: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 12, backgroundColor: 'rgba(255,255,255,0.5)' },
+  box: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 12, backgroundColor: 'rgba(255,255,255,0.92)' },
   icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   eye: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
 });

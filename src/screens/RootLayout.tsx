@@ -11,7 +11,8 @@ import { useI18n, applyDirection } from '@/lib/i18n';
 import { IncomingCallOverlay } from '@/components/call/IncomingCall';
 import { ToastHost, Loading } from '@/components/ui';
 import { AmbientBackground } from '@/components/glass';
-import { colors } from '@/lib/theme';
+import { colors, FONT_ASSETS } from '@/lib/theme';
+import { useFonts } from 'expo-font';
 import { APP, APP_NAME } from '@/lib/app';
 import { useRouter } from 'expo-router';
 
@@ -19,6 +20,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const router = useRouter();
+  const [fontsLoaded] = useFonts(FONT_ASSETS);
   const ready = useAuth((s) => s.ready);
   const init = useAuth((s) => s.init);
   const modeLoaded = useMode((s) => s.loaded);
@@ -28,7 +30,7 @@ export default function RootLayout() {
 
   useEffect(() => { init(); loadMode(); loadLocale(); }, [init, loadMode, loadLocale]);
   useEffect(() => { applyDirection(locale); }, [locale]);
-  useEffect(() => { if (ready && modeLoaded) SplashScreen.hideAsync().catch(() => {}); }, [ready, modeLoaded]);
+  useEffect(() => { if (ready && modeLoaded && fontsLoaded) SplashScreen.hideAsync().catch(() => {}); }, [ready, modeLoaded, fontsLoaded]);
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.title = APP_NAME[APP];
@@ -40,10 +42,10 @@ export default function RootLayout() {
       const style = document.createElement('style');
       style.textContent = [
         'html,body,#root{height:100%;background:#F4F7F8;color-scheme:light only}',
-        'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;-webkit-font-smoothing:antialiased}',
+        'body{font-family:"PlusJakartaSans-500",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}',
         '*{box-sizing:border-box}',
         '::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:rgba(11,31,42,0.18);border-radius:8px}',
-        'a,button,[role=button]{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .2s,opacity .2s}',
+        'a,button,[role=button]{transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .16s,opacity .16s}',
         '[role=button]:hover{filter:brightness(1.03)}',
         '@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}',
       ].join('\n');

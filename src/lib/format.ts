@@ -25,6 +25,7 @@ export function formatDate(iso: string, withTime = true): string {
 export const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
 export const serviceLabel: Record<ServiceType, string> = {
+  market: 'AntarMarket',
   ride_motor: 'AntarRide',
   ride_car: 'AntarCar',
   food: 'AntarFood',

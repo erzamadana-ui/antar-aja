@@ -94,7 +94,7 @@ export default function PricingIntel() {
                 <Row between><Text style={font.small}>Rata-rata kompetitor</Text><Text style={{ fontWeight: '700' }}>{sg.competitor_avg ? rupiah(Math.round(sg.competitor_avg)) : '—'}</Text></Row>
                 <View style={s.suggBox}>
                   <Text style={font.tiny}>USULAN</Text>
-                  <Row between><Text style={{ fontSize: 22, fontWeight: '900', color: lv.color }}>{rupiah(sg.suggested_fare)}</Text><Badge text={`${sg.suggested_multiplier}×`} color={lv.color} /></Row>
+                  <Row between><Text style={{ fontSize: 22, fontWeight: '800', color: lv.color }}>{rupiah(sg.suggested_fare)}</Text><Badge text={`${sg.suggested_multiplier}×`} color={lv.color} /></Row>
                   <Text style={[font.tiny, { color: diff >= 0 ? colors.success : colors.danger }]}>{diff >= 0 ? '+' : ''}{rupiah(diff)} vs sekarang</Text>
                 </View>
                 <Row between style={{ marginTop: 6 }}><Text style={font.tiny}>Driver dapat</Text><Text style={font.tiny}>{rupiah(sg.driver_now)} → <Text style={{ fontWeight: '800', color: colors.text }}>{rupiah(sg.driver_earning)}</Text></Text></Row>
@@ -175,8 +175,8 @@ export default function PricingIntel() {
 }
 
 const s = StyleSheet.create({
-  sugg: { flex: 1, minWidth: 240, borderWidth: 1.5, borderRadius: radius.lg, padding: 12, backgroundColor: 'rgba(255,255,255,0.6)' },
+  sugg: { flex: 1, minWidth: 240, borderWidth: 1.5, borderRadius: radius.lg, padding: 12, backgroundColor: 'rgba(255,255,255,0.92)' },
   suggBox: { marginTop: 8, padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(11,31,42,0.04)' },
   sessRow: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(11,31,42,0.07)' },
-  form: { gap: 10, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.5)', borderWidth: 1, borderColor: glass.border, marginTop: 6 },
+  form: { gap: 10, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, marginTop: 6 },
 });

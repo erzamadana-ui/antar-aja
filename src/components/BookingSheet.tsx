@@ -108,11 +108,11 @@ export function PriceSummary({ rows, total }: { rows: { label: string; value: nu
 }
 
 const s = StyleSheet.create({
-  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
+  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.92)' },
   payIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
-  gwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border },
+  gwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   gwIcons: { flexDirection: 'row', flexWrap: 'wrap', width: 34, gap: 3 },
   gwDot: { width: 14, height: 14, borderRadius: 4 },
-  notes: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.md, paddingHorizontal: 12 },
+  notes: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, borderRadius: radius.md, paddingHorizontal: 12 },
   notesInput: { flex: 1, height: 44, color: colors.text, fontSize: 14 },
 });

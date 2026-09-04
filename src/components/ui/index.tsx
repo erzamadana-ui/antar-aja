@@ -27,7 +27,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
   const isLoading = loading || busy;
   const c = color ?? colors.primary;
   const fg = variant === 'primary' || variant === 'danger' ? '#fff' : variant === 'secondary' ? colors.primaryDark : c;
-  const height = size === 'lg' ? 56 : size === 'sm' ? 38 : 48;
+  const height = size === 'lg' ? 54 : size === 'sm' ? 38 : 48;
   const handle = async () => {
     if (!onPress || isLoading || disabled) return;
     try { setBusy(true); await onPress(); } finally { setBusy(false); }
@@ -35,7 +35,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
   const inner = isLoading ? <ActivityIndicator color={fg} /> : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 20} color={fg} />}
-      <Text style={{ color: fg, fontWeight: '700', fontSize: size === 'sm' ? 14 : 16, letterSpacing: 0.1 }}>{title}</Text>
+      <Text style={{ color: fg, fontWeight: '800', fontSize: size === 'sm' ? 14 : 16, letterSpacing: 0.1 }}>{title}</Text>
     </View>
   );
   const shape: ViewStyle = { height, borderRadius: size === 'lg' ? radius.lg : radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: size === 'sm' ? 14 : 20, overflow: 'hidden' };
@@ -98,9 +98,13 @@ interface ScreenProps {
   title?: string; children: React.ReactNode; scroll?: boolean; back?: boolean; right?: React.ReactNode; padded?: boolean;
   bg?: string; headerBg?: string; headerFg?: string; footer?: React.ReactNode; contentStyle?: StyleProp<ViewStyle>; keyboard?: boolean; maxWidth?: number;
   ambient?: boolean | 'teal' | 'amber' | 'mixed'; bottomSpace?: number;
+  /** Header band berwarna layanan (teks putih, sudut bawah membulat) — pola "Solid Motion". */
+  band?: string; subtitle?: string;
 }
-export function Screen({ title, children, scroll = true, back, right, padded = true, bg, headerBg, headerFg = colors.text, footer, contentStyle, keyboard = true, maxWidth = 720, ambient = true, bottomSpace = 40 }: ScreenProps) {
+export function Screen({ title, children, scroll = true, back, right, padded = true, bg, headerBg, headerFg, footer, contentStyle, keyboard = true, maxWidth = 720, ambient = true, bottomSpace = 40, band, subtitle }: ScreenProps) {
   const router = useRouter();
+  if (band) { headerBg = band; headerFg = '#fff'; }
+  headerFg = headerFg ?? colors.text;
   const insets = useSafeAreaInsetsSafe();
   const inner = { width: '100%' as const, maxWidth, alignSelf: 'center' as const };
   const body = scroll ? (
@@ -115,15 +119,18 @@ export function Screen({ title, children, scroll = true, back, right, padded = t
       {ambient ? <AmbientBackground tint={typeof ambient === 'string' ? ambient : 'teal'} /> : null}
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {(title || back || right) && (
-          <View style={[s.header, headerBg ? { backgroundColor: headerBg } : null]}>
+          <View style={[s.header, headerBg ? { backgroundColor: headerBg, borderBottomWidth: 0 } : null, band ? s.band : null]}>
             {!headerBg && Platform.OS !== 'android' && <BlurView intensity={glass.blur} tint="light" style={StyleSheet.absoluteFill} />}
-            <View style={[s.headerInner, inner]}>
+            <View style={[s.headerInner, inner, subtitle ? { height: 64 } : null]}>
               {back ? (
-                <PressableScale onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={12} style={s.backBtn} scaleTo={0.9}>
+                <PressableScale onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={12} style={[s.backBtn, band ? { backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.25)' } : null]} scaleTo={0.9}>
                   <Ionicons name="arrow-back" size={20} color={headerFg} />
                 </PressableScale>
               ) : <View style={{ width: 8 }} />}
-              <Text style={[font.h3, { flex: 1, color: headerFg, fontSize: 17 }]} numberOfLines={1}>{title}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[font.h3, { color: headerFg, fontSize: subtitle ? 18 : 17 }]} numberOfLines={1}>{title}</Text>
+                {subtitle ? <Text style={[font.tiny, { color: band ? 'rgba(255,255,255,0.85)' : colors.textSecondary }]} numberOfLines={1}>{subtitle}</Text> : null}
+              </View>
               {right}
             </View>
           </View>
@@ -149,7 +156,7 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) { return <V
 export function Badge({ text, color = colors.primary, bg, style }: { text: string; color?: string; bg?: string; style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[{ backgroundColor: bg ?? color + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, alignSelf: 'flex-start', borderWidth: 1, borderColor: color + '22' }, style]}>
-      <Text style={{ color, fontSize: 12, fontWeight: '700' }}>{text}</Text>
+      <Text style={{ color, fontSize: 12, fontWeight: '800' }}>{text}</Text>
     </View>
   );
 }
@@ -212,7 +219,7 @@ export function Stars({ value, size = 14, onChange }: { value: number; size?: nu
 export function Chip({ label, active, onPress, color = colors.primary }: { label: string; active?: boolean; onPress?: () => void; color?: string }) {
   return (
     <PressableScale onPress={onPress} scaleTo={0.94} style={[s.chip, active && { backgroundColor: color, borderColor: color, ...shadow.glow(color) }]}>
-      <Text style={{ color: active ? '#fff' : colors.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
+      <Text style={{ color: active ? '#fff' : colors.text, fontWeight: '700', fontSize: 13 }}>{label}</Text>
     </PressableScale>
   );
 }
@@ -290,17 +297,18 @@ export { useReducedMotion };
 
 const s = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.10)', borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.82)', paddingHorizontal: 12, minHeight: 48, shadowColor: colors.primary, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.10)', borderRadius: radius.md, backgroundColor: '#FFFFFF', paddingHorizontal: 12, minHeight: 50, shadowColor: colors.primary, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } },
   input: { flex: 1, fontSize: 15, color: colors.text, paddingVertical: 10, ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : {}) },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, ...shadow.card },
-  header: { overflow: 'hidden', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(11,31,42,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)' },
-  headerInner: { flexDirection: 'row', alignItems: 'center', height: 54, paddingHorizontal: 8, gap: 4 },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border },
-  footer: { overflow: 'hidden', paddingHorizontal: spacing.lg, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(11,31,42,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.94)' : 'rgba(255,255,255,0.6)' },
+  header: { overflow: 'hidden', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(15,42,40,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.84)' },
+  headerInner: { flexDirection: 'row', alignItems: 'center', height: 54, paddingHorizontal: 8, gap: 6 },
+  band: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg, paddingBottom: 6, ...shadow.soft },
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 1, borderColor: glass.border },
+  footer: { overflow: 'hidden', paddingHorizontal: spacing.lg, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(11,31,42,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.9)' },
   listItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, borderWidth: 1, borderColor: 'rgba(11,31,42,0.10)', backgroundColor: 'rgba(255,255,255,0.75)' },
-  stepBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FFFFFF' },
+  stepBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
   toast: { position: 'absolute', left: 20, right: 20, alignItems: 'center', zIndex: 1000 },
-  sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.72)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing.lg, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
+  sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.92)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing.lg, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },
   handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.18)', alignSelf: 'center', marginBottom: 12, marginTop: -6 },
 });
