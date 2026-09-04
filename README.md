@@ -1,6 +1,16 @@
-# Antar Aja
+# AntarKita
 
-Super-app ala Gojek: **AntarRide** (ojek motor), **AntarCar** (mobil), **AntarFood** (pesan makanan), **AntarSend** (kirim paket), dan **AntarPay** (dompet digital). Satu basis kode React Native + Expo untuk **Android, iOS, dan Web**, backend **Supabase** (Postgres + PostGIS, Auth, Realtime, Storage).
+Super-app ala Gojek: **AntarRide** (ojek motor), **AntarCar** (mobil), **AntarFood**, **AntarSend** (dalam/antar kota), **AntarShop** (Indomaret/Alfamart/apotek/supermarket), **AntarMarket** (pasar tradisional), **AntarBox** (mobil box/pick up), **AntarTravel** (travel antar kota, carter, sopir harian), dan **AntarPay** (dompet + payment gateway). Satu basis kode React Native + Expo → **3 aplikasi terpisah** untuk Android, iOS, dan Web; backend **Supabase** (Postgres + PostGIS, Auth, Realtime, Storage, Edge Functions).
+
+## 3 aplikasi (tahap 6)
+
+| Aplikasi | Isi | Web | Android |
+|---|---|---|---|
+| **AntarKita** (Pelanggan) | semua layanan, pesanan, pembayaran, akun | `https://erzamadana-ui.github.io/antarkita/` | `antarkita-pelanggan-<build>.apk` |
+| **AntarKita Mitra** | driver motor/mobil/box, merchant, mitra travel & sopir pribadi | `…/antarkita/mitra/` | `antarkita-mitra-<build>.apk` |
+| **AntarKita Admin** | panel operasional, CS, keuangan, katalog, gateway, portal eksekutif | `…/antarkita/admin/` | web (bisa dibungkus APK: `APP=admin`) |
+
+Rute tiap aplikasi ada di `apps/<app>/app` (stub satu baris) → layar bersama di `src/screens`. Pilih aplikasi saat build dengan env `APP=pelanggan|mitra|admin` (lihat `app.config.ts`, `scripts/build-web.mjs`, workflow CI). Satu akun bisa dipakai di ketiga aplikasi; aplikasi Admin hanya menerima akun berperan admin.
 
 | Peran | Fitur |
 |---|---|
@@ -28,14 +38,13 @@ antar-aja/
 ├─ app.config.ts          # konfigurasi Expo (nama, ikon, izin, baseUrl web)
 ├─ eas.json               # profil EAS Build (APK preview, AAB/iOS production)
 ├─ .env                   # URL & anon key Supabase (aman untuk klien; akses diatur RLS)
-├─ src/app/               # rute Expo Router
-│  ├─ (auth)/             # welcome, login, register
-│  ├─ (customer)/         # tab pelanggan: beranda, pesanan, AntarPay, akun
-│  ├─ ride/ food/ send/   # alur pemesanan
-│  ├─ order/[id]/         # tracking + chat
-│  ├─ (driver)/ driver/   # mode mitra driver
-│  ├─ (merchant)/         # mode merchant
-│  └─ (admin)/            # panel admin (sidebar di layar lebar)
+├─ apps/pelanggan/app/    # rute aplikasi Pelanggan (stub → src/screens)
+├─ apps/mitra/app/        # rute aplikasi Mitra (driver, merchant, travel)
+├─ apps/admin/app/        # rute aplikasi Admin (+ portal eksekutif)
+├─ apps/*/assets/         # ikon/splash per aplikasi (logo C29 "Dua Tetes Bersatu")
+├─ src/screens/           # implementasi layar (customer/, driver/, merchant/, admin/, travel/, shop/, market/, …)
+├─ src/lib/app.ts         # identitas aplikasi (APP), tautan silang antar aplikasi
+├─ src/lib/theme.ts       # design system "Solid Motion" (Plus Jakarta Sans, warna dari logo)
 ├─ src/components/map/    # peta lintas platform (Leaflet: WebView di native, react-leaflet di web)
 ├─ src/lib/geo.ts         # pencarian tempat (Photon/Nominatim), rute (OSRM), fallback Google
 ├─ supabase/migrations/   # skema, fungsi bisnis (RPC), RLS, hardening
@@ -56,7 +65,7 @@ Expo Go: pasang dari App Store / Play Store, pastikan HP dan Mac satu Wi-Fi, sca
 
 ## Deploy web + APK otomatis (GitHub)
 
-1. Buat repositori GitHub bernama `antar-aja` (public atau private).
+1. Buat repositori GitHub bernama `antarkita` (public atau private).
 2. Push kode ini ke branch `main`.
 3. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
 4. Setiap push ke `main`:
@@ -147,3 +156,12 @@ Hak cipta © 2026 Erza Pradipta Madana. Seluruh hak dilindungi.
 - **Admin**: **Blast Promo** satu arah ke kotak masuk pelanggan (target semua/pelanggan/aktif 30 hari/per kota; lonceng notifikasi di beranda), **tren trafik per kota bulanan + layanan menonjol** di dashboard, **suspend/aktifkan dengan alasan** (driver, merchant, pengguna, mitra travel — tersimpan di log & terlihat mitra), Tarif & Promo dalam **baris**, **20 promo** bergambar.
 - **Portal Eksekutif** (`/exec`): login kedua dengan PIN 6 digit untuk level VP/CEO/CFO/pemegang saham (diberikan admin di Pengguna → Eksekutif); laporan GMV, take rate, tren bulanan, per layanan/kota, merchant teratas, pasokan & likuiditas, kualitas layanan, ekspor CSV. Sesi 30 menit, tiap login dicatat.
 - **Tipografi & motion**: ukuran huruf standar dinaikkan sedikit (body 15,5 / small 13,5 / tiny 12), durasi transisi dipercepat ±30% (base 180 ms), thumbnail layanan/promo diperkecil.
+
+## Tahap 6 (Sep 2026) — AntarKita
+- **Rebrand** AntarKita → **AntarKita**; logo C29 "Dua Tetes Bersatu"; tema **Solid Motion** (Arah A): kartu padat, kaca hanya di bar mengambang, font Plus Jakarta Sans skala 28/24/20/17/15/13/12, warna dari logo, tema selalu terang (dark mode OS diabaikan), menu ganda dihapus (AntarPay di akun, tile Pay, mode switch).
+- **3 aplikasi terpisah** (Pelanggan / Mitra / Admin) dari satu basis kode: `APP=…`, CI web 3 sub-path + 2 APK, `404.html` pengarah SPA.
+- **AntarShop katalog**: `shop_stores`/`shop_products` (toko: Indomaret, Alfamart, apotek, supermarket), `nearby_stores`, `store_products`, `shopping_estimate`; pilihan **motor / mobil** (belanja besar, faktor ongkir 1,8×); jasa belanja 5% (min Rp5.000) dibagi driver 70%; admin: tambah toko/produk, tandai habis, **impor CSV** harga toko.
+- **AntarMarket** (pasar tradisional): `markets`, `market_items` (57 bahan, harga acuan), `nearby_markets`, `market_catalog` (acuan per pasar → median nota driver 7 hari → acuan umum); dana ditahan acuan + 10%, driver isi **harga riil per item + foto nota** (`set_shopping_actual`) → selisih dikembalikan/ditagih, harga riil jadi acuan; jasa belanja 10% (min Rp8.000), driver 70%; admin: pasar, bahan, harga per pasar, statistik acuan vs nota.
+- **AntarTravel v2**: mitra = agen travel ATAU pemilik mobil pribadi; 3 mode: kursi bersama, **carter privat**, **sopir harian** (12 jam/hari, overtime/jam); permintaan → penawaran mitra → terima & bayar (AntarPay/tunai) → berjalan → selesai (payout, komisi 10%) → rating; **akomodasi sopir** saat menginap: ditanggung pelanggan atau mandiri (kompensasi ±Rp150.000/malam); BBM/tol/parkir ditanggung pelanggan atau termasuk; direktori mitra; refund penuh ≥12 jam sebelum berangkat, 70% jika kurang.
+- **Payment gateway plug-and-play** (Midtrans Snap): kunci diisi dari Panel Admin → Payment Gateway (tabel `gateway_secrets`, hanya Edge Function yang bisa baca) atau secret; uji koneksi; metode aktif; Snap.js popup di web; webhook + notifikasi; lihat `docs/PAYMENT-GATEWAY.md`.
+- Migrasi `0012`–`0016`; edge functions `midtrans-create` (v2) & `midtrans-webhook` (v2).

@@ -37,7 +37,7 @@ export default function FoodHome() {
   const shown = list.filter((m) => cat === 'Semua' || m.category === cat);
 
   return (
-    <Screen title="AntarFood" back scroll={false} padded={false} footer={<CartBar />} ambient="amber">
+    <Screen title="AntarFood" subtitle="Makanan favorit diantar · pilih halal / non-halal" band={colors.food} back scroll={false} padded={false} footer={<CartBar />}>
       <View style={{ padding: 16, paddingBottom: 8, gap: 12 }}>
         <Entrance index={0}><Input icon="search" placeholder="Cari resto atau menu…" value={q} onChangeText={setQ} /></Entrance>
         <Entrance index={1}>

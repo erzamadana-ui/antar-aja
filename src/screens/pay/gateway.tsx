@@ -13,7 +13,8 @@ import { useAuth } from '@/store/auth';
 import { useT } from '@/lib/i18n';
 import { colors, font, radius, glass, shadow, motion } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
-import type { Payment } from '@/lib/types';
+import type { Payment, GatewayPublicConfig } from '@/lib/types';
+import { rpc } from '@/lib/supabase';
 
 const METHODS = [
   { key: 'gopay', label: 'GoPay', icon: 'wallet', color: '#00AA13' },
@@ -22,6 +23,7 @@ const METHODS = [
   { key: 'shopeepay', label: 'ShopeePay', icon: 'wallet', color: '#EE4D2D' },
   { key: 'qris', label: 'QRIS', icon: 'qr-code', color: '#0B1F2A' },
   { key: 'bank_transfer', label: 'VA Bank', icon: 'business', color: colors.info },
+  { key: 'card', label: 'Kartu kredit', icon: 'card', color: '#7B61FF' },
 ];
 const PRESETS = [20000, 50000, 100000, 200000, 500000];
 type CreateResp = { payment: Payment; simulated: boolean; snap_token?: string; redirect_url?: string; client_key?: string | null; is_production?: boolean; error?: string; message?: string };
@@ -39,6 +41,11 @@ export default function Gateway() {
   const [status, setStatus] = useState<Payment['status'] | null>(null);
   const poll = useRef<ReturnType<typeof setInterval> | null>(null);
   const n = Number(String(amount).replace(/\D/g, '')) || 0;
+  const [cfg, setCfg] = useState<GatewayPublicConfig | null>(null);
+  useEffect(() => { rpc<GatewayPublicConfig>('gateway_public_config').then(setCfg).catch(() => setCfg(null)); }, []);
+  const enabled = cfg?.methods?.length ? METHODS.filter((x) => cfg.methods.includes(x.key)) : METHODS.filter((x) => x.key !== 'card');
+  useEffect(() => { if (enabled.length && !enabled.some((x) => x.key === method)) setMethod(enabled[0].key); }, [cfg]); // eslint-disable-line react-hooks/exhaustive-deps
+  const minTopup = cfg?.topup_min ?? 10000;
 
   useEffect(() => () => { if (poll.current) clearInterval(poll.current); }, []);
 
@@ -52,15 +59,28 @@ export default function Gateway() {
   };
 
   const create = async () => {
-    if (n < 10000) return toast.error('Minimal Rp10.000');
+    if (n < minTopup) return toast.error(`Minimal ${rupiah(minTopup)}`);
     setBusy(true);
     const { data, error } = await supabase.functions.invoke<CreateResp>('midtrans-create', { body: { amount: n, method, purpose: params.purpose ?? 'topup', order_id: params.order_id ?? null } });
     setBusy(false);
     if (error || !data || data.error) { toast.error(data?.error ?? error?.message ?? 'Gagal membuat transaksi'); return; }
     setResp(data); setStatus('pending'); watch(data.payment.id);
-    if (!data.simulated && data.redirect_url) {
-      if (Platform.OS === 'web') window.open(data.redirect_url, '_blank'); else Linking.openURL(data.redirect_url);
+    if (!data.simulated && data.redirect_url) openSnap(data);
+  };
+  /** Web: Snap.js popup (tanpa pindah tab) bila client key tersedia; selain itu buka redirect_url. */
+  const openSnap = (data: CreateResp) => {
+    if (Platform.OS === 'web' && data.snap_token && data.client_key && typeof document !== 'undefined') {
+      const w = window as unknown as { snap?: { pay: (t: string, o: Record<string, unknown>) => void } };
+      const run = () => w.snap?.pay(data.snap_token!, { onSuccess: () => refreshWallet(), onPending: () => {}, onError: () => toast.error('Pembayaran gagal'), onClose: () => {} });
+      if (w.snap) return run();
+      const sc = document.createElement('script');
+      sc.src = data.is_production ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
+      sc.setAttribute('data-client-key', data.client_key);
+      sc.onload = run; sc.onerror = () => window.open(data.redirect_url, '_blank');
+      document.body.appendChild(sc);
+      return;
     }
+    if (Platform.OS === 'web') window.open(data.redirect_url, '_blank'); else Linking.openURL(data.redirect_url!);
   };
   const simulate = async (ok: boolean) => {
     if (!resp) return;
@@ -72,7 +92,7 @@ export default function Gateway() {
     if (ok) { await refreshWallet(); toast.success(t('payment_success')); }
   };
   const finish = () => { if (params.reason === 'order') toast.success('Saldo sudah cukup — tekan Pesan sekali lagi untuk melanjutkan'); if (params.next) router.replace(params.next as never); else router.back(); };
-  const m = METHODS.find((x) => x.key === method)!;
+  const m = METHODS.find((x) => x.key === method) ?? METHODS[0];
 
   return (
     <Screen title={t('ewallet')} back maxWidth={560}>
@@ -93,7 +113,7 @@ export default function Gateway() {
           <Entrance index={2}><Card>
             <Text style={font.label}>{t('pay_with')}</Text>
             <View style={s.grid}>
-              {METHODS.map((x) => (
+              {enabled.map((x) => (
                 <View key={x.key} style={{ width: '31%', flexGrow: 1 }}>
                   <PressableScale onPress={() => setMethod(x.key)} scaleTo={0.95} style={[s.method, method === x.key && { borderColor: x.color, backgroundColor: x.color + '14', ...shadow.glow(x.color) }]}>
                     <View style={[s.mIcon, { backgroundColor: x.color }]}><Ionicons name={x.icon as never} size={18} color="#fff" /></View>
@@ -105,7 +125,7 @@ export default function Gateway() {
             </View>
             <Text style={[font.tiny, { marginTop: 8 }]}>Diproses oleh Midtrans (PCI-DSS). AntarKita tidak menyimpan data kartu/akun e-wallet Anda.</Text>
           </Card></Entrance>
-          <Entrance index={3}><Button title={`${t('pay_now')} · ${rupiah(n)} via ${m.label}`} size="lg" loading={busy} disabled={n < 10000} onPress={create} /></Entrance>
+          <Entrance index={3}><Button title={`${t('pay_now')} · ${rupiah(n)} via ${m?.label ?? ''}`} size="lg" loading={busy} disabled={n < minTopup} onPress={create} /></Entrance>
         </View>
       ) : (
         <Animated.View entering={ZoomIn.duration(motion.base)} layout={LinearTransition.springify().stiffness(280).damping(20)} style={{ gap: 16 }}>
@@ -120,7 +140,7 @@ export default function Gateway() {
             {status === 'pending' && !resp.simulated && (
               <Animated.View entering={FadeInDown.duration(motion.base)} style={{ gap: 8, width: '100%' }}>
                 <Text style={[font.small, { textAlign: 'center' }]}>Halaman pembayaran Midtrans dibuka di tab/aplikasi terpisah. Selesaikan pembayaran, lalu kembali — status diperbarui otomatis.</Text>
-                <Button title="Buka halaman pembayaran" variant="secondary" icon="open-outline" onPress={() => { if (Platform.OS === 'web') window.open(resp.redirect_url, '_blank'); else Linking.openURL(resp.redirect_url!); }} />
+                <Button title="Buka halaman pembayaran" variant="secondary" icon="open-outline" onPress={() => openSnap(resp)} />
               </Animated.View>
             )}
             {status === 'pending' && resp.simulated && (
@@ -132,7 +152,7 @@ export default function Gateway() {
             )}
             {status !== 'pending' && <Button title={status === 'settlement' ? t('done') : 'Coba lagi'} size="lg" style={{ alignSelf: 'stretch' }} onPress={() => (status === 'settlement' ? finish() : (setResp(null), setStatus(null)))} />}
           </View></Card>
-          <Text style={[font.tiny, { textAlign: 'center' }]}>Untuk mengaktifkan gateway asli: isi secret MIDTRANS_SERVER_KEY & MIDTRANS_CLIENT_KEY di Supabase → Edge Functions, dan set URL notifikasi Midtrans ke fungsi midtrans-webhook (lihat docs/INTEGRASI.md).</Text>
+          {resp.simulated && <Text style={[font.tiny, { textAlign: 'center' }]}>Gateway asli aktif setelah admin mengisi Server Key Midtrans di Panel Admin → Payment Gateway (lihat docs/PAYMENT-GATEWAY.md).</Text>}
         </Animated.View>
       )}
     </Screen>

@@ -114,7 +114,7 @@ export default function SendScreen() {
   };
 
   return (
-    <Screen title="AntarSend" back maxWidth={640} footer={valid ? <Button title={`${when ? 'Booking' : 'Kirim'} ${scope === 'intercity' ? 'antar kota' : 'sekarang'} · ${rupiah(total)}`} size="lg" color={colors.send} loading={ordering} onPress={order} /> : undefined}>
+    <Screen title="AntarSend" subtitle="Kirim paket dalam kota & antar kota" band={colors.send} back maxWidth={640} footer={valid ? <Button title={`${when ? 'Booking' : 'Kirim'} ${scope === 'intercity' ? 'antar kota' : 'sekarang'} · ${rupiah(total)}`} size="lg" color={colors.send} loading={ordering} onPress={order} /> : undefined}>
       <View style={{ gap: 14 }}>
         <Row gap={12} style={s.hero}>
           <ServiceArt kind="send" color={colors.send} size={54} glow={false} />

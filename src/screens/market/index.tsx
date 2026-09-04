@@ -232,8 +232,8 @@ export default function MarketScreen() {
         <Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Kendaraan driver</Text>
           <Row gap={8}>
-            <Chip label={`Motor · ≤10 kg${est ? ` · ${rupiah(est.fare_motor)}` : ''}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} color={colors.market} />
-            <Chip label={`Mobil · belanja besar${est ? ` · ${rupiah(est.fare_car)}` : ''}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} color={colors.car} />
+            <Chip label={`Motor${est ? ` · ${rupiah(est.fare_motor)}` : ' · ≤10 kg'}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} color={colors.market} />
+            <Chip label={`Mobil${est ? ` · ${rupiah(est.fare_car)}` : ' · belanja besar'}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} color={colors.car} />
           </Row>
           {est && subtotal >= est.car_min_budget && <Text style={[font.tiny, { color: vehicle === 'car' ? colors.textMuted : colors.warning }]}>Belanja di atas {rupiah(est.car_min_budget)} disarankan memakai mobil agar muat dan aman.</Text>}
         </Card>

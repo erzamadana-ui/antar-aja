@@ -93,8 +93,7 @@ export default function TravelScreen() {
             const active = mode === m.key;
             return (
               <PressableScale key={m.key} onPress={() => setMode(m.key)} scaleTo={0.96} style={[s.segItem, active && { backgroundColor: colors.travel, ...shadow.glow(colors.travel) }]}>
-                <Ionicons name={m.icon} size={14} color={active ? '#fff' : colors.textSecondary} />
-                <Text style={{ fontSize: 12, fontWeight: '800', color: active ? '#fff' : colors.textSecondary }} numberOfLines={1}>{m.label}</Text>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: active ? '#fff' : colors.textSecondary, textAlign: 'center' }} numberOfLines={1}>{m.label}</Text>
               </PressableScale>
             );
           })}
@@ -317,7 +316,7 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
         {daily && (
           <>
             <Row between>
-              <View><Text style={{ fontWeight: '800', color: colors.text }}>Jumlah hari</Text><Text style={font.tiny}>12 jam per hari, lebih dari itu dihitung overtime per jam{nights > 0 ? ` · ${nights} malam menginap` : ''}</Text></View>
+              <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}><Text style={{ fontWeight: '800', color: colors.text }}>Jumlah hari</Text><Text style={font.tiny}>12 jam per hari, lebih dari itu dihitung overtime per jam{nights > 0 ? ` · ${nights} malam menginap` : ''}</Text></View>
               <Stepper value={days} onChange={setDays} min={1} max={30} />
             </Row>
             <Text style={font.label}>Tanggal kembali (opsional)</Text>
@@ -437,7 +436,7 @@ function PartnerCard({ p, daily, active, onPick }: { p: TravelPartnerCard; daily
 
 const s = StyleSheet.create({
   segment: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
-  segItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: radius.sm },
+  segItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 4, borderRadius: radius.sm },
   hero: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
   group: { gap: 10, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
   day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: colors.surface },

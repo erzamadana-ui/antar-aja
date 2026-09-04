@@ -89,7 +89,7 @@ export default function RideScreen() {
 
   const ready = !!(pickup && dropoff);
   return (
-    <Screen title={def.label} back maxWidth={640} footer={ready && chosen ? (
+    <Screen title={def.label} subtitle={def.id === 'ride_car' ? 'Mobil · 1–4 penumpang · Hemat, Standar, Premium, Listrik' : 'Ojek motor · cepat & hemat'} band={def.color} back maxWidth={640} footer={ready && chosen ? (
       <Button title={`${when ? 'Booking' : 'Pesan'} ${chosen.label} · ${rupiah(total)}`} size="lg" color={accent} loading={ordering} disabled={loading} onPress={order} />
     ) : undefined}>
       <View style={{ gap: 14 }}>

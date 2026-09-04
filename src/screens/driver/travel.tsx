@@ -74,12 +74,11 @@ export default function TravelPartnerHome() {
         </BrandGradient></Entrance>
 
         <View style={s.segment}>
-          {([['shared', 'Kursi bersama', 'people-outline'], ['requests', 'Permintaan carter & harian', 'car-outline']] as const).map(([k, l, ic]) => {
+          {([['shared', 'Kursi bersama', 'people-outline'], ['requests', 'Carter & sopir harian', 'car-outline']] as const).map(([k, l]) => {
             const active = tab === k;
             return (
               <PressableScale key={k} onPress={() => setTab(k)} scaleTo={0.96} style={[s.segItem, active && { backgroundColor: colors.travel, ...shadow.glow(colors.travel) }]}>
-                <Ionicons name={ic} size={14} color={active ? '#fff' : colors.textSecondary} />
-                <Text style={{ fontSize: 12, fontWeight: '800', color: active ? '#fff' : colors.textSecondary }} numberOfLines={1}>{l}</Text>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: active ? '#fff' : colors.textSecondary, textAlign: 'center' }} numberOfLines={1}>{l}</Text>
               </PressableScale>
             );
           })}
@@ -297,6 +296,6 @@ const s = StyleSheet.create({
   trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
   pax: { padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
   segment: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
-  segItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: radius.sm },
+  segItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 4, borderRadius: radius.sm },
   calc: { gap: 4, padding: 10, borderRadius: radius.md, backgroundColor: colors.bg },
 });

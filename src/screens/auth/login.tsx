@@ -27,6 +27,8 @@ export default function Login() {
   const { denied } = useLocalSearchParams<{ denied?: string }>();
   const signOut = useAuth((s) => s.signOut);
   const session = useAuth((s) => s.session);
+  const profile = useAuth((s) => s.profile);
+  const showDenied = !!denied || (APP === 'admin' && !!session && !!profile && profile.role !== 'admin');
 
   const submit = async () => {
     setErr(null);
@@ -39,7 +41,7 @@ export default function Login() {
     <Screen title={t('login')} back maxWidth={480}>
       <Entrance index={0} from="zoom" style={{ alignItems: 'center', marginTop: 8, marginBottom: 6 }}><LogoLockup size={56} /></Entrance>
       <Entrance index={1}><Text style={[font.h1, { marginTop: 8 }]}>{t('welcome_back')}</Text><Text style={font.small}>{APP === 'admin' ? `Masuk ke ${APP_NAME.admin} dengan akun admin.` : APP === 'mitra' ? 'Masuk dengan akun AntarKita Anda untuk mengelola pesanan mitra.' : t('login_sub')}</Text></Entrance>
-      {denied ? (
+      {showDenied ? (
         <Entrance index={1}><View style={{ backgroundColor: colors.dangerLight, padding: 12, borderRadius: 12, marginTop: 12, gap: 8 }}>
           <Text style={{ color: colors.danger, fontWeight: '700' }}>Akun ini bukan admin</Text>
           <Text style={font.small}>{APP_NAME.admin} hanya untuk akun berperan admin. Gunakan aplikasi Pelanggan atau Mitra untuk akun ini.</Text>

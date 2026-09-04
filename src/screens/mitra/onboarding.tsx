@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Row, Avatar, Badge, ListItem, Divider, Button } from '@/components/ui';
 import { Entrance, PressableScale } from '@/components/motion';
 import { ServiceArt, type ArtKind } from '@/components/ServiceArt';
@@ -26,7 +27,7 @@ export default function MitraOnboarding() {
     Alert.alert('Keluar', 'Keluar dari akun?', [{ text: 'Batal' }, { text: 'Keluar', style: 'destructive', onPress: doIt }]);
   };
   return (
-    <Screen title="Jadi Mitra AntarKita" ambient="amber">
+    <Screen title="Jadi Mitra AntarKita" subtitle="Satu akun untuk driver, merchant, dan travel" band={colors.ink}>
       <Entrance index={0}><Card>
         <Row gap={12}>
           <Avatar name={profile?.full_name} url={profile?.avatar_url} size={48} />
@@ -40,13 +41,16 @@ export default function MitraOnboarding() {
       <View style={{ gap: 12, marginTop: 16 }}>
         {OPTIONS.map((o, i) => (
           <Entrance key={o.key} index={1 + i}>
-            <PressableScale onPress={() => router.push(o.href as never)} style={{ borderRadius: radius.lg }}>
-              <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: o.color + '1A', alignItems: 'center', justifyContent: 'center' }}><ServiceArt kind={o.art} color={o.color} size={40} glow={false} /></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[font.h3, { fontSize: 16 }]}>{o.title}</Text>
-                  <Text style={font.small}>{o.sub}</Text>
-                </View>
+            <PressableScale onPress={() => router.push(o.href as never)} style={{ borderRadius: radius.lg, width: '100%' }}>
+              <Card>
+                <Row gap={14}>
+                  <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: o.color + '1A', alignItems: 'center', justifyContent: 'center' }}><ServiceArt kind={o.art} color={o.color} size={40} glow={false} /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[font.h3, { fontSize: 16 }]}>{o.title}</Text>
+                    <Text style={font.small}>{o.sub}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </Row>
               </Card>
             </PressableScale>
           </Entrance>
