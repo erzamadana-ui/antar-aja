@@ -135,5 +135,5 @@ export default function BoxScreen() {
 const s = StyleSheet.create({
   hero: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
   group: { gap: 10, backgroundColor: 'rgba(255,255,255,0.62)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  purpose: { width: '48%', flexGrow: 1, gap: 3, padding: 10, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
+  purpose: { flexBasis: '46%', flexGrow: 1, minWidth: 150, gap: 3, padding: 10, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.7)' },
 });

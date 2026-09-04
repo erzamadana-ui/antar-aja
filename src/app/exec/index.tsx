@@ -76,7 +76,7 @@ export default function ExecPortal() {
         <BrandGradient colors={['#0B1F2A', '#1F3A4A']} style={[s.hero, shadow.card]}>
           <Row between style={{ flexWrap: 'wrap', gap: 8 }}>
             <View><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '700', letterSpacing: 0.6 }}>LAPORAN MANAJEMEN & PEMEGANG SAHAM · {execLevelLabel[sess.level].toUpperCase()}</Text><Text style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>Antar Aja — {months} bulan terakhir</Text><Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Dibuat {r ? formatDate(r.generated_at) : '…'} · sesi s.d. {new Date(sess.expires_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text></View>
-            <Row gap={6}>{[3, 6, 12].map((m) => <Chip key={m} label={`${m} bln`} active={months === m} onPress={() => setMonths(m)} color="#fff" />)}{Platform.OS === 'web' && <Button size="sm" title="CSV" icon="download-outline" color="#fff" variant="glass" onPress={exportCsv} />}</Row>
+            <Row gap={6}>{[3, 6, 12].map((m) => <Chip key={m} label={`${m} bln`} active={months === m} onPress={() => setMonths(m)} color={colors.accent} />)}{Platform.OS === 'web' && <Button size="sm" title="CSV" icon="download-outline" color="#fff" variant="glass" onPress={exportCsv} />}</Row>
           </Row>
         </BrandGradient>
         {!r ? <Text style={font.small}>Menyusun laporan…</Text> : (

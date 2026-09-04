@@ -50,7 +50,7 @@ export default function AdminPricing() {
       <Card padded={false}>
         <View style={{ padding: 14 }}><Text style={font.label}>Tarif per layanan (baris) · kelas kendaraan memakai pengali: Hemat ×0,9 · Standar ×1 · Premium ×1,35 · Listrik ×1,1 · Listrik Premium ×1,45 · Pick Up ×1 · Box ×1,4</Text></View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ minWidth: 980 }}>
+          <View style={{ minWidth: 1060 }}>
             <Row gap={8} style={s.th}>
               <Text style={[font.label, { width: 120 }]}>Layanan</Text>
               {numFields.map((k) => <Text key={k} style={[font.label, { width: 104, textAlign: 'right' }]}>{labels[k]}</Text>)}
