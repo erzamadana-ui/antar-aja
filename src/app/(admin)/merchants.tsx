@@ -1,52 +1,144 @@
+// Admin · Merchant — daftar + tinjauan pengajuan (dokumen, halal, setujui/tolak + catatan)
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Linking, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { AdminPage, Table, FilterBar } from '@/components/admin';
-import { Row, Badge, Button, toast, Input } from '@/components/ui';
+import { Row, Badge, Button, toast, Input, Chip } from '@/components/ui';
+import { HalalBadge } from '@/components/MerchantStatus';
 import { rpc, supabase } from '@/lib/supabase';
-import { colors, font } from '@/lib/theme';
+import { signedUrl } from '@/lib/upload';
+import { colors, font, radius, glass, motion } from '@/lib/theme';
 import { formatDate } from '@/lib/format';
-import type { ApprovalStatus, Merchant, Profile } from '@/lib/types';
+import type { ApprovalStatus, Merchant, MerchantDocuments, Profile } from '@/lib/types';
 
-type Row_ = Merchant & { owner: Profile | null; menu_count: number };
+type Row_ = Merchant & { owner: Profile | null; menu_count: number; docs: MerchantDocuments | null };
 const statusColor: Record<ApprovalStatus, string> = { pending: colors.warning, approved: colors.success, suspended: colors.danger, rejected: colors.textMuted };
+const statusLabel: Record<ApprovalStatus, string> = { pending: 'Menunggu', approved: 'Aktif', suspended: 'Ditangguhkan', rejected: 'Ditolak' };
 
 export default function AdminMerchants() {
   const [rows, setRows] = useState<Row_[]>([]);
   const [filter, setFilter] = useState('pending');
   const [q, setQ] = useState('');
+  const [review, setReview] = useState<Row_ | null>(null);
   const load = useCallback(async () => {
-    const { data } = await supabase.from('merchants').select('*, menu_items(count)').order('created_at', { ascending: false }).limit(300);
+    const [{ data }, { data: docs }] = await Promise.all([
+      supabase.from('merchants').select('*, menu_items(count)').order('created_at', { ascending: false }).limit(300),
+      supabase.from('merchant_documents').select('*'),
+    ]);
     const ms = ((data as (Merchant & { menu_items: { count: number }[] })[]) ?? []);
     const ownerIds = ms.map((m) => m.owner_id).filter(Boolean) as string[];
     const { data: profiles } = ownerIds.length ? await supabase.from('profiles').select('*').in('id', ownerIds) : { data: [] };
     const pm = new Map(((profiles as Profile[]) ?? []).map((p) => [p.id, p]));
-    setRows(ms.map((m) => ({ ...m, owner: m.owner_id ? pm.get(m.owner_id) ?? null : null, menu_count: m.menu_items?.[0]?.count ?? 0 })));
+    const dm = new Map(((docs as MerchantDocuments[]) ?? []).map((d) => [d.merchant_id, d]));
+    const list = ms.map((m) => ({ ...m, owner: m.owner_id ? pm.get(m.owner_id) ?? null : null, menu_count: m.menu_items?.[0]?.count ?? 0, docs: dm.get(m.id) ?? null }));
+    setRows(list);
+    setReview((r) => (r ? list.find((x) => x.id === r.id) ?? null : null));
   }, []);
   useEffect(() => { load(); }, [load]);
-  const setStatus = async (id: string, status: ApprovalStatus) => { try { await rpc('admin_set_merchant_status', { p_merchant: id, p_status: status }); toast.success('Status merchant diperbarui'); load(); } catch (e) { toast.error((e as Error).message); } };
   const shown = rows.filter((r) => (filter === 'all' || r.status === filter) && (!q || r.name.toLowerCase().includes(q.toLowerCase())));
+  const pending = rows.filter((r) => r.status === 'pending').length;
 
   return (
-    <AdminPage title="Merchant AntarFood" subtitle={`${rows.length} terdaftar · ${rows.filter((r) => r.status === 'pending').length} menunggu`} onRefresh={load}>
+    <AdminPage title="Merchant AntarFood" subtitle={`${rows.length} terdaftar · ${pending} pengajuan menunggu · ${rows.filter((r) => r.halal_verified).length} halal terverifikasi`} onRefresh={load}>
+      {review && <ReviewPanel m={review} onClose={() => setReview(null)} onDone={load} />}
       <Row gap={10} style={{ flexWrap: 'wrap' }}>
-        <FilterBar value={filter} onChange={setFilter} options={[{ key: 'pending', label: 'Menunggu' }, { key: 'approved', label: 'Aktif' }, { key: 'suspended', label: 'Ditangguhkan' }, { key: 'all', label: 'Semua' }]} />
+        <FilterBar value={filter} onChange={setFilter} options={[{ key: 'pending', label: `Pengajuan (${pending})` }, { key: 'approved', label: 'Aktif' }, { key: 'rejected', label: 'Ditolak' }, { key: 'suspended', label: 'Ditangguhkan' }, { key: 'all', label: 'Semua' }]} />
         <Input placeholder="Cari nama" value={q} onChangeText={setQ} icon="search" containerStyle={{ minWidth: 220 }} />
       </Row>
       <Table rows={shown as unknown as Record<string, unknown>[]} columns={[
-        { key: 'name', label: 'Merchant', width: 220, render: (r) => { const m = r as unknown as Row_; return <View><Text style={{ fontWeight: '700' }}>{m.name}</Text><Text style={font.tiny}>{m.category} · {m.address}</Text></View>; } },
+        { key: 'name', label: 'Merchant', width: 230, render: (r) => { const m = r as unknown as Row_; return <View><Text style={{ fontWeight: '700' }}>{m.name}</Text><Text style={font.tiny} numberOfLines={1}>{m.category} · {m.address}</Text></View>; } },
         { key: 'owner', label: 'Pemilik', width: 170, render: (r) => { const m = r as unknown as Row_; return <Text style={font.small}>{m.owner ? `${m.owner.full_name}\n${m.owner.email ?? ''}` : '— (seed)'}</Text>; } },
-        { key: 'menu', label: 'Menu', width: 80, render: (r) => <Text style={font.small}>{String((r as unknown as Row_).menu_count)}</Text> },
-        { key: 'rating', label: 'Rating', width: 110, render: (r) => { const m = r as unknown as Row_; return <Text style={font.small}>⭐ {Number(m.rating_avg).toFixed(1)} ({m.rating_count})</Text>; } },
-        { key: 'open', label: 'Buka', width: 80, render: (r) => <Badge text={(r as unknown as Row_).is_open ? 'Buka' : 'Tutup'} color={(r as unknown as Row_).is_open ? colors.success : colors.textMuted} /> },
-        { key: 'status', label: 'Status', width: 120, render: (r) => <Badge text={String(r.status)} color={statusColor[r.status as ApprovalStatus]} /> },
-        { key: 'created_at', label: 'Daftar', width: 120, render: (r) => <Text style={font.tiny}>{formatDate(String(r.created_at), false)}</Text> },
-        { key: 'actions', label: 'Aksi', width: 220, render: (r) => { const m = r as unknown as Row_; return (
-          <Row gap={6}>
-            {m.status !== 'approved' && <Button size="sm" title="Setujui" color={colors.success} onPress={() => setStatus(m.id, 'approved')} />}
-            {m.status === 'pending' && <Button size="sm" title="Tolak" variant="outline" color={colors.danger} onPress={() => setStatus(m.id, 'rejected')} />}
-            {m.status === 'approved' && <Button size="sm" title="Tangguhkan" variant="outline" color={colors.danger} onPress={() => setStatus(m.id, 'suspended')} />}
-          </Row>); } },
+        { key: 'docs', label: 'Dokumen', width: 150, render: (r) => { const m = r as unknown as Row_; const d = m.docs; const n = [d?.npwp_no, d?.owner_id_card_url, d?.place_photo_url].filter(Boolean).length; return <Row gap={6}><DocDots docs={d} /><Text style={font.tiny}>{n}/3 wajib</Text></Row>; } },
+        { key: 'halal', label: 'Halal', width: 100, render: (r) => <HalalBadge merchant={r as unknown as Row_} /> },
+        { key: 'menu', label: 'Menu', width: 60, render: (r) => <Text style={font.small}>{String((r as unknown as Row_).menu_count)}</Text> },
+        { key: 'rating', label: 'Rating', width: 100, render: (r) => { const m = r as unknown as Row_; return <Text style={font.small}>⭐ {Number(m.rating_avg).toFixed(1)} ({m.rating_count})</Text>; } },
+        { key: 'status', label: 'Status', width: 120, render: (r) => <Badge text={statusLabel[r.status as ApprovalStatus]} color={statusColor[r.status as ApprovalStatus]} /> },
+        { key: 'created_at', label: 'Diajukan', width: 120, render: (r) => { const m = r as unknown as Row_; return <Text style={font.tiny}>{formatDate(m.docs?.submitted_at ?? m.created_at, false)}</Text>; } },
+        { key: 'actions', label: 'Aksi', width: 160, render: (r) => { const m = r as unknown as Row_; return (
+          <Button size="sm" title={m.status === 'pending' ? 'Tinjau pengajuan' : 'Tinjau / ubah'} color={m.status === 'pending' ? colors.warning : colors.primary} variant={m.status === 'pending' ? 'primary' : 'outline'} icon="document-text-outline" onPress={() => setReview(m)} />
+        ); } },
       ]} />
     </AdminPage>
   );
 }
+
+function DocDots({ docs }: { docs: MerchantDocuments | null }) {
+  const items = [docs?.npwp_no, docs?.owner_id_card_url, docs?.place_photo_url, docs?.license_no || docs?.license_url, docs?.halal_cert_url || docs?.halal_cert_no];
+  return <Row gap={3}>{items.map((v, i) => <View key={i} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: v ? colors.success : i < 3 ? colors.danger + '66' : colors.border }} />)}</Row>;
+}
+
+function ReviewPanel({ m, onClose, onDone }: { m: Row_; onClose: () => void; onDone: () => void }) {
+  const d = m.docs;
+  const [note, setNote] = useState(d?.review_note ?? '');
+  const [halalOk, setHalalOk] = useState(m.halal_verified);
+  const [busy, setBusy] = useState(false);
+  const openDoc = async (path: string | null | undefined) => { if (!path) return toast.error('Belum diunggah'); const u = path.startsWith('http') ? path : await signedUrl('documents', path); if (u) Linking.openURL(u); };
+  const act = async (status: ApprovalStatus) => {
+    if (status === 'rejected' && note.trim().length < 5) return toast.error('Tulis alasan penolakan agar merchant bisa memperbaiki');
+    setBusy(true);
+    try { await rpc('admin_review_merchant', { p_merchant: m.id, p_status: status, p_note: note || null, p_halal_verified: m.is_halal ? halalOk : false }); toast.success(`Merchant ${statusLabel[status].toLowerCase()}`); await onDone(); if (status !== 'approved') onClose(); }
+    catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  const Doc = ({ label, value, no, required }: { label: string; value?: string | null; no?: string | null; required?: boolean }) => (
+    <Pressable onPress={() => openDoc(value)} style={[s.doc, !value && !no && { opacity: 0.6 }]}>
+      <Ionicons name={value ? 'document-attach' : no ? 'text-outline' : 'remove-circle-outline'} size={18} color={value ? colors.success : no ? colors.info : required ? colors.danger : colors.textMuted} />
+      <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', fontSize: 13, color: colors.text }}>{label}{required ? ' *' : ''}</Text><Text style={font.tiny}>{no ?? (value ? 'Ketuk untuk lihat' : 'Tidak diunggah')}</Text></View>
+      {value && <Ionicons name="open-outline" size={16} color={colors.textMuted} />}
+    </Pressable>
+  );
+  return (
+    <Animated.View entering={FadeInDown.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify()} style={s.panel}>
+      <Row between>
+        <View style={{ flex: 1 }}>
+          <Row gap={8}><Text style={font.h2}>{m.name}</Text><Badge text={statusLabel[m.status]} color={statusColor[m.status]} /></Row>
+          <Text style={font.small}>{m.category} · {m.address}</Text>
+          <Text style={font.tiny}>Pemilik: {m.owner?.full_name ?? '—'} · {m.owner?.email ?? ''} · HP {d?.owner_phone ?? m.owner?.phone ?? '—'}</Text>
+        </View>
+        <Pressable onPress={onClose} style={s.close}><Ionicons name="close" size={20} color={colors.textSecondary} /></Pressable>
+      </Row>
+      <View style={s.cols}>
+        <View style={s.col}>
+          <Text style={font.label}>Dokumen legalitas</Text>
+          <Doc label="NPWP / NPWPD" no={d?.npwp_no} value={d?.npwp_url} required />
+          <Doc label="KTP pemilik" value={d?.owner_id_card_url} required />
+          <Doc label="Foto tempat usaha" value={d?.place_photo_url} required />
+          <Doc label="Izin usaha / NIB" no={d?.license_no} value={d?.license_url} />
+          <Doc label="Foto sampul toko" value={m.image_url} />
+          <Text style={font.tiny}>Rekening: {d?.bank_name ?? '—'} {d?.bank_account ?? ''} {d?.bank_holder ? `a.n. ${d.bank_holder}` : ''}</Text>
+        </View>
+        <View style={s.col}>
+          <Text style={font.label}>Halal</Text>
+          <Row gap={8}><Text style={font.small}>Klaim merchant:</Text><HalalBadge merchant={{ is_halal: m.is_halal, halal_verified: false }} /></Row>
+          {m.is_halal ? (
+            <>
+              <Doc label="Sertifikat halal (BPJPH/MUI)" no={d?.halal_cert_no} value={d?.halal_cert_url} />
+              <Row gap={8}>
+                <Chip label="✓ Verifikasi halal" active={halalOk} onPress={() => setHalalOk(true)} color={colors.success} />
+                <Chip label="Belum diverifikasi" active={!halalOk} onPress={() => setHalalOk(false)} color={colors.textSecondary} />
+              </Row>
+              <Text style={font.tiny}>Verifikasi hanya bila nomor sertifikat cocok dengan data BPJPH (halal.go.id). Tanpa verifikasi, pelanggan melihat label “Halal” (klaim) tanpa centang.</Text>
+            </>
+          ) : <Text style={font.tiny}>Merchant menyatakan non-halal. Pelanggan melihat label “Non-halal”.</Text>}
+          <Text style={[font.label, { marginTop: 8 }]}>Catatan untuk merchant</Text>
+          <Input placeholder="Contoh: Foto KTP buram, mohon unggah ulang" value={note} onChangeText={setNote} multiline style={{ minHeight: 70 }} />
+          {d?.reviewed_at && <Text style={font.tiny}>Tinjauan terakhir {formatDate(d.reviewed_at)}</Text>}
+          <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 4 }}>
+            <Button size="sm" title={m.status === 'approved' ? 'Simpan (tetap aktif)' : 'Setujui'} color={colors.success} icon="checkmark" loading={busy} onPress={() => act('approved')} />
+            {m.status !== 'rejected' && <Button size="sm" title="Tolak" variant="outline" color={colors.danger} icon="close" onPress={() => act('rejected')} />}
+            {m.status === 'approved' && <Button size="sm" title="Tangguhkan" variant="outline" color={colors.warning} icon="pause" onPress={() => act('suspended')} />}
+          </Row>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+const s = StyleSheet.create({
+  panel: { backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: radius.xl, padding: 16, borderWidth: 1.5, borderColor: colors.warning + '66', gap: 12, marginBottom: 4 },
+  close: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
+  cols: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  col: { flexGrow: 1, flexBasis: 320, gap: 8 },
+  doc: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+});

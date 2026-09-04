@@ -14,6 +14,7 @@ import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, customerSubt
 import { ExtraRequest } from '@/components/TipExtras';
 import { ShopTotalCard } from '@/components/ShopTotal';
 import { CallButton } from '@/components/call/IncomingCall';
+import { PinPrompt, SafetyRow } from '@/components/Safety';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { useCurrentLocation, useWatchLocation } from '@/hooks/useLocation';
@@ -31,6 +32,7 @@ export default function DriverOrder() {
   const { driver, refreshWallet } = useAuth();
   const { location } = useCurrentLocation();
   const [live, setLive] = useState<{ lat: number; lng: number; heading: number | null } | null>(null);
+  const [pinAsk, setPinAsk] = useState(false);
   useWatchLocation(true, (p) => setLive(p));
   const me = live ?? (driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location);
 
@@ -45,9 +47,13 @@ export default function DriverOrder() {
     return order.status === 'in_progress' ? [me, dp] : order.status === 'completed' || order.status === 'cancelled' ? [pk, dp] : [me, pk];
   }, [order?.status, me.lat, me.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const update = async (status: OrderStatus) => {
-    try { await rpc('driver_update_order_status', { p_order_id: id, p_status: status }); await reload(); if (status === 'completed') { await refreshWallet(); toast.success('Order selesai. Pendapatan masuk ke saldo.'); } }
-    catch (e) { toast.error((e as Error).message); }
+  const update = async (status: OrderStatus, pin?: string) => {
+    try { await rpc('driver_update_order_status', { p_order_id: id, p_status: status, p_pin: pin ?? null }); setPinAsk(false); await reload(); if (status === 'completed') { await refreshWallet(); toast.success('Order selesai. Pendapatan masuk ke saldo.'); } }
+    catch (e) {
+      const msg = (e as Error).message;
+      if (msg.includes('PIN_REQUIRED')) { if (pin) throw new Error('PIN salah. Minta PIN 4 digit dari pelanggan.'); setPinAsk(true); return; }
+      if (pin) throw e; toast.error(msg);
+    }
   };
   const complete = () => {
     if (!order) return;
@@ -109,6 +115,8 @@ export default function DriverOrder() {
           {order.service === 'food' && order.payment_method === 'cash' && <Text style={[s.earnLabel, { marginTop: 6 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
         </Animated.View>
 
+        <PinPrompt visible={pinAsk} onCancel={() => setPinAsk(false)} onSubmit={(pin) => update('in_progress', pin)} />
+        <SafetyRow order={order} forDriver />
         {customer && <Animated.View entering={FadeInDown.delay(80).duration(motion.slow)}><PersonCard name={customer.full_name} subtitle={customerSubtitle(customer)} avatar={customer.avatar_url} onChat={active ? () => router.push(`/order/${id}/chat` as never) : undefined} badge="Pelanggan" callPeer={active ? { id: customer.id, name: customer.full_name, avatar: customer.avatar_url, role: 'customer' } : null} orderId={order.id} /></Animated.View>}
         {order.service === 'food' && order.merchant_status && (
           <Row gap={8} style={s.block}><Ionicons name="restaurant" size={18} color={colors.food} /><Text style={[font.small, { flex: 1 }]}>Merchant: <Text style={{ fontWeight: '700' }}>{order.merchant?.name}</Text></Text><Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} />{active && order.merchant?.owner_id && <CallButton peer={{ id: order.merchant.owner_id, name: order.merchant.name, role: 'merchant' }} orderId={order.id} size={36} color={colors.food} />}</Row>
@@ -126,6 +134,7 @@ export default function DriverOrder() {
           {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : order.service === 'shop' ? (shopNotTotaled ? 'Masukkan total belanja dulu' : 'Belanja selesai, antar sekarang') : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady || shopNotTotaled} onPress={() => update('in_progress')} />}
           {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" color={colors.success} onPress={complete} />}
           {(order.status === 'accepted' || order.status === 'arrived') && <Button title="Lepas order" variant="ghost" color={colors.danger} onPress={cancel} />}
+          {active && <Button title="Laporkan masalah / insiden" variant="ghost" color={colors.textSecondary} icon="flag-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}
         </Animated.View>
         <View style={s.block}><PriceBlock order={order} forDriver /></View>
         <View style={s.block}><Timeline events={events} /></View>

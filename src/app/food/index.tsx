@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { colors, font, radius, shadow, glass } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { Merchant } from '@/lib/types';
+import { HalalBadge } from '@/components/MerchantStatus';
 
 const CATS = ['Semua', 'Makanan', 'Minuman', 'Jajanan'];
 
@@ -19,18 +20,19 @@ export default function FoodHome() {
   const { location } = useCurrentLocation();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Semua');
+  const [halal, setHalal] = useState<'all' | 'halal' | 'non'>('all');
   const [list, setList] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
-      const { data } = await supabase.rpc('nearby_merchants', { p_lat: location.lat, p_lng: location.lng, p_radius_km: 30, p_q: q || null });
+      const { data } = await supabase.rpc('nearby_merchants', { p_lat: location.lat, p_lng: location.lng, p_radius_km: 30, p_q: q || null, p_halal: halal === 'all' ? null : halal === 'halal' });
       setList((data as Merchant[]) ?? []);
       setLoading(false);
     }, q ? 350 : 0);
     return () => clearTimeout(t);
-  }, [q, location.lat, location.lng]);
+  }, [q, halal, location.lat, location.lng]);
 
   const shown = list.filter((m) => cat === 'Semua' || m.category === cat);
 
@@ -42,6 +44,14 @@ export default function FoodHome() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {CATS.map((c) => <Chip key={c} label={c} active={cat === c} onPress={() => setCat(c)} color={colors.food} />)}
           </ScrollView>
+        </Entrance>
+        <Entrance index={2}>
+          <Row gap={8}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.success} />
+            <Chip label="Semua" active={halal === 'all'} onPress={() => setHalal('all')} color={colors.textSecondary} />
+            <Chip label="🕌 Halal" active={halal === 'halal'} onPress={() => setHalal('halal')} color={colors.success} />
+            <Chip label="Non-halal" active={halal === 'non'} onPress={() => setHalal('non')} color={colors.textSecondary} />
+          </Row>
         </Entrance>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -62,7 +72,7 @@ export default function FoodHome() {
                       {!m.is_open && <View style={s.closed}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>TUTUP</Text></View>}
                     </View>
                     <View style={{ flex: 1, padding: 12, gap: 3, minWidth: 0 }}>
-                      <Text style={font.h3} numberOfLines={1}>{m.name}</Text>
+                      <Row between><Text style={[font.h3, { flex: 1 }]} numberOfLines={1}>{m.name}</Text><HalalBadge merchant={m} /></Row>
                       <Text style={font.small} numberOfLines={1}>{m.category} · {m.description}</Text>
                       <Row gap={6} style={{ marginTop: 4 }}>
                         <Stars value={m.rating_avg} size={12} />

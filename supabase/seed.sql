@@ -106,3 +106,7 @@ select * from (values
  ('Kompetitor A','shop'::service_type,3000,2700,12000,'middle','Contoh referensi (jasa belanja)','Data contoh')
 ) v(competitor, service, base_fare, per_km, min_fare, level, source, note)
 where not exists (select 1 from competitor_prices);
+
+-- Tahap 4: label halal demo (klaim + 2 terverifikasi)
+update merchants set is_halal = true where name not ilike '%kopi%';
+update merchants set halal_verified = true where id in ('b0000000-0000-4000-8000-000000000001','b0000000-0000-4000-8000-000000000002');

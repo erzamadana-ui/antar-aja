@@ -64,3 +64,13 @@ Metode yang dipetakan: GoPay, ShopeePay, QRIS (OVO/DANA lewat QRIS), VA bank (ba
 
 ## Multi-bahasa
 `src/lib/i18n.ts` — kamus ID/EN/ZH/AR; tambah kunci di objek `id` lalu terjemahannya. Arab = RTL (web: `dir=rtl`; native: I18nManager, perlu muat ulang).
+
+## Tahap 4 — tiket CS, log aktivitas, keamanan
+
+- **CS online**: tiket & pesan ada di tabel `tickets` / `ticket_messages` (realtime). Semua pengguna dengan `role = admin` bertindak sebagai CS. Untuk tim CS terpisah, buat akun admin khusus dan gunakan kolom `assigned_to`.
+- **Notifikasi**: pesan CS tampil realtime di aplikasi; untuk push/WhatsApp, hubungkan Edge Function ke webhook `ticket_messages` (lihat bagian Push notification).
+- **Log aktivitas** (`audit_logs`): diisi otomatis oleh trigger `audit_trigger()` pada tabel inti. Tambah tabel lain: `create trigger t_audit_<tabel> after insert or update or delete on <tabel> for each row execute function audit_trigger()` lalu tambahkan cabang ringkasan di fungsi.
+- **Verifikasi wajah driver**: `app_settings.driver_selfie_hours` (default 20; `0` = nonaktif). Foto disimpan di bucket privat `documents` (`drivers.last_selfie_url`). Untuk pencocokan wajah otomatis, kirim `last_selfie_url` + `photo_id_url` ke layanan face-match (mis. AWS Rekognition / Verihubs) dari Edge Function.
+- **PIN penjemputan**: `app_settings.pin_services` (default `["ride_motor","ride_car"]`); PIN di tabel `order_pins` hanya terbaca pelanggan; driver wajib mengirim `p_pin` ke `driver_update_order_status` saat `in_progress`.
+- **Bagikan perjalanan**: URL `EXPO_PUBLIC_SITE_URL/share/<share_token>`; RPC `shared_order` boleh dipanggil `anon` dan hanya membuka data non-sensitif (tanpa nomor HP).
+- **SOS**: `sos_trigger` → tabel `sos_alerts` + tiket kategori `safety` prioritas `urgent`; admin menandai `handled` / `false_alarm`. Untuk eskalasi otomatis (SMS/telepon ke kontak darurat), pasang webhook pada `sos_alerts` ke Twilio/WhatsApp Business.

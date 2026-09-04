@@ -35,7 +35,9 @@ export default function DriverAccount() {
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="car-outline" title="Data kendaraan & dokumen" onPress={() => router.push('/account/become-driver')} />
           <Divider style={{ marginVertical: 0 }} />
-          <ListItem icon="help-circle-outline" title="Bantuan" onPress={() => router.push('/account/help')} />
+          <ListItem icon="shield-checkmark-outline" iconColor={colors.danger} title="Pusat Keamanan" subtitle="SOS, verifikasi wajah, kontak darurat, laporan insiden" onPress={() => router.push('/safety' as never)} />
+          <Divider style={{ marginVertical: 0 }} />
+          <ListItem icon="chatbubbles-outline" iconColor={colors.info} title="Bantuan & tiket aduan" subtitle="CS online" onPress={() => router.push('/support' as never)} />
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="language-outline" title="Bahasa / Language" onPress={() => router.push('/account/language')} />
         </View>

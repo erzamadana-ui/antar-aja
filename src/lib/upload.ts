@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from './supabase';
 
 /** Pilih gambar dari galeri lalu unggah ke bucket Supabase. Mengembalikan path & URL (public bucket) atau signed URL. */
-export async function pickAndUpload(bucket: 'avatars' | 'merchant-images' | 'documents' | 'proofs', userId: string, opts?: { camera?: boolean }) {
+export async function pickAndUpload(bucket: 'avatars' | 'merchant-images' | 'documents' | 'proofs' | 'promo-images', userId: string, opts?: { camera?: boolean }) {
   const perm = opts?.camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) throw new Error('Izin akses galeri/kamera ditolak');
   const res = opts?.camera
@@ -17,7 +17,7 @@ export async function pickAndUpload(bucket: 'avatars' | 'merchant-images' | 'doc
   const buf = await new Response(blob).arrayBuffer();
   const { error } = await supabase.storage.from(bucket).upload(path, buf, { contentType, upsert: false });
   if (error) throw new Error(error.message);
-  const isPublic = bucket === 'avatars' || bucket === 'merchant-images';
+  const isPublic = bucket === 'avatars' || bucket === 'merchant-images' || bucket === 'promo-images';
   const url = isPublic ? supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl : path;
   return { path, url };
 }

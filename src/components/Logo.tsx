@@ -1,12 +1,12 @@
-// Logo Antar Aja — 5 konsep (lihat assets/logo/preview.html). Ganti LOGO_VARIANT untuk memakai konsep lain.
+// Logo Antar Aja — 6 konsep (lihat assets/logo/preview.html). Varian 6 = kombinasi helm + mobil (default).
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, useReducedMotion } from 'react-native-reanimated';
 import { colors, font, shadow } from '@/lib/theme';
 
-export type LogoVariant = 1 | 2 | 3 | 4 | 5;
-export const LOGO_VARIANT: LogoVariant = 3;
+export type LogoVariant = 1 | 2 | 3 | 4 | 5 | 6;
+export const LOGO_VARIANT: LogoVariant = 6;
 
 export function BrandLogo({ size = 48, variant = LOGO_VARIANT, style }: { size?: number; variant?: LogoVariant; style?: object }) {
   return <View style={[{ width: size, height: size, borderRadius: size * 0.28, overflow: 'hidden' }, shadow.glow(colors.primary), style]}><LogoSvg size={size} variant={variant} /></View>;
@@ -53,12 +53,34 @@ function LogoSvg({ size, variant }: { size: number; variant: LogoVariant }) {
         <Path d="M128 60 l14 26 h-28 z" fill="#FFC15E" />
       </Svg>
     );
-    default: return (
+    case 5: return (
       <Svg width={s} height={s} viewBox="0 0 256 256">
         <Defs><LinearGradient id="l5" x1="0" y1="1" x2="1" y2="0"><Stop offset="0" stopColor="#0A5C5B" /><Stop offset="1" stopColor="#17B3AE" /></LinearGradient><LinearGradient id="l5o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFC15E" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient></Defs>
         <Circle cx="128" cy="128" r="112" fill="url(#l5)" />
         <Path d="M30 118 h58" stroke="#fff" strokeOpacity={0.9} strokeWidth="12" strokeLinecap="round" /><Path d="M44 142 h44" stroke="#fff" strokeOpacity={0.55} strokeWidth="12" strokeLinecap="round" /><Path d="M58 166 h30" stroke="#fff" strokeOpacity={0.3} strokeWidth="12" strokeLinecap="round" />
         <Path d="M158 206 c-30 -40 -42 -58 -42 -80 a42 42 0 0 1 84 0 c0 22 -12 40 -42 80z" fill="#fff" /><Circle cx="158" cy="126" r="20" fill="url(#l5o)" /><Circle cx="158" cy="126" r="7" fill="#fff" />
+      </Svg>
+    );
+    default: return (   // 6 · Helm + Mobil: mobil tersenyum memakai helm (motor & mobil dalam satu ikon)
+      <Svg width={s} height={s} viewBox="0 0 256 256">
+        <Defs>
+          <LinearGradient id="l6" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#17B3AE" /><Stop offset="1" stopColor="#0E7C7B" /></LinearGradient>
+          <LinearGradient id="l6c" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#0F8F8B" /><Stop offset="1" stopColor="#0A5C5B" /></LinearGradient>
+          <LinearGradient id="l6o" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFC15E" /><Stop offset="1" stopColor="#F58A1F" /></LinearGradient>
+        </Defs>
+        <Rect x="16" y="16" width="224" height="224" rx="72" fill="#F3F6F8" /><Rect x="16" y="16" width="224" height="224" rx="72" fill="none" stroke="#0E7C7B" strokeOpacity={0.18} strokeWidth="4" />
+        <Path d="M30 96 h22" stroke="#0E7C7B" strokeOpacity={0.45} strokeWidth="8" strokeLinecap="round" /><Path d="M22 118 h26" stroke="#0E7C7B" strokeOpacity={0.28} strokeWidth="8" strokeLinecap="round" />
+        <Path d="M36 208 v-44 a26 26 0 0 1 26 -26 h132 a26 26 0 0 1 26 26 v44 a10 10 0 0 1 -10 10 h-164 a10 10 0 0 1 -10 -10 z" fill="url(#l6c)" />
+        <Circle cx="70" cy="214" r="17" fill="#0B1F2A" /><Circle cx="70" cy="214" r="6" fill="#fff" opacity={0.9} />
+        <Circle cx="186" cy="214" r="17" fill="#0B1F2A" /><Circle cx="186" cy="214" r="6" fill="#fff" opacity={0.9} />
+        <Circle cx="62" cy="180" r="11" fill="url(#l6o)" /><Circle cx="194" cy="180" r="11" fill="url(#l6o)" />
+        <Circle cx="59" cy="177" r="4" fill="#fff" opacity={0.8} /><Circle cx="191" cy="177" r="4" fill="#fff" opacity={0.8} />
+        <Path d="M104 188 q24 16 48 0" fill="none" stroke="#fff" strokeWidth="8" strokeLinecap="round" />
+        <Path d="M60 138 a68 68 0 0 1 136 0 v10 a12 12 0 0 1 -12 12 h-112 a12 12 0 0 1 -12 -12 z" fill="url(#l6)" />
+        <Path d="M60 138 a68 68 0 0 1 136 0 h-22 a46 46 0 0 0 -92 0 z" fill="#fff" opacity={0.2} />
+        <Path d="M74 126 h108 a10 10 0 0 1 10 10 v10 a20 20 0 0 1 -20 20 h-88 a20 20 0 0 1 -20 -20 v-10 a10 10 0 0 1 10 -10 z" fill="url(#l6o)" />
+        <Path d="M90 140 h52" stroke="#fff" strokeOpacity={0.7} strokeWidth="7" strokeLinecap="round" />
+        <Circle cx="200" cy="72" r="8" fill="#F58A1F" />
       </Svg>
     );
   }

@@ -19,6 +19,7 @@ import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
 import { rupiah, km, timeAgo, serviceLabel, statusLabel } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
 import type { AvailableOrder } from '@/lib/types';
+import { SelfieGate } from '@/components/Safety';
 
 export default function DriverHome() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function DriverHome() {
   const { driver, online, busy, setOnline, available, active, accept, myPos, setMyPos } = useDriverSession();
   const { location, refresh } = useCurrentLocation();
   const [selected, setSelected] = useState<AvailableOrder | null>(null);
+  const [selfie, setSelfie] = useState<{ lat: number; lng: number } | null | false>(false);
   const pos = myPos ?? (driver?.lat && driver.lng ? { lat: driver.lat, lng: driver.lng } : location);
 
   const toggle = async (v: boolean) => {
@@ -34,7 +36,15 @@ export default function DriverHome() {
       if (v) { const fix = await refresh(); if (!fix) { toast.error('Lokasi tidak tersedia. Izinkan akses GPS lalu coba lagi.'); return; } p = fix; setMyPos({ ...fix, heading: null }); }
       await setOnline(v, p);
       toast.show(v ? 'Anda online — siap menerima order' : 'Anda offline');
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg.includes('SELFIE_REQUIRED')) { setSelfie(myPos ?? location ?? null); toast.show('Verifikasi wajah dulu sebelum online'); return; }
+      toast.error(msg);
+    }
+  };
+  const afterSelfie = async () => {
+    const p = selfie || undefined; setSelfie(false);
+    try { await setOnline(true, p || undefined); toast.success('Anda online — siap menerima order'); } catch (e) { toast.error((e as Error).message); }
   };
 
   const markers = useMemo<MapMarker[]>(() => {
@@ -90,11 +100,13 @@ export default function DriverHome() {
   );
 
   return (
+    <>
+    <SelfieGate visible={selfie !== false} onDone={afterSelfie} onCancel={() => setSelfie(false)} />
     <MapScreen
       map={<MapView center={pos} zoom={14} markers={markers} fitTo={fitTo} paddingBottom={20} />}
       back={false}
       topLeft={topLeft}
-      floatingRight={<FloatingButton icon="locate" color={colors.info} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} />}
+      floatingRight={<View style={{ gap: 8 }}><FloatingButton icon="shield-checkmark" color={colors.danger} onPress={() => router.push('/safety' as never)} /><FloatingButton icon="locate" color={colors.info} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} /></View>}
       header={header}
       minHeight={170 + TAB_BAR_SPACE}
       maxRatio={0.58}
@@ -159,6 +171,7 @@ export default function DriverHome() {
         )}
       </Animated.View>
     </MapScreen>
+    </>
   );
 }
 

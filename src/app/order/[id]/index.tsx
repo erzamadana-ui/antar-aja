@@ -12,8 +12,10 @@ import { Radar, ProgressBar, LiveDot, PressableScale } from '@/components/motion
 import { AmbientBackground } from '@/components/glass';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, driverSubtitle } from '@/components/OrderDetails';
 import { TipCard, ExtrasApproval } from '@/components/TipExtras';
+import { PinCard, SafetyRow, DriverVerifyCard, ShareTripButton } from '@/components/Safety';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
+import { useBooking } from '@/store/booking';
 import { rpc, supabase } from '@/lib/supabase';
 import { colors, font, radius, motion, glass } from '@/lib/theme';
 import { statusLabel, statusColor, rupiah, serviceLabel } from '@/lib/format';
@@ -124,6 +126,9 @@ export default function OrderTracking() {
               callPeer={driver.profile ? { id: driver.id, name: driver.profile.full_name, avatar: driver.profile.avatar_url, role: 'driver' } : null} orderId={order.id} />
           </Animated.View>
         )}
+        {driver && active && <DriverVerifyCard plate={driver.vehicle_plate} vehicle={`${driver.vehicle_type === 'car' ? 'Mobil' : 'Motor'} ${driver.vehicle_brand ?? ''}${driver.vehicle_color ? ' ' + driver.vehicle_color : ''}`} name={driver.profile?.full_name ?? 'Driver'} selfieAt={driver.last_selfie_at} />}
+        <PinCard orderId={order.id} status={order.status} />
+        <SafetyRow order={order} />
         {active && <ExtrasApproval order={order} onDone={reload} />}
         {order.status === 'completed' && driver && (
           <Animated.View entering={FadeInDown.delay(120).duration(motion.slow)} style={s.rateBox}>
@@ -144,8 +149,16 @@ export default function OrderTracking() {
           {order.payment_status === 'refunded' && <Badge text="Dana dikembalikan ke AntarPay" color={colors.info} style={{ marginTop: 8 }} />}
         </View>
         <View style={s.block}><Timeline events={events} /></View>
+        {active && <Button title="Laporkan masalah pesanan" variant="ghost" color={colors.textSecondary} icon="flag-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}
         {canCancel && <Button title="Batalkan pesanan" variant="outline" color={colors.danger} onPress={cancel} />}
-        {!active && <Button title="Pesan lagi" variant="secondary" onPress={() => router.replace(def.route as never)} />}
+        {!active && <Button title="Ada kendala dengan pesanan ini?" variant="ghost" color={colors.textSecondary} icon="help-circle-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}
+        {!active && <Button title={order.service === 'food' && order.merchant ? `Pesan lagi dari ${order.merchant.name}` : 'Pesan lagi rute ini'} icon="refresh" variant="secondary" onPress={() => {
+          if (order.service === 'food' && order.merchant_id) { router.replace(`/food/${order.merchant_id}` as never); return; }
+          const b = useBooking.getState();
+          b.setDropoff({ lat: order.dropoff_lat, lng: order.dropoff_lng, address: order.dropoff_address, name: order.dropoff_address.split(',')[0] });
+          if (order.service !== 'shop') b.setPickup({ lat: order.pickup_lat, lng: order.pickup_lng, address: order.pickup_address, name: order.pickup_address.split(',')[0] });
+          router.replace(def.route as never);
+        }} />}
       </Animated.View>
     </MapScreen>
   );

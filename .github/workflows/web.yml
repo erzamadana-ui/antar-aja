@@ -32,6 +32,7 @@ jobs:
       - name: Export web (SPA)
         env:
           EXPO_PUBLIC_BASE_URL: ${{ steps.base.outputs.url }}
+          EXPO_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io${{ steps.base.outputs.url }}
           EXPO_NO_TELEMETRY: 1
           CI: 1
         run: |

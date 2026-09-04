@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { Merchant, MenuItem } from '@/lib/types';
+import { HalalBadge } from '@/components/MerchantStatus';
 
 export default function MerchantScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,6 +67,7 @@ export default function MerchantScreen() {
           <Text style={font.small}>{merchant.category} · {merchant.address}</Text>
           <Row gap={8} style={{ marginTop: 8, flexWrap: 'wrap' }}>
             <Row gap={4}><Stars value={merchant.rating_avg} size={13} /><Text style={font.small}>{Number(merchant.rating_avg).toFixed(1)} ({merchant.rating_count} ulasan)</Text></Row>
+            <HalalBadge merchant={merchant} size="md" />
             <Badge text={merchant.is_open ? `Buka · ${merchant.opening_hours}` : 'Tutup'} color={merchant.is_open ? colors.success : colors.danger} />
             <Badge text={`Siap ±${merchant.prep_minutes} mnt`} color={colors.info} />
           </Row>

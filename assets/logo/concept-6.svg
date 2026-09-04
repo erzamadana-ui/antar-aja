@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="g6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17B3AE"/><stop offset="1" stop-color="#0E7C7B"/></linearGradient>
+    <linearGradient id="c6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F8F8B"/><stop offset="1" stop-color="#0A5C5B"/></linearGradient>
+    <linearGradient id="o6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC15E"/><stop offset="1" stop-color="#F58A1F"/></linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="72" fill="#F3F6F8"/>
+  <rect x="16" y="16" width="224" height="224" rx="72" fill="none" stroke="#0E7C7B" stroke-opacity="0.18" stroke-width="4"/>
+  <!-- garis kecepatan -->
+  <path d="M30 96 h22" stroke="#0E7C7B" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+  <path d="M22 118 h26" stroke="#0E7C7B" stroke-opacity="0.28" stroke-width="8" stroke-linecap="round"/>
+  <!-- badan mobil (tampak depan) -->
+  <path d="M36 208 v-44 a26 26 0 0 1 26 -26 h132 a26 26 0 0 1 26 26 v44 a10 10 0 0 1 -10 10 h-164 a10 10 0 0 1 -10 -10 z" fill="url(#c6)"/>
+  <!-- roda -->
+  <circle cx="70" cy="214" r="17" fill="#0B1F2A"/><circle cx="70" cy="214" r="6" fill="#fff" opacity="0.9"/>
+  <circle cx="186" cy="214" r="17" fill="#0B1F2A"/><circle cx="186" cy="214" r="6" fill="#fff" opacity="0.9"/>
+  <!-- lampu depan -->
+  <circle cx="62" cy="180" r="11" fill="url(#o6)"/><circle cx="194" cy="180" r="11" fill="url(#o6)"/>
+  <circle cx="59" cy="177" r="4" fill="#fff" opacity="0.8"/><circle cx="191" cy="177" r="4" fill="#fff" opacity="0.8"/>
+  <!-- senyum (bumper) -->
+  <path d="M104 188 q24 16 48 0" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <!-- helm di atas mobil -->
+  <path d="M60 138 a68 68 0 0 1 136 0 v10 a12 12 0 0 1 -12 12 h-112 a12 12 0 0 1 -12 -12 z" fill="url(#g6)"/>
+  <path d="M60 138 a68 68 0 0 1 136 0 h-22 a46 46 0 0 0 -92 0 z" fill="#fff" opacity="0.2"/>
+  <!-- visor = kaca depan -->
+  <path d="M74 126 h108 a10 10 0 0 1 10 10 v10 a20 20 0 0 1 -20 20 h-88 a20 20 0 0 1 -20 -20 v-10 a10 10 0 0 1 10 -10 z" fill="url(#o6)"/>
+  <path d="M90 140 h52" stroke="#fff" stroke-opacity="0.7" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="200" cy="72" r="8" fill="#F58A1F"/>
+</svg>

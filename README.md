@@ -125,3 +125,13 @@ Hak cipta © 2026 Erza Pradipta Madana. Seluruh hak dilindungi.
 - AntarShop (belanja titip), tip & biaya tambahan (parkir/tol/tunggu), telepon in-app WebRTC (nomor HP tersembunyi — UU PDP),
   payment gateway Midtrans Snap (+ mode simulasi), sesi harga high/middle/low & intelijen harga kompetitor (admin), multi-bahasa ID/EN/ZH/AR.
 - Migrasi: `supabase/migrations/0005_shop_enum.sql`, `0006_features.sql`; edge functions: `supabase/functions/midtrans-*`.
+
+## Tahap 4 (Sep 2026)
+
+- **Merchant — sertifikasi & pengajuan**: form pendaftaran memuat NPWP/NPWPD (wajib), KTP pemilik (wajib), foto tempat usaha (wajib), Izin usaha/NIB (opsional), Sertifikat halal (opsional), rekening pencairan. Data dokumen di tabel privat `merchant_documents` (hanya pemilik & admin). Merchant bisa memperbarui/mengajukan ulang di `Toko Saya → Sertifikasi & dokumen`. Admin meninjau di `Panel Admin → Merchant → Tinjau pengajuan` (lihat dokumen, catatan, setujui/tolak/tangguhkan, verifikasi halal).
+- **Label halal untuk pelanggan**: filter *Semua / Halal / Non-halal* di AntarFood, badge “Halal” (klaim) atau “Halal ✓” (terverifikasi admin) di kartu & detail merchant.
+- **Tiket aduan + CS online**: `Pusat Bantuan` (menu Akun → Bantuan) untuk pelanggan, driver, merchant: buat tiket (kategori, lampiran, terkait pesanan), chat realtime dengan CS, tutup & nilai. Admin: `Panel Admin → CS & Tiket` (antrean, prioritas, ambil tiket, catatan internal, statistik respons).
+- **Log aktivitas**: `Panel Admin → Log Aktivitas` — semua kejadian (pesanan, driver, merchant, saldo, gateway, tarif/promo/pengaturan, tiket, SOS) dicatat trigger DB ke `audit_logs`, realtime, filter & ekspor CSV.
+- **Keamanan ala Gojek/Grab**: tombol SOS (tahan 2 detik → tiket darurat + alarm admin), bagikan perjalanan (halaman publik `/share/<token>` tanpa login), PIN penjemputan 4 digit untuk ride (driver wajib memasukkan PIN pelanggan), verifikasi wajah driver (selfie) sebelum online tiap 20 jam (`app_settings.driver_selfie_hours`), kontak darurat, Pusat Keamanan (`/safety`), laporan insiden.
+- **Beranda pelanggan**: promo bergambar (thumbnail, admin bisa unggah gambar di Tarif & Promo), “Sering dipesan” (pesan ulang sekali ketuk), tujuan terakhir.
+- **Logo**: varian 6 “Helm + Mobil” (mobil tersenyum memakai helm) — `assets/logo/concept-6.svg`, ikon aplikasi diregenerasi.

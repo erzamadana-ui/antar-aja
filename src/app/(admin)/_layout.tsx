@@ -8,6 +8,7 @@ import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring, useRedu
 import { RequireAuth } from '@/components/AuthGate';
 import { AmbientBackground, BrandGradient } from '@/components/glass';
 import { PressableScale } from '@/components/motion';
+import { BrandLogo } from '@/components/Logo';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { colors, font, glass, motion, radius, shadow } from '@/lib/theme';
@@ -22,6 +23,8 @@ const NAV: { href: string; label: string; icon: IconName; iconActive: IconName }
   { href: '/(admin)/finance', label: 'Keuangan', icon: 'cash-outline', iconActive: 'cash' },
   { href: '/(admin)/pricing', label: 'Tarif & Promo', icon: 'pricetags-outline', iconActive: 'pricetags' },
   { href: '/(admin)/pricing-intel', label: 'Intelijen Harga', icon: 'trending-up-outline', iconActive: 'trending-up' },
+  { href: '/(admin)/cs', label: 'CS & Tiket', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
+  { href: '/(admin)/activity', label: 'Log Aktivitas', icon: 'time-outline', iconActive: 'time' },
   { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline', iconActive: 'settings' },
 ];
 const ITEM_H = 44;
@@ -51,7 +54,7 @@ export default function AdminLayout() {
                 <View style={[s.sidebar, shadow.card]}>
                   {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
                   <View style={s.brand}>
-                    <BrandGradient style={[s.logo, shadow.glow(colors.primary)]}><Ionicons name="navigate" size={18} color="#fff" /></BrandGradient>
+                    <BrandLogo size={36} />
                     <View><Text style={{ color: colors.text, fontSize: 17, fontWeight: '900' }}>Antar Aja</Text><Text style={font.tiny}>Panel Admin</Text></View>
                   </View>
                   <View style={{ paddingHorizontal: 10, gap: 4 }}>
@@ -78,7 +81,7 @@ export default function AdminLayout() {
               <View style={s.topbar}>
                 {Platform.OS !== 'android' && <BlurView intensity={glass.blur} tint="light" style={StyleSheet.absoluteFill} />}
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, gap: 10 }}>
-                  <BrandGradient style={s.logoSm}><Ionicons name="navigate" size={14} color="#fff" /></BrandGradient>
+                  <BrandLogo size={28} />
                   <Text style={[font.h3, { flex: 1 }]}>Panel Admin</Text>
                   <PressableScale onPress={async () => { await setMode('customer'); router.replace('/(customer)'); }} scaleTo={0.9} style={s.iconBtn}><Ionicons name="swap-horizontal" size={20} color={colors.primary} /></PressableScale>
                 </View>

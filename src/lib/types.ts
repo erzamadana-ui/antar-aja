@@ -15,6 +15,7 @@ export interface Place extends LatLng { address: string; name?: string }
 export interface Profile {
   id: string; full_name: string; phone: string | null; email: string | null; avatar_url: string | null;
   role: UserRole; is_active: boolean; created_at: string; locale?: Locale;
+  emergency_contact_name?: string | null; emergency_contact_phone?: string | null;
 }
 export interface Wallet { user_id: string; balance: number; updated_at: string }
 export interface WalletTx {
@@ -33,7 +34,7 @@ export interface Driver {
   id: string; vehicle_type: VehicleType; vehicle_brand: string | null; vehicle_plate: string; vehicle_color: string | null;
   status: ApprovalStatus; is_online: boolean; lat: number | null; lng: number | null;
   heading: number | null; last_seen_at: string | null; rating_avg: number; rating_count: number; total_trips: number;
-  created_at: string;
+  created_at: string; last_selfie_at?: string | null; last_selfie_url?: string | null;
   profile?: Profile | null;
 }
 export interface DriverDocuments { driver_id: string; license_number: string | null; id_card_number: string | null; photo_id_url: string | null; photo_vehicle_url: string | null }
@@ -41,7 +42,13 @@ export interface Merchant {
   id: string; owner_id: string | null; name: string; description: string | null; category: string; address: string | null;
   lat: number | null; lng: number | null; image_url: string | null; is_open: boolean; status: ApprovalStatus;
   rating_avg: number; rating_count: number; prep_minutes: number; opening_hours: string | null; created_at: string;
-  distance_km?: number; delivery_fee?: number;
+  distance_km?: number; delivery_fee?: number; is_halal?: boolean; halal_verified?: boolean;
+}
+export interface MerchantDocuments {
+  merchant_id: string; owner_phone: string | null; npwp_no: string | null; npwp_url: string | null; license_no: string | null; license_url: string | null;
+  halal_cert_no: string | null; halal_cert_url: string | null; owner_id_card_url: string | null; place_photo_url: string | null;
+  bank_name: string | null; bank_account: string | null; bank_holder: string | null;
+  submitted_at: string; reviewed_at: string | null; reviewed_by: string | null; review_note: string | null;
 }
 export interface MenuItem {
   id: string; merchant_id: string; name: string; description: string | null; price: number; image_url: string | null;
@@ -61,7 +68,7 @@ export interface Order {
   notes: string | null; recipient_name: string | null; recipient_phone: string | null;
   package_details: { type?: string; weight?: string; description?: string } | null;
   shopping_list?: ShoppingItem[] | null; est_budget?: number; shop_store?: string | null; receipt_url?: string | null;
-  tip?: number; extras?: OrderExtra[]; extras_total?: number;
+  tip?: number; extras?: OrderExtra[]; extras_total?: number; share_token?: string | null;
   cancel_reason: string | null; created_at: string; accepted_at: string | null; arrived_at: string | null; started_at: string | null;
   completed_at: string | null; cancelled_at: string | null;
   // relasi opsional
@@ -77,7 +84,7 @@ export interface Pricing {
 export interface Promo {
   code: string; description: string | null; discount_type: 'fixed' | 'percent'; value: number; max_discount: number | null;
   min_total: number; service: ServiceType | null; quota: number | null; used_count: number; valid_from: string | null;
-  valid_to: string | null; is_active: boolean;
+  valid_to: string | null; is_active: boolean; title?: string | null; image_url?: string | null; sort_order?: number;
 }
 export interface SavedPlace { id: string; user_id: string; label: string; address: string; lat: number; lng: number }
 
@@ -92,3 +99,29 @@ export interface PricingSession { id: string; name: string; level: 'low' | 'midd
 export interface CompetitorPrice { id: string; competitor: string; service: ServiceType; base_fare: number; per_km: number; min_fare: number; level: 'low' | 'middle' | 'high'; city: string | null; source: string | null; captured_at: string; note: string | null }
 export interface Payment { id: string; user_id: string; order_id: string | null; purpose: 'topup' | 'order'; amount: number; method: string; provider: string; status: 'pending' | 'settlement' | 'expire' | 'cancel' | 'deny' | 'failure'; external_id: string | null; snap_token: string | null; redirect_url: string | null; created_at: string }
 export interface CallLog { id: string; order_id: string | null; caller_id: string; callee_id: string; status: 'ringing' | 'answered' | 'missed' | 'declined' | 'ended'; started_at: string; answered_at: string | null; ended_at: string | null }
+
+// ---- Tahap 4 ----
+export type TicketStatus = 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed';
+export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type TicketCategory = 'order' | 'payment' | 'driver' | 'merchant' | 'account' | 'app' | 'safety' | 'other';
+export interface Ticket {
+  id: string; code: string; user_id: string; role: UserRole; order_id: string | null; category: TicketCategory; subject: string; description: string | null;
+  priority: TicketPriority; status: TicketStatus; assigned_to: string | null; attachments: string[]; last_message_at: string; first_response_at: string | null;
+  resolved_at: string | null; closed_at: string | null; rating: number | null; rating_comment: string | null; created_at: string; updated_at: string;
+  user?: Profile | null; assignee?: Profile | null; order?: Pick<Order, 'code' | 'service' | 'status'> | null;
+}
+export interface TicketMessage { id: number; ticket_id: string; sender_id: string | null; sender_role: 'user' | 'cs' | 'system'; body: string; attachment_url: string | null; is_internal: boolean; created_at: string }
+export interface AuditLog { id: number; actor_id: string | null; actor_name: string | null; actor_role: UserRole | null; action: string; entity: string; entity_id: string | null; summary: string | null; detail: Record<string, unknown> | null; created_at: string }
+export interface SosAlert { id: string; user_id: string; role: UserRole; order_id: string | null; ticket_id: string | null; lat: number | null; lng: number | null; note: string | null; status: 'open' | 'handled' | 'false_alarm'; handled_by: string | null; handled_at: string | null; handle_note: string | null; created_at: string; user?: Profile | null }
+export interface FrequentData {
+  merchants: { merchant_id: string; name: string; image_url: string | null; category: string; rating_avg: number; is_halal: boolean; halal_verified: boolean; is_open: boolean; count: number; last_at: string }[];
+  routes: { service: ServiceType; dropoff_address: string; dropoff_lat: number; dropoff_lng: number; pickup_address: string; pickup_lat: number; pickup_lng: number; shop_store: string | null; count: number; last_at: string }[];
+  services: Partial<Record<ServiceType, number>>;
+  recent: { address: string; lat: number; lng: number; service: ServiceType }[];
+}
+export interface SharedOrder {
+  code: string; service: ServiceType; status: OrderStatus; created_at: string; started_at: string | null; completed_at: string | null;
+  pickup_address: string; pickup_lat: number; pickup_lng: number; dropoff_address: string; dropoff_lat: number; dropoff_lng: number;
+  route_geometry: [number, number][] | null; distance_km: number; duration_min: number; customer_name: string;
+  driver: { name: string; avatar_url: string | null; plate: string; vehicle_type: VehicleType; vehicle_brand: string | null; vehicle_color: string | null; rating: number; lat: number | null; lng: number | null; heading: number | null } | null;
+}

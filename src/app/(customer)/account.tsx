@@ -75,7 +75,7 @@ export default function Account() {
       <Entrance index={3}><Text style={[font.label, { marginTop: 24, marginBottom: 8 }]}>{t('others')}</Text>
       <Card padded={false}>
         <View style={{ paddingHorizontal: 12 }}>
-          <ListItem icon="help-circle-outline" title={t('help')} onPress={() => router.push('/account/help')} />
+          <ListItem icon="chatbubbles-outline" iconColor={colors.info} title={t('help')} subtitle={t('help_sub')} onPress={() => router.push('/support' as never)} />
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="log-out-outline" title={t('logout')} danger onPress={confirmSignOut} />
         </View>

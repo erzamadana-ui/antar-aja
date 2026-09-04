@@ -57,3 +57,11 @@ export const phoneDisplay = (p?: string | null) => (p ? p.replace(/^\+62/, '0') 
 /** Nomor disamarkan (PDP): 0812••••789 — pihak lain tidak melihat nomor lengkap. */
 export const phoneMasked = (p?: string | null) => { if (!p) return '—'; const d = p.replace(/^\+62/, '0'); return d.length > 7 ? d.slice(0, 4) + '••••' + d.slice(-3) : '••••'; };
 export const extraKindLabel: Record<string, string> = { parking: 'Parkir', toll: 'Tol', waiting: 'Waktu tunggu', other: 'Lainnya' };
+
+// ---- Tahap 4: tiket & keamanan ----
+export const ticketStatusLabel: Record<string, string> = { open: 'Terbuka', in_progress: 'Ditangani CS', waiting_user: 'Menunggu Anda', resolved: 'Selesai', closed: 'Ditutup' };
+export const ticketStatusColor = (s: string) => s === 'open' ? '#F59E0B' : s === 'in_progress' ? '#3B82F6' : s === 'waiting_user' ? '#8B5CF6' : s === 'resolved' ? '#10B981' : '#94A3B8';
+export const ticketPriorityLabel: Record<string, string> = { low: 'Rendah', normal: 'Normal', high: 'Tinggi', urgent: 'Darurat' };
+export const ticketPriorityColor = (p: string) => p === 'urgent' ? '#EF4444' : p === 'high' ? '#F97316' : p === 'normal' ? '#3B82F6' : '#94A3B8';
+export const ticketCategoryLabel: Record<string, string> = { order: 'Pesanan', payment: 'Pembayaran / Saldo', driver: 'Driver', merchant: 'Merchant', account: 'Akun', app: 'Aplikasi', safety: 'Keamanan', other: 'Lainnya' };
+export const roleLabelId: Record<string, string> = { customer: 'Pelanggan', driver: 'Driver', merchant: 'Merchant', admin: 'Admin' };

@@ -10,6 +10,7 @@ import { useMode } from '@/store/mode';
 import { supabase } from '@/lib/supabase';
 import { pickAndUpload } from '@/lib/upload';
 import { colors, font, radius } from '@/lib/theme';
+import { HalalBadge } from '@/components/MerchantStatus';
 
 export default function MerchantStore() {
   const router = useRouter();
@@ -36,7 +37,10 @@ export default function MerchantStore() {
             <View style={{ padding: 16, gap: 8 }}>
               <Row between>
                 <View style={{ flex: 1 }}><Text style={font.h2}>{merchant.name}</Text><Row gap={6}><Stars value={merchant.rating_avg} size={12} /><Text style={font.tiny}>{Number(merchant.rating_avg).toFixed(1)} ({merchant.rating_count})</Text></Row></View>
-                <Badge text={merchant.status === 'approved' ? 'Terverifikasi' : merchant.status} color={merchant.status === 'approved' ? colors.success : colors.warning} />
+                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                  <Badge text={merchant.status === 'approved' ? 'Terverifikasi' : merchant.status === 'pending' ? 'Menunggu admin' : merchant.status} color={merchant.status === 'approved' ? colors.success : colors.warning} />
+                  <HalalBadge merchant={merchant} />
+                </View>
               </Row>
               <Row between style={{ backgroundColor: merchant.is_open ? colors.success + '14' : 'rgba(11,31,42,0.05)', padding: 12, borderRadius: radius.md, borderWidth: 1, borderColor: merchant.is_open ? colors.success + '33' : 'rgba(11,31,42,0.06)' }}>
                 <View><Text style={font.h3}>{merchant.is_open ? 'Toko BUKA' : 'Toko TUTUP'}</Text><Text style={font.tiny}>Matikan saat libur/stok habis</Text></View>
@@ -58,6 +62,10 @@ export default function MerchantStore() {
           </Card></Entrance>
           <Entrance index={2}><Card padded={false}>
             <View style={{ paddingHorizontal: 12 }}>
+              <ListItem icon="document-text-outline" iconColor={colors.food} title="Sertifikasi & dokumen usaha" subtitle="NPWP, izin usaha, sertifikat halal, rekening" onPress={() => router.push('/merchant/documents' as never)} />
+              <Divider style={{ marginVertical: 0 }} />
+              <ListItem icon="chatbubbles-outline" iconColor={colors.info} title="Bantuan & tiket aduan" subtitle="Hubungi CS online" onPress={() => router.push('/support' as never)} />
+              <Divider style={{ marginVertical: 0 }} />
               <ListItem icon="person-outline" title="Edit profil pemilik" onPress={() => router.push('/account/edit')} />
               <Divider style={{ marginVertical: 0 }} />
               <ListItem icon="language-outline" title="Bahasa / Language" onPress={() => router.push('/account/language')} />
