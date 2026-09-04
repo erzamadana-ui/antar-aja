@@ -110,3 +110,4 @@ where not exists (select 1 from competitor_prices);
 -- Tahap 4: label halal demo (klaim + 2 terverifikasi)
 update merchants set is_halal = true where name not ilike '%kopi%';
 update merchants set halal_verified = true where id in ('b0000000-0000-4000-8000-000000000001','b0000000-0000-4000-8000-000000000002');
+update promos set image_url = 'https://erzamadana-ui.github.io/antar-aja/promos/' || code || '.jpg', sort_order = case code when 'ANTARBARU' then 1 when 'MAKANENAK' then 2 else 3 end where code in ('ANTARBARU','MAKANENAK','HEMAT5');

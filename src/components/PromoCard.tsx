@@ -1,4 +1,5 @@
-// Kartu promo bergambar (thumbnail). Bila promo belum punya gambar, tampil ilustrasi layanan + gradien.
+// Kartu promo bergambar (thumbnail 16:9). Bila promo punya image_url, gambar tampil penuh (teks sudah ada di gambar);
+// bila belum, tampil ilustrasi layanan + gradien + judul otomatis.
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,12 +29,12 @@ export function PromoCard({ promo, index = 0, onPress, width = 260 }: { promo: P
       )}
       {!promo.image_url && <View style={s.orb} />}
       {!promo.image_url && <View style={s.art}><ServiceIllustration kind={def?.art ?? 'pay'} size={78} /></View>}
-      <BrandGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']} angle="vertical" style={s.shade} />
-      <View style={s.body}>
+      {!promo.image_url && <BrandGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']} angle="vertical" style={s.shade} />}
+      {!promo.image_url && <View style={s.body}>
         <View style={s.code}><Ionicons name="pricetag" size={11} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 11, letterSpacing: 0.5 }}>{promo.code}</Text></View>
         <Text style={s.title} numberOfLines={2}>{promoHeadline(promo)}</Text>
         <Text style={s.desc} numberOfLines={1}>{promo.min_total > 0 ? `Min. ${rupiah(promo.min_total)} · ` : ''}{def ? def.label : 'Semua layanan'}</Text>
-      </View>
+      </View>}
     </PressableScale>
   );
 }
