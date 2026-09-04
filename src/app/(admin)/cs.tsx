@@ -144,7 +144,7 @@ function TicketPanel({ id, onClose, onChanged }: { id: string; onClose: () => vo
   };
   if (!ticket) return <View style={s.panel}><Text style={font.small}>Memuat…</Text></View>;
   return (
-    <Animated.View entering={FadeInDown.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify()} style={s.panel}>
+    <Animated.View entering={FadeInDown.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)} style={s.panel}>
       <View style={s.panelHead}>
         <Row between>
           <View style={{ flex: 1, minWidth: 0 }}>

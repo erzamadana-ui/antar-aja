@@ -8,14 +8,14 @@ import { useAuth } from '@/store/auth';
 import { colors, font, radius } from '@/lib/theme';
 
 export function DocUpload({ label, hint, value, onChange, required, camera, color = colors.primary, bucket = 'documents' }: {
-  label: string; hint?: string; value?: string | null; onChange: (path: string) => void; required?: boolean; camera?: boolean; color?: string; bucket?: 'documents' | 'merchant-images' | 'proofs';
+  label: string; hint?: string; value?: string | null; onChange: (path: string) => void; required?: boolean; camera?: boolean; color?: string; bucket?: 'documents' | 'merchant-images' | 'proofs' | 'promo-images';
 }) {
   const session = useAuth((s) => s.session);
   const [busy, setBusy] = useState(false);
   const pick = async (useCamera?: boolean) => {
     if (!session) return;
     setBusy(true);
-    try { const r = await pickAndUpload(bucket, session.user.id, { camera: useCamera }); if (r) onChange(r.path); }
+    try { const r = await pickAndUpload(bucket, session.user.id, { camera: useCamera }); if (r) onChange(bucket === 'promo-images' || bucket === 'merchant-images' ? r.url : r.path); }
     catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   };

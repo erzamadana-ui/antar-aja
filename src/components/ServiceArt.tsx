@@ -5,7 +5,7 @@ import { View, StyleSheet } from 'react-native';
 import Svg, { Path, Circle, Rect, Ellipse, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import { shadow } from '@/lib/theme';
 
-export type ArtKind = 'rider' | 'car' | 'food' | 'send' | 'shop' | 'pay';
+export type ArtKind = 'rider' | 'car' | 'food' | 'send' | 'shop' | 'pay' | 'box' | 'travel';
 
 /** Hanya gambar (tanpa bingkai). */
 export function ServiceIllustration({ kind, size = 56 }: { kind: ArtKind; size?: number }) {
@@ -93,6 +93,42 @@ export function ServiceIllustration({ kind, size = 56 }: { kind: ArtKind; size?:
         {/* wajah keranjang */}
         <Circle cx="27" cy="40" r="1.6" fill="#0B1F2A" /><Circle cx="37" cy="40" r="1.6" fill="#0B1F2A" /><Path d="M29 44 q3 2.5 6 0" stroke="#0B1F2A" strokeWidth="1.3" fill="none" strokeLinecap="round" />
         <Circle cx="20" cy="58" r="3.5" fill="#0B1F2A" /><Circle cx="44" cy="58" r="3.5" fill="#0B1F2A" />
+      </Svg>
+    );
+    case 'box': return (
+      <Svg width={s} height={s} viewBox="0 0 64 64">
+        <Defs><LinearGradient id="bx" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#F5A524" /><Stop offset="1" stopColor="#D97706" /></LinearGradient></Defs>
+        {/* garis kecepatan */}
+        <Path d="M4 30 h8 M2 37 h10" stroke="#0B1F2A" strokeWidth="2" strokeLinecap="round" opacity="0.35" />
+        {/* box kargo */}
+        <Rect x="14" y="18" width="30" height="26" rx="4" fill="url(#bx)" />
+        <Path d="M14 26 h30" stroke="#fff" strokeWidth="1.5" opacity="0.5" />
+        <Rect x="22" y="22" width="14" height="8" rx="2" fill="#fff" opacity="0.85" />
+        <Path d="M25 26 h8" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
+        {/* kabin */}
+        <Path d="M44 26 h9 a4 4 0 0 1 3.5 2.2 L59 36 v8 h-15 z" fill="#0E7C7B" />
+        <Path d="M46 28 h6 l4 7 h-10 z" fill="#BFE8F5" />
+        {/* roda */}
+        <Circle cx="22" cy="46" r="6" fill="#0B1F2A" /><Circle cx="22" cy="46" r="2.5" fill="#E3E8ED" />
+        <Circle cx="50" cy="46" r="6" fill="#0B1F2A" /><Circle cx="50" cy="46" r="2.5" fill="#E3E8ED" />
+        {/* lampu & wajah */}
+        <Circle cx="58" cy="40" r="1.6" fill="#FFF3DD" />
+        <Circle cx="20" cy="36" r="1.5" fill="#fff" /><Circle cx="27" cy="36" r="1.5" fill="#fff" /><Path d="M21 39.5 q2.5 2.2 5 0" stroke="#fff" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+      </Svg>
+    );
+    case 'travel': return (
+      <Svg width={s} height={s} viewBox="0 0 64 64">
+        <Defs><LinearGradient id="tv" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#3B82F6" /><Stop offset="1" stopColor="#1D4ED8" /></LinearGradient></Defs>
+        <Path d="M3 34 h9 M1 41 h11" stroke="#0B1F2A" strokeWidth="2" strokeLinecap="round" opacity="0.35" />
+        {/* minibus (Hi-Ace) */}
+        <Path d="M14 22 h34 a6 6 0 0 1 6 5 l3 9 v10 h-45 a4 4 0 0 1 -4 -4 v-16 a4 4 0 0 1 4 -4 z" fill="url(#tv)" />
+        <Rect x="16" y="26" width="9" height="8" rx="2" fill="#DBEAFE" /><Rect x="27" y="26" width="9" height="8" rx="2" fill="#DBEAFE" /><Rect x="38" y="26" width="9" height="8" rx="2" fill="#DBEAFE" /><Path d="M49 26 h3 l4 8 h-7 z" fill="#DBEAFE" />
+        <Path d="M10 40 h47" stroke="#fff" strokeWidth="1.5" opacity="0.5" />
+        <Rect x="8" y="17" width="20" height="4" rx="2" fill="#F5A524" />
+        <Circle cx="20" cy="47" r="5.5" fill="#0B1F2A" /><Circle cx="20" cy="47" r="2.2" fill="#E3E8ED" />
+        <Circle cx="48" cy="47" r="5.5" fill="#0B1F2A" /><Circle cx="48" cy="47" r="2.2" fill="#E3E8ED" />
+        <Circle cx="56" cy="40" r="1.6" fill="#FFF3DD" />
+        <Circle cx="19" cy="30" r="1.3" fill="#1D4ED8" /><Circle cx="22" cy="30" r="1.3" fill="#1D4ED8" />
       </Svg>
     );
     case 'pay': return (

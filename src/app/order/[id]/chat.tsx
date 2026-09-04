@@ -50,7 +50,7 @@ export default function OrderChat() {
             const mine = m.sender_id === uid;
             const last = i >= messages.length - 1;
             return (
-              <Animated.View key={m.id} entering={last ? (mine ? FadeInUp : FadeInDown).springify().damping(18) : undefined} layout={LinearTransition.springify()} style={[s.bubble, mine ? s.mine : s.theirs]}>
+              <Animated.View key={m.id} entering={last ? (mine ? FadeInUp : FadeInDown).springify().stiffness(280).damping(18) : undefined} layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.bubble, mine ? s.mine : s.theirs]}>
                 {mine && <BrandGradient style={StyleSheet.absoluteFill} />}
                 <Text style={{ color: mine ? '#fff' : colors.text, fontSize: 15, lineHeight: 21 }}>{m.body}</Text>
                 <Text style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2, alignSelf: 'flex-end' }}>{formatTime(m.created_at)}</Text>

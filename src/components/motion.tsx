@@ -14,7 +14,7 @@ export { FadeIn, FadeOut, FadeInDown, FadeInUp, ZoomIn, Layout, LinearTransition
 export function Entrance({ children, index = 0, style, from = 'down', delay = 0 }: { children: React.ReactNode; index?: number; style?: StyleProp<ViewStyle>; from?: 'down' | 'up' | 'fade' | 'zoom'; delay?: number }) {
   const reduce = useReducedMotion();
   if (reduce) return <View style={style}>{children}</View>;
-  const d = delay + index * motion.stagger;
+  const d = delay + Math.min(index, 8) * motion.stagger;
   const anim = from === 'up' ? FadeInUp : from === 'fade' ? FadeIn : from === 'zoom' ? ZoomIn : FadeInDown;
   return <Animated.View entering={anim.delay(d).duration(motion.slow).easing(motion.easeOut)} style={style}>{children}</Animated.View>;
 }

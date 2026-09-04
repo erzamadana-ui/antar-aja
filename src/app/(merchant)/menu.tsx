@@ -43,7 +43,7 @@ export default function MerchantMenu() {
       {items.length === 0 ? <Empty icon="restaurant-outline" title="Belum ada menu" subtitle="Tambahkan menu andalan Anda." action={<Button title="Tambah menu" color={colors.food} onPress={() => setEditing({ ...empty })} />} /> : (
         <View style={{ gap: 10 }}>
           {items.map((it, i) => (
-            <Entrance key={it.id} index={Math.min(i, 8)} from="up"><Animated.View layout={LinearTransition.springify()}><Card style={!it.is_available && { opacity: 0.6 }}>
+            <Entrance key={it.id} index={Math.min(i, 8)} from="up"><Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)}><Card style={!it.is_available && { opacity: 0.6 }}>
               <Row gap={12}>
                 {it.image_url ? <Image source={{ uri: it.image_url }} style={s.thumb} /> : <View style={[s.thumb, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="fast-food-outline" size={22} color={colors.textMuted} /></View>}
                 <View style={{ flex: 1 }}>
@@ -66,7 +66,7 @@ export default function MerchantMenu() {
       <Modal visible={!!editing} animationType="fade" transparent onRequestClose={() => setEditing(null)}>
         <View style={s.modalBg}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditing(null)} />
-          <Animated.View entering={FadeInDown.springify().damping(18)} style={s.modal}>
+          <Animated.View entering={FadeInDown.springify().stiffness(280).damping(18)} style={s.modal}>
             {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
             <View style={s.handle} />
             <ScrollView contentContainerStyle={{ gap: 12 }}>

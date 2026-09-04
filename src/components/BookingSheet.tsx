@@ -9,14 +9,35 @@ import { supabase } from '@/lib/supabase';
 import { colors, font, radius, glass, shadow } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { PaymentMethod, ServiceType } from '@/lib/types';
+import { usePayPrefs, EWALLETS } from '@/store/payprefs';
+import { useEffect } from 'react';
+
 
 /** Pilihan metode bayar + promo + catatan — dipakai ride, food, send. */
+export type PayChoice = PaymentMethod | 'ewallet';
+/** Nilai `paid_via` untuk create_order: 'cash' | 'wallet' | kode e-wallet (gopay/ovo/…). */
+export const paidViaOf = (m: PayChoice, ewallet?: string | null) => (m === 'ewallet' ? (ewallet ?? 'gopay') : m);
+/** Tangani error SALDO_KURANG:<nominal> → buka gateway e-wallet untuk kekurangannya. Mengembalikan true bila ditangani. */
+export function handleShortfall(e: unknown, router: ReturnType<typeof useRouter>, ewallet?: string | null) {
+  const m = /SALDO_KURANG:(\d+)/.exec((e as Error).message ?? '');
+  if (!m) return false;
+  const amount = Math.max(10000, Math.ceil(Number(m[1]) / 1000) * 1000);
+  toast.show(`Saldo kurang ${rupiah(Number(m[1]))} — lengkapi lewat ${ewallet ? (EWALLETS.find((x) => x.key === ewallet)?.label ?? 'e-wallet') : 'e-wallet'}`);
+  router.push({ pathname: '/pay/gateway', params: { amount: String(amount), method: ewallet ?? 'gopay', reason: 'order' } } as never);
+  return true;
+}
+
 export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNotes, subtotal, service, onDiscount, notesPlaceholder }: {
-  method: PaymentMethod; onMethod: (m: PaymentMethod) => void; promo: string; onPromo: (v: string) => void;
+  method: PayChoice; onMethod: (m: PayChoice) => void; promo: string; onPromo: (v: string) => void;
   notes: string; onNotes: (v: string) => void; subtotal: number; service: ServiceType; onDiscount: (d: number) => void; notesPlaceholder?: string;
 }) {
-  const wallet = useAuth((s) => s.wallet);
+  const { wallet, session } = useAuth();
   const router = useRouter();
+  const { prefs, loaded, load } = usePayPrefs();
+  useEffect(() => { if (session && !loaded) load(session.user.id); }, [session, loaded, load]);
+  useEffect(() => { if (loaded && prefs && !appliedRef.current) { appliedRef.current = true; onMethod(prefs.default_method); } }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  const appliedRef = React.useRef(false);
+  const ew = EWALLETS.find((x) => x.key === prefs?.ewallet) ?? EWALLETS[0];
   const [checking, setChecking] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -32,13 +53,14 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
   return (
     <View style={{ gap: 12 }}>
       <Text style={font.label}>Pembayaran</Text>
-      <Row gap={10}>
-        <PayOption active={method === 'cash'} onPress={() => onMethod('cash')} icon="cash-outline" title="Tunai" subtitle="Bayar ke driver" />
-        <PayOption active={method === 'wallet'} onPress={() => onMethod('wallet')} icon="wallet-outline" title="AntarPay" subtitle={`Saldo ${rupiah(wallet?.balance ?? 0)}`} />
+      <Row gap={8}>
+        <PayOption active={method === 'cash'} onPress={() => onMethod('cash')} icon="cash-outline" title="Tunai" subtitle="Ke driver" />
+        <PayOption active={method === 'wallet'} onPress={() => onMethod('wallet')} icon="wallet-outline" title="AntarPay" subtitle={rupiah(wallet?.balance ?? 0)} />
+        <PayOption active={method === 'ewallet'} onPress={() => onMethod('ewallet')} icon="phone-portrait-outline" title={ew.label} subtitle="e-wallet" color={ew.color} />
       </Row>
-      <PressableScale onPress={() => { onMethod('wallet'); router.push({ pathname: '/pay/gateway', params: { amount: String(Math.max(10000, Math.ceil(Math.max(0, subtotal + 5000 - (wallet?.balance ?? 0)) / 1000) * 1000)) } } as never); }} scaleTo={0.98} haptic={false} style={s.gwRow}>
+      <PressableScale onPress={() => router.push('/(customer)/pay' as never)} scaleTo={0.98} haptic={false} style={s.gwRow}>
         <View style={s.gwIcons}>{['#00AA13', '#4C2A86', '#118EEA', '#EE4D2D'].map((c) => <View key={c} style={[s.gwDot, { backgroundColor: c }]} />)}</View>
-        <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }}>Bayar via GoPay / OVO / DANA / ShopeePay / QRIS / VA</Text><Text style={font.tiny}>Top up instan ke AntarPay lalu bayar dengan saldo.</Text></View>
+        <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }}>{method === 'ewallet' ? `Bayar dengan ${ew.label} (via Midtrans)` : 'Ganti e-wallet / metode utama'}</Text><Text style={font.tiny}>{method === 'ewallet' ? 'Bila saldo AntarPay kurang, halaman bayar dibuka otomatis untuk kekurangannya.' : 'GoPay · OVO · DANA · ShopeePay · QRIS · VA Bank'}</Text></View>
         <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
       </PressableScale>
       <Row gap={8}>
@@ -56,15 +78,14 @@ export function PaymentSection({ method, onMethod, promo, onPromo, notes, onNote
   );
 }
 
-function PayOption({ active, onPress, icon, title, subtitle }: { active: boolean; onPress: () => void; icon: React.ComponentProps<typeof Ionicons>['name']; title: string; subtitle: string }) {
+function PayOption({ active, onPress, icon, title, subtitle, color = colors.primary }: { active: boolean; onPress: () => void; icon: React.ComponentProps<typeof Ionicons>['name']; title: string; subtitle: string; color?: string }) {
   return (
-    <PressableScale onPress={onPress} scaleTo={0.97} style={[s.pay, active && { borderColor: colors.primary, backgroundColor: colors.primary + '14', ...shadow.glow(colors.primary) }]}>
-      <View style={[s.payIcon, active && { backgroundColor: colors.primary }]}><Ionicons name={icon} size={20} color={active ? '#fff' : colors.textSecondary} /></View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700', color: colors.text }}>{title}</Text>
+    <PressableScale onPress={onPress} scaleTo={0.97} style={[s.pay, active && { borderColor: color, backgroundColor: color + '14', ...shadow.glow(color) }]}>
+      <View style={[s.payIcon, active && { backgroundColor: color }]}><Ionicons name={icon} size={18} color={active ? '#fff' : colors.textSecondary} /></View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }} numberOfLines={1}>{title}</Text>
         <Text style={font.tiny} numberOfLines={1}>{subtitle}</Text>
       </View>
-      {active && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
     </PressableScale>
   );
 }
@@ -87,8 +108,8 @@ export function PriceSummary({ rows, total }: { rows: { label: string; value: nu
 }
 
 const s = StyleSheet.create({
-  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
-  payIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
+  pay: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
+  payIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
   gwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: glass.border },
   gwIcons: { flexDirection: 'row', flexWrap: 'wrap', width: 34, gap: 3 },
   gwDot: { width: 14, height: 14, borderRadius: 4 },

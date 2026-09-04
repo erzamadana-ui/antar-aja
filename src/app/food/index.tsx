@@ -65,7 +65,7 @@ export default function FoodHome() {
             {shown.length === 0 && <Empty icon="restaurant-outline" title="Belum ada merchant" subtitle="Coba kata kunci lain atau perluas lokasi." />}
             {shown.map((m, i) => (
               <Entrance key={m.id} index={Math.min(i, 6)} from="up">
-                <Animated.View layout={LinearTransition.springify()}>
+                <Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)}>
                   <PressableScale onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.98} style={s.card}>
                     <View>
                       <Image source={{ uri: m.image_url ?? undefined }} style={s.img} />

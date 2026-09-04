@@ -5,7 +5,8 @@ import { Entrance, PressableScale } from '@/components/motion';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Row, Stepper, Button, Badge, Empty, toast } from '@/components/ui';
-import { PaymentSection, PriceSummary } from '@/components/BookingSheet';
+import { PaymentSection, PriceSummary, paidViaOf, handleShortfall, type PayChoice } from '@/components/BookingSheet';
+import { usePayPrefs } from '@/store/payprefs';
 import { useCart } from '@/store/cart';
 import { useBooking } from '@/store/booking';
 import { useAuth } from '@/store/auth';
@@ -24,7 +25,8 @@ export default function Checkout() {
   const refreshWallet = useAuth((s) => s.refreshWallet);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [fare, setFare] = useState<FareEstimate | null>(null);
-  const [method, setMethod] = useState<PaymentMethod>('cash');
+  const [method, setMethod] = useState<PayChoice>('cash');
+  const payPrefs = usePayPrefs((st) => st.prefs);
   const [promo, setPromo] = useState('');
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
@@ -58,12 +60,12 @@ export default function Checkout() {
     try {
       const o = await rpc<Order>('create_order', { p: {
         service: 'food', merchant_id: m.id, dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: dropoff.address },
-        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method, promo_code: promo || null, notes: notes || null,
+        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method === 'ewallet' ? 'wallet' : method, paid_via: paidViaOf(method, payPrefs?.ewallet), promo_code: promo || null, notes: notes || null,
         items: cart.lines.map((l) => ({ menu_item_id: l.item.id, qty: l.qty, notes: l.notes || null })),
       } });
       cart.clear(); await refreshWallet(); useBooking.getState().reset();
       router.replace(`/order/${o.id}` as never);
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { if (!handleShortfall(e, router, payPrefs?.ewallet)) toast.error((e as Error).message); }
   };
 
   return (
@@ -88,7 +90,7 @@ export default function Checkout() {
             <Pressable onPress={() => router.push(`/food/${m.id}` as never)}><Text style={{ color: colors.food, fontWeight: '700' }}>+ Tambah</Text></Pressable>
           </Row>
           {cart.lines.map((l) => (
-            <Animated.View key={l.item.id} layout={LinearTransition.springify()} style={s.line}>
+            <Animated.View key={l.item.id} layout={LinearTransition.springify().stiffness(280).damping(20)} style={s.line}>
               <Row between>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontWeight: '600', color: colors.text }}>{l.item.name}</Text>

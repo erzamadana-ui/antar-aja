@@ -75,7 +75,7 @@ function ReviewPanel({ m, onClose, onDone }: { m: Row_; onClose: () => void; onD
   const [busy, setBusy] = useState(false);
   const openDoc = async (path: string | null | undefined) => { if (!path) return toast.error('Belum diunggah'); const u = path.startsWith('http') ? path : await signedUrl('documents', path); if (u) Linking.openURL(u); };
   const act = async (status: ApprovalStatus) => {
-    if (status === 'rejected' && note.trim().length < 5) return toast.error('Tulis alasan penolakan agar merchant bisa memperbaiki');
+    if ((status === 'rejected' || status === 'suspended') && note.trim().length < 5) return toast.error('Tulis alasan (min. 5 huruf) — tersimpan di log & terlihat merchant');
     setBusy(true);
     try { await rpc('admin_review_merchant', { p_merchant: m.id, p_status: status, p_note: note || null, p_halal_verified: m.is_halal ? halalOk : false }); toast.success(`Merchant ${statusLabel[status].toLowerCase()}`); await onDone(); if (status !== 'approved') onClose(); }
     catch (e) { toast.error((e as Error).message); }
@@ -89,7 +89,7 @@ function ReviewPanel({ m, onClose, onDone }: { m: Row_; onClose: () => void; onD
     </Pressable>
   );
   return (
-    <Animated.View entering={FadeInDown.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify()} style={s.panel}>
+    <Animated.View entering={FadeInDown.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)} style={s.panel}>
       <Row between>
         <View style={{ flex: 1 }}>
           <Row gap={8}><Text style={font.h2}>{m.name}</Text><Badge text={statusLabel[m.status]} color={statusColor[m.status]} /></Row>

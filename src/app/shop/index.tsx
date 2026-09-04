@@ -10,7 +10,8 @@ import { Button, Row, Badge, Input, Chip, toast } from '@/components/ui';
 import { MapScreen } from '@/components/MapScreen';
 import { PressableScale, Skeleton } from '@/components/motion';
 import { ServiceArt } from '@/components/ServiceArt';
-import { PaymentSection, PriceSummary } from '@/components/BookingSheet';
+import { PaymentSection, PriceSummary, paidViaOf, handleShortfall, type PayChoice } from '@/components/BookingSheet';
+import { usePayPrefs } from '@/store/payprefs';
 import { useBooking } from '@/store/booking';
 import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
@@ -40,7 +41,8 @@ export default function ShopScreen() {
   const [fare, setFare] = useState<FareEstimate | null>(null);
   const [items, setItems] = useState<ShoppingItem[]>([{ name: '', qty: 1 }]);
   const [budget, setBudget] = useState(100000);
-  const [method, setMethod] = useState<PaymentMethod>('wallet');
+  const [method, setMethod] = useState<PayChoice>('wallet');
+  const payPrefs = usePayPrefs((st) => st.prefs);
   const [promo, setPromo] = useState(''); const [discount, setDiscount] = useState(0); const [notes, setNotes] = useState('');
 
   // alamat antar = lokasi saya (default)
@@ -86,12 +88,12 @@ export default function ShopScreen() {
     try {
       const o = await rpc<Order>('create_order', { p: {
         service: 'shop', pickup: { lat: store.lat, lng: store.lng, address: store.address }, dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: dropoff.address },
-        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method, promo_code: promo || null, notes: notes || null,
+        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method === 'ewallet' ? 'wallet' : method, paid_via: paidViaOf(method, payPrefs?.ewallet), promo_code: promo || null, notes: notes || null,
         shopping_list: validItems, est_budget: budget, shop_store: store.name ?? storeType,
       } });
       await refreshWallet(); useBooking.getState().reset();
       router.replace(`/order/${o.id}` as never);
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { if (!handleShortfall(e, router, payPrefs?.ewallet)) toast.error((e as Error).message); }
   };
 
   const header = (
@@ -140,7 +142,7 @@ export default function ShopScreen() {
         <View style={s.group}>
           <Row between><Text style={font.label}>Daftar belanja</Text><Text style={font.tiny}>{validItems.length} barang</Text></Row>
           {items.map((it, i) => (
-            <Animated.View key={i} entering={FadeInDown.duration(motion.fast)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify()}>
+            <Animated.View key={i} entering={FadeInDown.duration(motion.fast)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)}>
               <Row gap={8}>
                 <TextInput placeholder={`Barang ${i + 1} (mis. Indomie goreng)`} placeholderTextColor={colors.textMuted} value={it.name} onChangeText={(v) => setItems((arr) => arr.map((x, j) => (j === i ? { ...x, name: v } : x)))} style={[s.input, { flex: 1 }]} />
                 <View style={s.qty}>

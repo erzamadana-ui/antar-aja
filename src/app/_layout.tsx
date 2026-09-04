@@ -53,7 +53,7 @@ export default function RootLayout() {
               headerShown: false,
               contentStyle: { backgroundColor: colors.bg },
               animation: Platform.OS === 'web' ? 'fade' : 'slide_from_right',
-              animationDuration: 260,
+              animationDuration: 180,
               gestureEnabled: true,
               fullScreenGestureEnabled: true,
             }}>

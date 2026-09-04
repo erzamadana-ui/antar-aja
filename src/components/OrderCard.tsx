@@ -9,7 +9,7 @@ import { rupiah, statusLabel, statusColor, formatDate, serviceLabel } from '@/li
 import { serviceDef } from '@/lib/services';
 import type { Order } from '@/lib/types';
 
-const PROGRESS: Record<string, number> = { searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1, cancelled: 1 };
+const PROGRESS: Record<string, number> = { scheduled: 0.05, searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1, cancelled: 1 };
 
 export function OrderCard({ order, href, compact }: { order: Order; href?: string; compact?: boolean }) {
   const router = useRouter();

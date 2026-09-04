@@ -23,9 +23,12 @@ const NAV: { href: string; label: string; icon: IconName; iconActive: IconName }
   { href: '/(admin)/finance', label: 'Keuangan', icon: 'cash-outline', iconActive: 'cash' },
   { href: '/(admin)/pricing', label: 'Tarif & Promo', icon: 'pricetags-outline', iconActive: 'pricetags' },
   { href: '/(admin)/pricing-intel', label: 'Intelijen Harga', icon: 'trending-up-outline', iconActive: 'trending-up' },
+  { href: '/(admin)/blast', label: 'Blast Promo', icon: 'megaphone-outline', iconActive: 'megaphone' },
+  { href: '/(admin)/logistics', label: 'Logistik & Travel', icon: 'map-outline', iconActive: 'map' },
   { href: '/(admin)/cs', label: 'CS & Tiket', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
   { href: '/(admin)/activity', label: 'Log Aktivitas', icon: 'time-outline', iconActive: 'time' },
   { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline', iconActive: 'settings' },
+  { href: '/exec', label: 'Portal Eksekutif', icon: 'shield-half-outline', iconActive: 'shield-half' },
 ];
 const ITEM_H = 44;
 
@@ -62,7 +65,7 @@ export default function AdminLayout() {
                     {NAV.map((n) => {
                       const active = isActive(n.href);
                       return (
-                        <Pressable key={n.href} onPress={() => router.replace(n.href as never)} style={(st) => [s.side, !active && (st as { hovered?: boolean }).hovered && { backgroundColor: 'rgba(11,31,42,0.04)' }]}>
+                        <Pressable key={n.href} onPress={() => (n.href === '/exec' ? router.push('/exec' as never) : router.replace(n.href as never))} style={(st) => [s.side, !active && (st as { hovered?: boolean }).hovered && { backgroundColor: 'rgba(11,31,42,0.04)' }]}>
                           <Ionicons name={active ? n.iconActive : n.icon} size={18} color={active ? colors.primary : colors.textSecondary} />
                           <Text style={{ color: active ? colors.primary : colors.textSecondary, fontWeight: active ? '800' : '600', fontSize: 14 }}>{n.label}</Text>
                         </Pressable>
@@ -89,7 +92,7 @@ export default function AdminLayout() {
                   {NAV.map((n) => {
                     const active = isActive(n.href);
                     return (
-                      <PressableScale key={n.href} haptic={false} scaleTo={0.94} onPress={() => router.replace(n.href as never)} style={[s.chip, active && s.chipActive]}>
+                      <PressableScale key={n.href} haptic={false} scaleTo={0.94} onPress={() => (n.href === '/exec' ? router.push('/exec' as never) : router.replace(n.href as never))} style={[s.chip, active && s.chipActive]}>
                         <Ionicons name={active ? n.iconActive : n.icon} size={16} color={active ? '#fff' : colors.textSecondary} />
                         <Text style={{ color: active ? '#fff' : colors.textSecondary, fontWeight: '700', fontSize: 13 }}>{n.label}</Text>
                       </PressableScale>

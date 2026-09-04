@@ -29,11 +29,11 @@ type CreateResp = { payment: Payment; simulated: boolean; snap_token?: string; r
 export default function Gateway() {
   const router = useRouter();
   const t = useT();
-  const params = useLocalSearchParams<{ amount?: string; purpose?: string; order_id?: string; next?: string }>();
+  const params = useLocalSearchParams<{ amount?: string; purpose?: string; order_id?: string; next?: string; method?: string; reason?: string }>();
   const refreshWallet = useAuth((s) => s.refreshWallet);
   const wallet = useAuth((s) => s.wallet);
   const [amount, setAmount] = useState(params.amount ?? '50000');
-  const [method, setMethod] = useState('gopay');
+  const [method, setMethod] = useState(params.method && METHODS.some((m) => m.key === params.method) ? params.method : 'gopay');
   const [busy, setBusy] = useState(false);
   const [resp, setResp] = useState<CreateResp | null>(null);
   const [status, setStatus] = useState<Payment['status'] | null>(null);
@@ -71,7 +71,7 @@ export default function Gateway() {
     setStatus(ok ? 'settlement' : 'cancel');
     if (ok) { await refreshWallet(); toast.success(t('payment_success')); }
   };
-  const finish = () => { if (params.next) router.replace(params.next as never); else router.back(); };
+  const finish = () => { if (params.reason === 'order') toast.success('Saldo sudah cukup — tekan Pesan sekali lagi untuk melanjutkan'); if (params.next) router.replace(params.next as never); else router.back(); };
   const m = METHODS.find((x) => x.key === method)!;
 
   return (
@@ -82,7 +82,7 @@ export default function Gateway() {
             <BrandGradient colors={[colors.primary, colors.primaryDark]} style={[s.hero, shadow.glow(colors.primary)]}>
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '600', fontSize: 12 }}>{t('balance')}</Text>
               <AnimatedNumber value={wallet?.balance ?? 0} format={rupiah} style={{ color: '#fff', fontSize: 28, fontWeight: '900' }} />
-              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 }}>Top up instan lewat e-wallet, QRIS, atau virtual account bank.</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 4 }}>{params.reason === 'order' ? 'Lengkapi kekurangan saldo untuk pesanan ini — setelah berhasil, kembali dan tekan Pesan.' : 'Top up instan lewat e-wallet, QRIS, atau virtual account bank.'}</Text>
             </BrandGradient>
           </Entrance>
           <Entrance index={1}><Card>
@@ -108,7 +108,7 @@ export default function Gateway() {
           <Entrance index={3}><Button title={`${t('pay_now')} · ${rupiah(n)} via ${m.label}`} size="lg" loading={busy} disabled={n < 10000} onPress={create} /></Entrance>
         </View>
       ) : (
-        <Animated.View entering={ZoomIn.duration(motion.base)} layout={LinearTransition.springify()} style={{ gap: 16 }}>
+        <Animated.View entering={ZoomIn.duration(motion.base)} layout={LinearTransition.springify().stiffness(280).damping(20)} style={{ gap: 16 }}>
           <Card><View style={{ alignItems: 'center', gap: 10 }}>
             {status === 'settlement' ? <View style={[s.big, { backgroundColor: colors.success }]}><Ionicons name="checkmark" size={44} color="#fff" /></View>
               : status === 'pending' ? <Radar color={m.color} size={130}><Ionicons name={m.icon as never} size={30} color={m.color} /></Radar>

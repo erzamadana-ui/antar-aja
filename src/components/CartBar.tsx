@@ -18,7 +18,7 @@ export function CartBar() {
   const subtotal = lines.reduce((a, l) => a + l.qty * l.item.price, 0);
   if (count === 0) return null;
   return (
-    <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOutDown} layout={LinearTransition.springify()}>
+    <Animated.View entering={FadeInDown.springify().stiffness(280).damping(16)} exiting={FadeOutDown} layout={LinearTransition.springify().stiffness(280).damping(20)}>
       <PressableScale onPress={() => router.push('/food/checkout')} scaleTo={0.97} style={[s.wrap, shadow.glow(colors.food)]}>
         <BrandGradient colors={[colors.food, '#EA580C']} angle="horizontal" style={s.bar}>
           <Animated.View key={count} entering={FadeInDown.duration(220)} style={s.count}><Text style={{ color: colors.food, fontWeight: '900' }}>{count}</Text></Animated.View>

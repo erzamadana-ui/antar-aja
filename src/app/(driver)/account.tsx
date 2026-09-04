@@ -33,7 +33,9 @@ export default function DriverAccount() {
         <View style={{ paddingHorizontal: 12 }}>
           <ListItem icon="person-outline" title="Edit profil" onPress={() => router.push('/account/edit')} />
           <Divider style={{ marginVertical: 0 }} />
-          <ListItem icon="car-outline" title="Data kendaraan & dokumen" onPress={() => router.push('/account/become-driver')} />
+          <ListItem icon="car-outline" title="Data kendaraan & dokumen" subtitle={driver?.vehicle_class ? `Kelas: ${driver.vehicle_class}` : undefined} onPress={() => router.push('/account/become-driver')} />
+          <Divider style={{ marginVertical: 0 }} />
+          <ListItem icon="bus-outline" iconColor={colors.travel} title="Mitra AntarTravel" subtitle="Jadwal travel antar kota, manifest penumpang" onPress={() => router.push('/driver/travel' as never)} />
           <Divider style={{ marginVertical: 0 }} />
           <ListItem icon="shield-checkmark-outline" iconColor={colors.danger} title="Pusat Keamanan" subtitle="SOS, verifikasi wajah, kontak darurat, laporan insiden" onPress={() => router.push('/safety' as never)} />
           <Divider style={{ marginVertical: 0 }} />

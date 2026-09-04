@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { View, Text, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Card, Row, Avatar, ListItem, Divider, Badge } from '@/components/ui';
@@ -12,6 +13,9 @@ import { phoneDisplay } from '@/lib/format';
 
 export default function Account() {
   const router = useRouter();
+  const [hasExec, setHasExec] = useState(false);
+  const uid = useAuth((st) => st.session?.user.id);
+  useEffect(() => { if (uid) supabase.from('exec_access').select('user_id').eq('user_id', uid).eq('active', true).maybeSingle().then(({ data }) => setHasExec(!!data)); }, [uid]);
   const { profile, driver, merchant, signOut } = useAuth();
   const setMode = useMode((s) => s.setMode);
   const t = useT();
@@ -57,14 +61,20 @@ export default function Account() {
             <ListItem icon="bicycle-outline" iconColor={colors.ride} title={t('switch_driver')} subtitle={driver.status === 'approved' ? 'Akun mitra aktif' : driver.status === 'pending' ? 'Menunggu verifikasi admin' : 'Akun ' + driver.status}
               onPress={async () => { await setMode('driver'); router.replace('/(driver)'); }} />
           ) : (
-            <ListItem icon="bicycle-outline" iconColor={colors.ride} title={t('become_driver')} subtitle="Motor atau mobil, penghasilan fleksibel" onPress={() => router.push('/account/become-driver')} />
+            <ListItem icon="bicycle-outline" iconColor={colors.ride} title={t('become_driver')} subtitle="Motor, mobil, pick up, atau mobil box" onPress={() => router.push('/account/become-driver')} />
           )}
+          <Divider style={{ marginVertical: 0 }} />
+          <ListItem icon="bus-outline" iconColor={colors.travel} title="Mitra AntarTravel" subtitle="Innova / Hi-Ace: isi kursi travel antar kota" onPress={() => router.push('/account/become-travel' as never)} />
           <Divider style={{ marginVertical: 0 }} />
           {merchant ? (
             <ListItem icon="storefront-outline" iconColor={colors.food} title={t('switch_merchant')} subtitle={merchant.status === 'approved' ? merchant.name : 'Menunggu verifikasi admin'} onPress={async () => { await setMode('merchant'); router.replace('/(merchant)'); }} />
           ) : (
             <ListItem icon="storefront-outline" iconColor={colors.food} title={t('become_merchant')} subtitle="Jual makanan & minuman ke ribuan pelanggan" onPress={() => router.push('/account/become-merchant')} />
           )}
+          {hasExec && (<>
+            <Divider style={{ marginVertical: 0 }} />
+            <ListItem icon="shield-half-outline" iconColor="#0B1F2A" title="Portal Eksekutif" subtitle="Laporan manajemen & pemegang saham (login kedua)" onPress={() => router.push('/exec' as never)} />
+          </>)}
           {profile?.role === 'admin' && (<>
             <Divider style={{ marginVertical: 0 }} />
             <ListItem icon="shield-checkmark-outline" iconColor={colors.info} title={t('admin_panel')} subtitle="Kelola driver, merchant, tarif, top up" onPress={async () => { await setMode('admin'); router.replace('/(admin)'); }} />

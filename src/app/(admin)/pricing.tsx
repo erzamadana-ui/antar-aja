@@ -3,6 +3,7 @@ import { View, Text, Switch } from 'react-native';
 import { AdminPage } from '@/components/admin';
 import { Card, Row, Input, Button, Badge, toast } from '@/components/ui';
 import { PromoCard } from '@/components/PromoCard';
+import { Image, Pressable, StyleSheet } from 'react-native';
 import { pickAndUpload } from '@/lib/upload';
 import { useAuth } from '@/store/auth';
 import { ScrollView } from 'react-native';
@@ -46,28 +47,31 @@ export default function AdminPricing() {
 
   return (
     <AdminPage title="Tarif & Promo" subtitle="Perubahan langsung berlaku untuk pesanan baru" onRefresh={load}>
-      <Row gap={16} style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        {Object.entries(pricing).map(([service, v]) => (
-          <Card key={service} style={{ flex: 1, minWidth: 260, gap: 8 }}>
-            <Text style={font.h3}>{serviceLabel[service as ServiceType]}</Text>
-            {numFields.map((k) => (
-              <Row key={k} between gap={10}>
-                <Text style={[font.small, { flex: 1 }]}>{labels[k]}</Text>
-                <Input value={v[k]} keyboardType="decimal-pad" onChangeText={(t) => setPricing((p) => ({ ...p, [service]: { ...p[service], [k]: t } }))} containerStyle={{ width: 110 }} style={{ textAlign: 'right' }} />
+      <Card padded={false}>
+        <View style={{ padding: 14 }}><Text style={font.label}>Tarif per layanan (baris) · kelas kendaraan memakai pengali: Hemat ×0,9 · Standar ×1 · Premium ×1,35 · Listrik ×1,1 · Listrik Premium ×1,45 · Pick Up ×1 · Box ×1,4</Text></View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ minWidth: 980 }}>
+            <Row gap={8} style={s.th}>
+              <Text style={[font.label, { width: 120 }]}>Layanan</Text>
+              {numFields.map((k) => <Text key={k} style={[font.label, { width: 104, textAlign: 'right' }]}>{labels[k]}</Text>)}
+              <Text style={[font.label, { width: 90 }]} />
+            </Row>
+            {Object.entries(pricing).map(([service, v], i) => (
+              <Row key={service} gap={8} style={[s.tr, i % 2 ? s.trAlt : null]}>
+                <Text style={{ width: 120, fontWeight: '800', color: colors.text }}>{serviceLabel[service as ServiceType] ?? service}</Text>
+                {numFields.map((k) => <Input key={k} value={v[k]} keyboardType="decimal-pad" onChangeText={(t) => setPricing((p) => ({ ...p, [service]: { ...p[service], [k]: t } }))} containerStyle={{ width: 104 }} style={{ textAlign: 'right', paddingVertical: 6 }} />)}
+                <Button title="Simpan" size="sm" onPress={() => savePricing(service)} style={{ width: 90 }} />
               </Row>
             ))}
-            <Button title="Simpan" size="sm" onPress={() => savePricing(service)} />
-          </Card>
-        ))}
-      </Row>
+          </View>
+        </ScrollView>
+      </Card>
       <Entrance index={0}>
         <Card style={{ gap: 10 }}>
-          <Text style={font.label}>Promo · thumbnail di beranda pelanggan</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
-            {promos.filter((p) => p.is_active).map((p, i) => <PromoCard key={p.code} promo={p} index={i} width={220} onPress={() => setNp({ code: p.code, title: p.title ?? '', description: p.description ?? '', discount_type: p.discount_type, value: String(p.value), max_discount: p.max_discount ? String(p.max_discount) : '', min_total: String(p.min_total), service: p.service ?? '', quota: p.quota ? String(p.quota) : '', image_url: p.image_url ?? '' })} />)}
-          </ScrollView>
+          <Row between><Text style={font.label}>Promo ({promos.filter((p) => p.is_active).length} aktif · thumbnail tampil di beranda pelanggan, maks. 20)</Text><Text style={font.tiny}>ketuk baris untuk mengubah</Text></Row>
           {promos.map((p) => (
             <Row key={p.code} between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
+              <PressableThumb promo={p} onPress={() => setNp({ code: p.code, title: p.title ?? '', description: p.description ?? '', discount_type: p.discount_type, value: String(p.value), max_discount: p.max_discount ? String(p.max_discount) : '', min_total: String(p.min_total), service: p.service ?? '', quota: p.quota ? String(p.quota) : '', image_url: p.image_url ?? '' })} />
               <View style={{ flex: 1 }}>
                 <Row gap={8}><Text style={{ fontWeight: '800' }}>{p.code}</Text><Badge text={p.discount_type === 'percent' ? `${p.value}%${p.max_discount ? ` maks ${p.max_discount}` : ''}` : `Rp${p.value}`} />{p.service && <Badge text={serviceLabel[p.service]} color={colors.info} />}</Row>
                 <Text style={font.tiny}>{p.description} · min Rp{p.min_total} · dipakai {p.used_count}{p.quota ? `/${p.quota}` : ''}</Text>
@@ -101,3 +105,16 @@ export default function AdminPricing() {
     </AdminPage>
   );
 }
+
+function PressableThumb({ promo, onPress }: { promo: Promo; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={{ marginRight: 10 }}>
+      {promo.image_url ? <Image source={{ uri: promo.image_url }} style={{ width: 96, height: 54, borderRadius: 8, backgroundColor: colors.border }} /> : <PromoCard promo={promo} width={96} height={54} />}
+    </Pressable>
+  );
+}
+const s = StyleSheet.create({
+  th: { paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: 'rgba(11,31,42,0.03)' },
+  tr: { paddingHorizontal: 14, paddingVertical: 6, borderTopWidth: 1, borderTopColor: colors.border, alignItems: 'center' },
+  trAlt: { backgroundColor: 'rgba(255,255,255,0.35)' },
+});

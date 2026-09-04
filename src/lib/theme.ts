@@ -30,6 +30,8 @@ export const colors = {
   send: '#7B61FF',
   pay: '#0E7C7B',
   shop: '#0EA5E9',
+  box: '#D97706',
+  travel: '#1D4ED8',
 };
 
 /** Permukaan kaca: dipakai bersama BlurView (iOS/web) atau sebagai fallback translusen (Android). */
@@ -82,25 +84,27 @@ export const shadow = {
 };
 
 export const font = {
-  display: { fontSize: 32, fontWeight: '900' as const, color: colors.text, letterSpacing: -0.8 },
-  h1: { fontSize: 26, fontWeight: '800' as const, color: colors.text, letterSpacing: -0.4 },
+  // Skala tipografi standar (tahap 5): sedikit lebih besar dari sebelumnya agar nyaman dibaca, tetap ringkas.
+  display: { fontSize: 30, fontWeight: '900' as const, color: colors.text, letterSpacing: -0.6 },
+  h1: { fontSize: 25, fontWeight: '800' as const, color: colors.text, letterSpacing: -0.4 },
   h2: { fontSize: 20, fontWeight: '800' as const, color: colors.text, letterSpacing: -0.2 },
-  h3: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
-  body: { fontSize: 15, color: colors.text },
-  small: { fontSize: 13, color: colors.textSecondary },
-  tiny: { fontSize: 11, color: colors.textMuted, letterSpacing: 0.2 },
-  label: { fontSize: 11, fontWeight: '700' as const, color: colors.textMuted, letterSpacing: 0.8, textTransform: 'uppercase' as const },
+  h3: { fontSize: 17, fontWeight: '700' as const, color: colors.text },
+  body: { fontSize: 15.5, color: colors.text, lineHeight: 21 },
+  small: { fontSize: 13.5, color: colors.textSecondary, lineHeight: 18 },
+  tiny: { fontSize: 12, color: colors.textMuted, letterSpacing: 0.1, lineHeight: 16 },
+  label: { fontSize: 11.5, fontWeight: '700' as const, color: colors.textMuted, letterSpacing: 0.7, textTransform: 'uppercase' as const },
 };
 
 /** Token gerak: durasi & easing yang konsisten di seluruh aplikasi. */
 export const motion = {
-  fast: 160,
-  base: 260,
-  slow: 420,
-  stagger: 55,
+  // Tahap 5: durasi dipercepat ±30% agar aplikasi terasa gesit (bukan lambat/berat)
+  fast: 110,
+  base: 180,
+  slow: 280,
+  stagger: 35,
   easeOut: Easing.out(Easing.cubic),
   easeInOut: Easing.inOut(Easing.cubic),
-  spring: { damping: 18, stiffness: 220, mass: 0.8 },
-  springSoft: { damping: 22, stiffness: 160, mass: 1 },
-  springBouncy: { damping: 12, stiffness: 240, mass: 0.7 },
+  spring: { damping: 20, stiffness: 300, mass: 0.7 },
+  springSoft: { damping: 24, stiffness: 220, mass: 0.9 },
+  springBouncy: { damping: 14, stiffness: 320, mass: 0.6 },
 };

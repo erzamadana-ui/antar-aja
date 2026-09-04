@@ -12,7 +12,8 @@ import { Radar, ProgressBar, LiveDot, PressableScale } from '@/components/motion
 import { AmbientBackground } from '@/components/glass';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, driverSubtitle } from '@/components/OrderDetails';
 import { TipCard, ExtrasApproval } from '@/components/TipExtras';
-import { PinCard, SafetyRow, DriverVerifyCard, ShareTripButton } from '@/components/Safety';
+import { PinCard, SafetyRow, DriverVerifyCard } from '@/components/Safety';
+import { MerchantAds } from '@/components/BookingExtras';
 import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { useBooking } from '@/store/booking';
@@ -80,7 +81,8 @@ export default function OrderTracking() {
   if (!order) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Pesanan tidak ditemukan" subtitle="Pesanan tidak ada atau Anda tidak memiliki akses." action={<Button title="Kembali" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />} /></SafeAreaView></View>;
   const def = serviceDef(order.service);
   const active = !['completed', 'cancelled'].includes(order.status);
-  const canCancel = ['searching', 'accepted', 'arrived'].includes(order.status);
+  const canCancel = ['scheduled', 'searching', 'accepted', 'arrived'].includes(order.status);
+  const scheduled = order.status === 'scheduled';
   const sc = statusColor(order.status);
   const searching = order.status === 'searching';
 
@@ -110,7 +112,14 @@ export default function OrderTracking() {
       maxRatio={0.66}
       initiallyExpanded={!active}
     >
-      <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 14 }}>
+      <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 14 }}>
+        {scheduled && (
+          <Animated.View entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={s.radarBox}>
+            <Ionicons name="calendar" size={40} color="#8B5CF6" />
+            <Text style={[font.h3, { marginTop: 6 }]}>Booking terjadwal</Text>
+            <Text style={[font.small, { textAlign: 'center' }]}>{order.scheduled_at ? new Date(order.scheduled_at).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' WIB' : ''}{'\n'}Driver dicarikan otomatis ±20 menit sebelum jadwal. Anda akan diberi tahu saat driver ditugaskan.</Text>
+          </Animated.View>
+        )}
         {searching && (
           <Animated.View entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={s.radarBox}>
             <Radar color={colors.primary} size={140}><Ionicons name={def.icon as never} size={26} color={colors.primary} /></Radar>
@@ -120,7 +129,7 @@ export default function OrderTracking() {
         )}
 
         {driver && active && (
-          <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut}>
+          <Animated.View entering={FadeInDown.springify().stiffness(280).damping(16)} exiting={FadeOut}>
             <PersonCard name={driver.profile?.full_name} subtitle={driverSubtitle(driver)} avatar={driver.profile?.avatar_url} rating={driver.rating_avg} ratingCount={driver.rating_count}
               onChat={() => router.push(`/order/${id}/chat` as never)}
               callPeer={driver.profile ? { id: driver.id, name: driver.profile.full_name, avatar: driver.profile.avatar_url, role: 'driver' } : null} orderId={order.id} />
@@ -148,6 +157,7 @@ export default function OrderTracking() {
           <PriceBlock order={order} />
           {order.payment_status === 'refunded' && <Badge text="Dana dikembalikan ke AntarPay" color={colors.info} style={{ marginTop: 8 }} />}
         </View>
+        {['ride_motor', 'ride_car', 'send', 'box'].includes(order.service) && <MerchantAds near={{ lat: order.dropoff_lat, lng: order.dropoff_lng }} title={active ? 'Lapar sesampainya? Merchant dekat tujuan' : 'Merchant dekat tujuan'} max={5} />}
         <View style={s.block}><Timeline events={events} /></View>
         {active && <Button title="Laporkan masalah pesanan" variant="ghost" color={colors.textSecondary} icon="flag-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}
         {canCancel && <Button title="Batalkan pesanan" variant="outline" color={colors.danger} onPress={cancel} />}
@@ -166,6 +176,7 @@ export default function OrderTracking() {
 
 function subtitle(order: Order) {
   switch (order.status) {
+    case 'scheduled': return order.scheduled_at ? `Jemput ${new Date(order.scheduled_at).toLocaleString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} WIB` : 'Booking terjadwal';
     case 'searching': return 'Kami sedang mencarikan driver terdekat';
     case 'accepted': return 'Driver sedang menuju lokasi';
     case 'arrived': return 'Driver sudah tiba';
@@ -187,7 +198,7 @@ function StatusStepper({ status, color }: { status: OrderStatus; color: string }
           const cur = i === idx && status !== 'completed';
           return (
             <View key={st.key} style={{ alignItems: 'center', gap: 4, flex: 1 }}>
-              <Animated.View layout={LinearTransition.springify()} style={[s.step, done && { backgroundColor: color, borderColor: color }, cur && { borderColor: color, backgroundColor: color + '22' }]}>
+              <Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.step, done && { backgroundColor: color, borderColor: color }, cur && { borderColor: color, backgroundColor: color + '22' }]}>
                 <Ionicons name={st.icon as never} size={12} color={done ? '#fff' : cur ? color : colors.textMuted} />
               </Animated.View>
               <Text style={[font.tiny, { fontSize: 10, fontWeight: cur || done ? '700' : '500', color: cur ? color : done ? colors.text : colors.textMuted }]} numberOfLines={1}>{st.label}</Text>

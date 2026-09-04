@@ -14,7 +14,7 @@ import { rupiah, statusLabel, statusColor, serviceLabel } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import type { Order } from '@/lib/types';
 
-const PROGRESS: Record<string, number> = { searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1 };
+const PROGRESS: Record<string, number> = { scheduled: 0.05, searching: 0.15, accepted: 0.4, arrived: 0.6, in_progress: 0.85, completed: 1 };
 
 export function ActiveOrderBubbles({ orders, hrefFor = (o) => `/order/${o.id}`, role = 'customer' }: { orders: Order[]; hrefFor?: (o: Order) => string; role?: 'customer' | 'driver' }) {
   const router = useRouter();
@@ -23,14 +23,14 @@ export function ActiveOrderBubbles({ orders, hrefFor = (o) => `/order/${o.id}`, 
   if (orders.length === 0) return null;
   const sel = orders.find((o) => o.id === open) ?? null;
   return (
-    <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 10 }}>
+    <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 10 }}>
       <Row gap={12} style={{ flexWrap: 'wrap' }}>
         {orders.map((o, i) => {
           const def = serviceDef(o.service); const sc = statusColor(o.status); const active = open === o.id;
           return (
             <Animated.View key={o.id} entering={ZoomIn.delay(i * 60).duration(motion.base)}>
               <PressableScale onPress={() => setOpen(active ? null : o.id)} scaleTo={0.9} style={[s.bubble, active && { borderColor: def.color, backgroundColor: def.color + '1F' }]}>
-                <ServiceArt kind={def.art} color={def.color} size={52} glow={active} />
+                <ServiceArt kind={def.art} color={def.color} size={46} glow={active} />
                 <View style={[s.dot, { backgroundColor: '#fff' }]}><LiveDot color={o.status === 'searching' ? colors.accent : sc} size={7} /></View>
                 <Text style={[s.bubbleText, active && { color: def.color }]} numberOfLines={1}>{def.label.replace('Antar', '')}</Text>
               </PressableScale>
@@ -39,7 +39,7 @@ export function ActiveOrderBubbles({ orders, hrefFor = (o) => `/order/${o.id}`, 
         })}
       </Row>
       {sel && (
-        <Animated.View key={sel.id} entering={FadeInDown.springify().damping(18)} exiting={FadeOut.duration(motion.fast)}>
+        <Animated.View key={sel.id} entering={FadeInDown.springify().stiffness(280).damping(18)} exiting={FadeOut.duration(motion.fast)}>
           <Glass variant="strong" radius={radius.xl}>
             <View style={{ padding: 14, gap: 10 }}>
               <Row between>
@@ -72,7 +72,7 @@ export function ActiveOrderBubbles({ orders, hrefFor = (o) => `/order/${o.id}`, 
 }
 
 const s = StyleSheet.create({
-  bubble: { alignItems: 'center', gap: 4, padding: 6, paddingBottom: 8, borderRadius: radius.xl, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)', width: 76 },
+  bubble: { alignItems: 'center', gap: 4, padding: 6, paddingBottom: 8, borderRadius: radius.xl, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)', width: 70 },
   dot: { position: 'absolute', top: 4, right: 6, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   bubbleText: { fontSize: 11, fontWeight: '800', color: colors.textSecondary },
   pt: { width: 8, height: 8, borderRadius: 4 },

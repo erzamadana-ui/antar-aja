@@ -105,7 +105,7 @@ export default function DriverOrder() {
       minHeight={230}
       maxRatio={0.66}
     >
-      <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 14 }}>
+      <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 14 }}>
         <Animated.View entering={ZoomIn.duration(motion.base)} style={[s.earnCard, shadow.glow(colors.success)]}>
           <BrandGradient colors={[colors.success, '#047857']} angle="horizontal" style={StyleSheet.absoluteFill} />
           <Row between>

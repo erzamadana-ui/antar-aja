@@ -20,7 +20,7 @@ import type { LatLng, Place, SavedPlace } from '@/lib/types';
 
 export default function PlacePicker() {
   const router = useRouter();
-  const { title, target } = useLocalSearchParams<{ title?: string; target?: string }>();
+  const { title, target, mode: modeParam } = useLocalSearchParams<{ title?: string; target?: string; mode?: string }>();
   const booking = useBooking();
   const uid = useAuth((s) => s.session?.user.id);
   const { location, refresh } = useCurrentLocation();
@@ -32,7 +32,8 @@ export default function PlacePicker() {
   const [center, setCenter] = useState<LatLng>(location);
   const [address, setAddress] = useState<string>('');
   const [resolving, setResolving] = useState(false);
-  const [mode, setMode] = useState<'search' | 'map'>('search');
+  const [mode, setMode] = useState<'search' | 'map'>(modeParam === 'map' ? 'map' : 'search');
+  const [detail, setDetail] = useState('');
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initial = useRef<LatLng>((target === 'pickup' && booking.pickup) || (target === 'dropoff' && booking.dropoff) || location);
   const [mapCenter, setMapCenter] = useState<LatLng>(initial.current);
@@ -107,7 +108,7 @@ export default function PlacePicker() {
             <View style={{ position: 'absolute', right: 16, top: 16 }}>
               <FloatingButton icon="locate" color={colors.info} onPress={async () => { const p = (await refresh()) ?? location; setMapCenter({ ...p }); onCenterChange(p); }} />
             </View>
-            <Animated.View entering={FadeInDown.springify().damping(18)} style={[s.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+            <Animated.View entering={FadeInDown.springify().stiffness(280).damping(18)} style={[s.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
               {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
               <View style={{ width: '100%', maxWidth: 560, alignSelf: 'center' }}>
                 <Row gap={10}>
@@ -117,7 +118,8 @@ export default function PlacePicker() {
                     {resolving ? <Skeleton width="80%" height={14} style={{ marginTop: 4 }} /> : <Text style={{ fontWeight: '600', color: colors.text }} numberOfLines={2}>{address || 'Geser peta…'}</Text>}
                   </View>
                 </Row>
-                <Button title="Pilih lokasi ini" size="lg" style={{ marginTop: 14 }} disabled={resolving || !address} onPress={() => choose({ ...center, address })} />
+                <Input placeholder="Detail: nama gedung, lantai, patokan (opsional)" value={detail} onChangeText={setDetail} icon="business-outline" containerStyle={{ marginTop: 10 }} />
+                <Button title="Pilih lokasi ini" size="lg" style={{ marginTop: 10 }} disabled={resolving || !address} onPress={() => choose({ ...center, address: detail.trim() ? `${detail.trim()} · ${address}` : address, name: detail.trim() || undefined })} />
               </View>
             </Animated.View>
           </Animated.View>

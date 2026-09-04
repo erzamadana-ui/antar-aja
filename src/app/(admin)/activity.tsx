@@ -91,7 +91,7 @@ export default function AdminActivity() {
           const e = entityOf(r.entity);
           const danger = r.entity === 'sos_alerts' || r.action.endsWith('.rejected') || r.action.endsWith('.suspended') || r.action.endsWith('.cancelled') || r.action.endsWith('.deactivated');
           return (
-            <Animated.View key={r.id} entering={i < 3 ? FadeInDown.duration(motion.base) : undefined} layout={LinearTransition.springify()}>
+            <Animated.View key={r.id} entering={i < 3 ? FadeInDown.duration(motion.base) : undefined} layout={LinearTransition.springify().stiffness(280).damping(20)}>
               <PressableScale onPress={() => setOpen(open === r.id ? null : r.id)} scaleTo={0.995} haptic={false} style={[s.row, danger && { borderLeftWidth: 3, borderLeftColor: colors.danger }]}>
                 <View style={[s.icon, { backgroundColor: e.color + '1A' }]}><Ionicons name={e.icon as never} size={16} color={e.color} /></View>
                 <View style={{ flex: 1, minWidth: 0 }}>

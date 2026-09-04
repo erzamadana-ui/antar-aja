@@ -55,7 +55,7 @@ export function TicketChat({ ticket, messages, onSend, asCs, footer, style }: {
               {system ? (
                 <Animated.View entering={last ? FadeInDown.duration(motion.base) : undefined} style={s.system}><Ionicons name="information-circle-outline" size={14} color={colors.textSecondary} /><Text style={[font.tiny, { flex: 1 }]}>{m.body}</Text></Animated.View>
               ) : (
-                <Animated.View entering={last ? (mine ? FadeInUp : FadeInDown).springify().damping(18) : undefined} layout={LinearTransition.springify()}
+                <Animated.View entering={last ? (mine ? FadeInUp : FadeInDown).springify().stiffness(280).damping(18) : undefined} layout={LinearTransition.springify().stiffness(280).damping(20)}
                   style={[s.bubble, mine ? s.mine : s.theirs, m.is_internal && s.internal]}>
                   {mine && !m.is_internal && <BrandGradient colors={asCs ? [colors.info, '#1D4ED8'] : undefined} style={StyleSheet.absoluteFill} />}
                   {!mine && <Text style={[font.tiny, { fontWeight: '800', color: m.sender_role === 'cs' ? colors.info : colors.textSecondary, marginBottom: 2 }]}>{m.sender_role === 'cs' ? 'CS Antar Aja' : 'Pengguna'}</Text>}

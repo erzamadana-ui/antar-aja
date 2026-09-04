@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AdminPage, StatCard, MiniBars } from '@/components/admin';
+import { AdminPage, StatCard, MiniBars, TrendChart, CITY_COLORS } from '@/components/admin';
+import { Chip } from '@/components/ui';
+import type { TrafficStats } from '@/lib/types';
 import { Card, Row, Button, Badge } from '@/components/ui';
 import { Entrance } from '@/components/motion';
 import { rpc, supabase } from '@/lib/supabase';
@@ -15,12 +17,15 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [st, setSt] = useState<Stats | null>(null);
   const [live, setLive] = useState<Order[]>([]);
+  const [traffic, setTraffic] = useState<TrafficStats | null>(null);
+  const [months, setMonths] = useState(6);
   const [refreshing, setRefreshing] = useState(false);
   const load = useCallback(async () => {
     const [s, { data }] = await Promise.all([rpc<Stats>('admin_dashboard_stats').catch(() => null), supabase.from('orders').select('*').in('status', ['searching', 'accepted', 'arrived', 'in_progress']).order('created_at', { ascending: false }).limit(10)]);
     if (s) setSt(s); setLive((data as Order[]) ?? []);
   }, []);
   useEffect(() => { load(); const t = setInterval(load, 15000); return () => clearInterval(t); }, [load]);
+  useEffect(() => { rpc<TrafficStats>('admin_traffic_stats', { p_months: months }).then(setTraffic).catch(() => null); }, [months]);
 
   return (
     <AdminPage title="Dashboard" subtitle="Ringkasan operasional hari ini" onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} refreshing={refreshing}>
@@ -43,6 +48,30 @@ export default function AdminDashboard() {
           </Row>
         </Card>
       )}
+      <Card>
+        <Row between style={{ flexWrap: 'wrap', gap: 8 }}>
+          <View><Text style={font.label}>Tren trafik per kota (bulanan)</Text><Text style={font.tiny}>{traffic ? `Bulan ini ${traffic.this_month.orders} pesanan · ${rupiah(traffic.this_month.gmv)} (bulan lalu ${traffic.last_month.orders} · ${rupiah(traffic.last_month.gmv)})` : 'Memuat…'}</Text></View>
+          <Row gap={6}>{[3, 6, 12].map((m) => <Chip key={m} label={`${m} bln`} active={months === m} onPress={() => setMonths(m)} />)}</Row>
+        </Row>
+        <View style={{ marginTop: 12 }}>
+          {traffic && traffic.cities.length > 0 ? <TrendChart months={traffic.months} series={traffic.cities.slice(0, 6).map((c, i) => ({ label: `${c.city} (${c.total})`, values: c.series, color: CITY_COLORS[i % CITY_COLORS.length] }))} /> : <Text style={font.small}>Belum ada data.</Text>}
+        </View>
+        <Row gap={16} style={{ flexWrap: 'wrap', marginTop: 14 }}>
+          <View style={{ flex: 1, minWidth: 260, gap: 6 }}>
+            <Text style={font.label}>Layanan yang menonjol</Text>
+            {(traffic?.services ?? []).map((sv, i) => (
+              <View key={sv.service} style={{ gap: 3 }}>
+                <Row between><Text style={font.small}>{i === 0 ? '🏆 ' : ''}{serviceLabel[sv.service] ?? sv.service}</Text><Text style={font.tiny}>{sv.orders} pesanan · {sv.share}% · {rupiah(sv.gmv)}</Text></Row>
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.06)' }}><View style={{ width: `${Math.max(2, sv.share)}%`, height: 6, borderRadius: 3, backgroundColor: CITY_COLORS[i % CITY_COLORS.length] }} /></View>
+              </View>
+            ))}
+          </View>
+          <View style={{ flex: 1, minWidth: 260, gap: 6 }}>
+            <Text style={font.label}>Kota teratas</Text>
+            {(traffic?.cities ?? []).slice(0, 8).map((c, i) => <Row key={c.city} between><Row gap={6}><View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: CITY_COLORS[i % CITY_COLORS.length] }} /><Text style={font.small}>{c.city}</Text></Row><Badge text={`${c.total} pesanan`} /></Row>)}
+          </View>
+        </Row>
+      </Card>
       <Row gap={16} style={{ flexWrap: 'wrap', alignItems: 'stretch' }}>
         <Card style={{ flex: 1, minWidth: 300 }}>
           <Text style={font.label}>Pesanan 7 hari terakhir</Text>

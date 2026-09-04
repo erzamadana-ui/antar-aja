@@ -22,6 +22,7 @@ import { ServiceArt, ServiceIllustration } from '@/components/ServiceArt';
 import { ActiveOrderBubbles } from '@/components/ActiveOrderBubbles';
 import { BrandLogo } from '@/components/Logo';
 import { useT } from '@/lib/i18n';
+import { useNotifications } from '@/hooks/useNotifications';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
 
 export default function CustomerHome() {
@@ -34,11 +35,12 @@ export default function CustomerHome() {
   const [freq, setFreq] = useState<FrequentData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const t = useT();
+  const { unread } = useNotifications(session?.user.id);
 
   const loadExtras = async () => {
     const [{ data: m }, { data: p }, { data: f }] = await Promise.all([
       supabase.rpc('nearby_merchants', { p_lat: location.lat, p_lng: location.lng, p_radius_km: 25 }),
-      supabase.from('promos').select('*').eq('is_active', true).order('sort_order').limit(6),
+      supabase.from('promos').select('*').eq('is_active', true).order('sort_order').limit(20),
       supabase.rpc('customer_frequent', { p_limit: 6 }),
     ]);
     setMerchants(((m as Merchant[]) ?? []).slice(0, 8));
@@ -76,9 +78,15 @@ export default function CustomerHome() {
                     <Text style={[font.h1, { fontSize: 22 }]}>{profile?.full_name?.split(' ')[0] ?? 'Kawan'} 👋</Text>
                   </View>
                 </Row>
-                <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.9}>
-                  <Avatar name={profile?.full_name} url={profile?.avatar_url} size={44} />
-                </PressableScale>
+                <Row gap={8}>
+                  <PressableScale onPress={() => router.push('/inbox' as never)} scaleTo={0.9} style={s.bell}>
+                    <Ionicons name={unread > 0 ? 'notifications' : 'notifications-outline'} size={20} color={unread > 0 ? colors.primary : colors.textSecondary} />
+                    {unread > 0 && <View style={s.bellBadge}><Text style={{ color: '#fff', fontSize: 9, fontWeight: '900' }}>{unread > 9 ? '9+' : unread}</Text></View>}
+                  </PressableScale>
+                  <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.9}>
+                    <Avatar name={profile?.full_name} url={profile?.avatar_url} size={40} />
+                  </PressableScale>
+                </Row>
               </Row>
             </Entrance>
 
@@ -117,7 +125,7 @@ export default function CustomerHome() {
               {SERVICES.map((sv, i) => (
                 <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '33.33%', alignItems: 'stretch' }}>
                   <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
-                    <ServiceArt kind={sv.art} color={sv.color} size={66} />
+                    <ServiceArt kind={sv.art} color={sv.color} size={58} />
                     <Text style={s.serviceLabel}>{sv.label.replace('Antar', '')}</Text>
                     <Text style={s.serviceTag} numberOfLines={2}>{t(`tag_${sv.id}` as never)}</Text>
                   </PressableScale>
@@ -144,7 +152,7 @@ export default function CustomerHome() {
                   <Text style={font.tiny}>{promos.length} promo</Text>
                 </Row>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4, paddingRight: 16 }}>
-                  {promos.map((p, i) => <PromoCard key={p.code} promo={p} index={i} onPress={() => router.push((p.service ? serviceDef(p.service).route : '/food') as never)} />)}
+                  {promos.map((p, i) => <PromoCard key={p.code} promo={p} index={i} width={224} onPress={() => router.push((p.service ? serviceDef(p.service).route : '/food') as never)} />)}
                 </ScrollView>
               </Entrance>
             )}
@@ -199,9 +207,9 @@ export default function CustomerHome() {
                 <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>{t('see_all')}</Text></Pressable>
               </Row>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12, paddingRight: 16 }}>
-                {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={170} height={168} radius={radius.lg} />) : merchants.map((m) => (
+                {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={150} height={150} radius={radius.lg} />) : merchants.map((m) => (
                   <PressableScale key={m.id} onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.97}>
-                    <Glass variant="strong" radius={radius.lg} style={{ width: 170 }}>
+                    <Glass variant="strong" radius={radius.lg} style={{ width: 150 }}>
                       <Image source={{ uri: m.image_url ?? undefined }} style={s.merchantImg} />
                       <View style={{ padding: 10, gap: 2 }}>
                         <Row between><Text style={{ fontWeight: '700', color: colors.text, flex: 1 }} numberOfLines={1}>{m.name}</Text><HalalBadge merchant={m} /></Row>
@@ -231,18 +239,20 @@ function PayAction({ icon, label, onPress }: { icon: React.ComponentProps<typeof
 
 const s = StyleSheet.create({
   inner: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: spacing.lg },
+  bell: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, alignItems: 'center', justifyContent: 'center' },
+  bellBadge: { position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   kbd: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
   payCard: { marginTop: 14, borderRadius: radius.xl, padding: 18, overflow: 'hidden', ...shadow.glow(colors.primary) },
   payGlow: { position: 'absolute', right: -40, top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.14)' },
   payAction: { alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, minWidth: 64 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 18, rowGap: 12 },
-  serviceTile: { alignItems: 'center', gap: 4, width: '100%', paddingHorizontal: 4, paddingVertical: 8 },
-  serviceLabel: { fontSize: 13, fontWeight: '800', color: colors.text, marginTop: 4 },
-  serviceTag: { fontSize: 10, color: colors.textMuted, textAlign: 'center', lineHeight: 13, minHeight: 26 },
-  freq: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 250, padding: 8, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border },
+  serviceTile: { alignItems: 'center', gap: 3, width: '100%', paddingHorizontal: 4, paddingVertical: 6 },
+  serviceLabel: { fontSize: 13.5, fontWeight: '800', color: colors.text, marginTop: 3 },
+  serviceTag: { fontSize: 11, color: colors.textMuted, textAlign: 'center', lineHeight: 14, minHeight: 28 },
+  freq: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 236, padding: 8, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: glass.border },
   freqImg: { width: 52, height: 52, borderRadius: 12, backgroundColor: 'rgba(11,31,42,0.06)' },
   reorder: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   recent: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border, maxWidth: 180 },
-  merchantImg: { width: '100%', height: 100, backgroundColor: 'rgba(11,31,42,0.06)' },
+  merchantImg: { width: '100%', height: 86, backgroundColor: 'rgba(11,31,42,0.06)' },
   glassBorder: { borderColor: glass.border },
 });

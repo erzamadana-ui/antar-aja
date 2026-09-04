@@ -17,18 +17,18 @@ export function promoHeadline(p: Promo) {
   return p.title ?? (p.discount_type === 'percent' ? `Diskon ${p.value}%${p.max_discount ? ` s.d. ${rupiah(p.max_discount)}` : ''}` : `Potongan ${rupiah(p.value)}`);
 }
 
-export function PromoCard({ promo, index = 0, onPress, width = 260 }: { promo: Promo; index?: number; onPress?: () => void; width?: number }) {
+export function PromoCard({ promo, index = 0, onPress, width = 260, height = Math.round(width * 9 / 16) }: { promo: Promo; index?: number; onPress?: () => void; width?: number; height?: number }) {
   const def = promo.service ? serviceDef(promo.service) : null;
   const pal = PALETTES[index % PALETTES.length];
   return (
-    <PressableScale onPress={onPress} scaleTo={0.97} style={[s.card, { width }, shadow.card]}>
+    <PressableScale onPress={onPress} scaleTo={0.97} style={[s.card, { width, height }, shadow.card]}>
       {promo.image_url ? (
         <Image source={{ uri: promo.image_url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       ) : (
         <BrandGradient colors={def ? [def.color, pal[1]] : pal} style={StyleSheet.absoluteFill} />
       )}
       {!promo.image_url && <View style={s.orb} />}
-      {!promo.image_url && <View style={s.art}><ServiceIllustration kind={def?.art ?? 'pay'} size={78} /></View>}
+      {!promo.image_url && <View style={s.art}><ServiceIllustration kind={def?.art ?? 'pay'} size={66} /></View>}
       {!promo.image_url && <BrandGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']} angle="vertical" style={s.shade} />}
       {!promo.image_url && <View style={s.body}>
         <View style={s.code}><Ionicons name="pricetag" size={11} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 11, letterSpacing: 0.5 }}>{promo.code}</Text></View>
@@ -40,7 +40,7 @@ export function PromoCard({ promo, index = 0, onPress, width = 260 }: { promo: P
 }
 
 const s = StyleSheet.create({
-  card: { height: 140, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.primary },
+  card: { height: 126, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.primary },
   orb: { position: 'absolute', right: -30, top: -40, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.16)' },
   art: { position: 'absolute', right: 10, top: 8 },
   shade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 90 },

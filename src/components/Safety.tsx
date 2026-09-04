@@ -75,7 +75,7 @@ export function PinCard({ orderId, status }: { orderId: string; status: string }
   useEffect(() => { supabase.from('order_pins').select('pin').eq('order_id', orderId).maybeSingle().then(({ data }) => setPin((data as { pin: string } | null)?.pin ?? null)); }, [orderId]);
   if (!pin || !['accepted', 'arrived'].includes(status)) return null;
   return (
-    <Animated.View entering={FadeInDown.springify().damping(16)} style={[s.pinCard, shadow.glow(colors.ride)]}>
+    <Animated.View entering={FadeInDown.springify().stiffness(280).damping(16)} style={[s.pinCard, shadow.glow(colors.ride)]}>
       <BrandGradient colors={[colors.ride, '#0F766E']} style={StyleSheet.absoluteFill} />
       <View style={{ flex: 1 }}>
         <Row gap={6}><Ionicons name="shield-checkmark" size={16} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>PIN penjemputan</Text></Row>

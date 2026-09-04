@@ -16,7 +16,7 @@ import { useDriverSession } from '@/hooks/useDriver';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { useAuth } from '@/store/auth';
 import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
-import { rupiah, km, timeAgo, serviceLabel, statusLabel } from '@/lib/format';
+import { rupiah, km, timeAgo, serviceLabel, statusLabel, vehicleClassLabel, formatSchedule } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
 import type { AvailableOrder } from '@/lib/types';
 import { SelfieGate } from '@/components/Safety';
@@ -113,7 +113,7 @@ export default function DriverHome() {
       bottomSpace={TAB_BAR_SPACE - 24}
       initiallyExpanded={!!selected || !!active}
     >
-      <Animated.View layout={LinearTransition.springify().damping(18)} style={{ gap: 12 }}>
+      <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 12 }}>
         {active && (
           <Entrance index={0}>
             <PressableScale onPress={() => router.push(`/driver/order/${active.id}` as never)} scaleTo={0.97} style={[{ borderRadius: radius.lg, overflow: 'hidden' }, shadow.glow(colors.ride)]}>
@@ -135,7 +135,13 @@ export default function DriverHome() {
         ) : selected ? (
           <Animated.View key={selected.id} entering={ZoomIn.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} style={[s.offer, shadow.glow(colors.success)]}>
             <Row between>
-              <Badge text={serviceLabel[selected.service]} color={serviceDef(selected.service).color} />
+              <Row gap={6} style={{ flexWrap: 'wrap', flex: 1 }}>
+                <Badge text={serviceLabel[selected.service]} color={serviceDef(selected.service).color} />
+                {selected.vehicle_class && <Badge text={vehicleClassLabel[selected.vehicle_class] ?? selected.vehicle_class} color={colors.info} />}
+                {selected.scheduled_at && <Badge text={`📅 ${formatSchedule(selected.scheduled_at)}`} color="#8B5CF6" />}
+                {!!selected.helpers && <Badge text={`+${selected.helpers} pembantu angkat`} color={colors.box} />}
+                {selected.send_scope === 'intercity' && <Badge text="Antar kota → gudang" color={colors.send} />}
+              </Row>
               <PressableScale onPress={() => setSelected(null)} scaleTo={0.9} style={s.closeBtn}><Ionicons name="close" size={20} color={colors.textSecondary} /></PressableScale>
             </Row>
             <AnimatedNumber value={selected.driver_earning} format={rupiah} style={{ fontSize: 30, fontWeight: '900', color: colors.success, marginTop: 6, letterSpacing: -0.5 }} duration={500} />
@@ -156,13 +162,13 @@ export default function DriverHome() {
           </Animated.View>
         ) : (
           available.map((o, i) => (
-            <Animated.View key={o.id} entering={FadeInDown.delay(i * motion.stagger).duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify()}>
+            <Animated.View key={o.id} entering={FadeInDown.delay(i * motion.stagger).duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)}>
               <PressableScale onPress={() => setSelected(o)} scaleTo={0.98} style={s.orderRow}>
                 <BrandGradient colors={[serviceDef(o.service).color, serviceDef(o.service).color + 'BB']} style={s.svcIcon}><Ionicons name={serviceDef(o.service).icon as never} size={20} color="#fff" /></BrandGradient>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Row between><Text style={{ fontWeight: '700', color: colors.text }}>{serviceLabel[o.service]}</Text><Text style={{ fontWeight: '900', color: colors.success }}>{rupiah(o.driver_earning)}</Text></Row>
                   <Text style={font.small} numberOfLines={1}>{o.merchant_name ?? o.pickup_address}</Text>
-                  <Text style={font.tiny} numberOfLines={1}>{km(o.distance_to_pickup_km)} dari Anda · {km(o.distance_km)} · {timeAgo(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai' : 'AntarPay'}</Text>
+                  <Text style={font.tiny} numberOfLines={1}>{km(o.distance_to_pickup_km)} dari Anda · {km(o.distance_km)} · {o.scheduled_at ? `📅 ${formatSchedule(o.scheduled_at)}` : timeAgo(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai' : 'AntarPay'}{o.vehicle_class ? ` · ${vehicleClassLabel[o.vehicle_class] ?? ''}` : ''}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </PressableScale>

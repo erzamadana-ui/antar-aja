@@ -259,7 +259,7 @@ export function ToastHost() {
   const c = msg.type === 'error' ? colors.danger : msg.type === 'success' ? colors.success : colors.text;
   const icon: IconName = msg.type === 'error' ? 'alert-circle' : msg.type === 'success' ? 'checkmark-circle' : 'information-circle';
   return (
-    <Animated.View key={msg.id} entering={FadeInDown.springify().damping(16)} exiting={FadeOutUp.duration(180)} pointerEvents="none" style={[s.toast, { top: insets.top + 12 }]}>
+    <Animated.View key={msg.id} entering={FadeInDown.springify().stiffness(280).damping(16)} exiting={FadeOutUp.duration(180)} pointerEvents="none" style={[s.toast, { top: insets.top + 12 }]}>
       <Glass variant="strong" radius={radius.lg} style={{ maxWidth: 520, width: '100%' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 }}>
           <Ionicons name={icon} size={22} color={c} />

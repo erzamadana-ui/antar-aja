@@ -80,7 +80,7 @@ export default function MerchantScreen() {
               const q = qtyOf(item.id);
               return (
                 <Entrance key={item.id} index={Math.min(gi + ii + 1, 8)} from="up">
-                <Animated.View layout={LinearTransition.springify()} style={[s.item, !item.is_available && { opacity: 0.5 }, q > 0 && { borderColor: colors.food + '66', backgroundColor: colors.food + '0D' }]}>
+                <Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.item, !item.is_available && { opacity: 0.5 }, q > 0 && { borderColor: colors.food + '66', backgroundColor: colors.food + '0D' }]}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontWeight: '700', color: colors.text }}>{item.name}</Text>
                     {item.description ? <Text style={font.small} numberOfLines={2}>{item.description}</Text> : null}

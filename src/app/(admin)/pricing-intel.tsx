@@ -88,7 +88,7 @@ export default function PricingIntel() {
             if (!sg) return null;
             const diff = sg.suggested_fare - sg.our_fare;
             return (
-              <Animated.View key={lv.key} layout={LinearTransition.springify()} style={[s.sugg, { borderColor: lv.color + '66' }]}>
+              <Animated.View key={lv.key} layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.sugg, { borderColor: lv.color + '66' }]}>
                 <Row between><Badge text={lv.label} color={lv.color} />{sg.competitor_n > 0 ? <Text style={font.tiny}>{sg.competitor_n} data kompetitor</Text> : <Text style={[font.tiny, { color: colors.warning }]}>tanpa data kompetitor</Text>}</Row>
                 <Row between style={{ marginTop: 8 }}><Text style={font.small}>Tarif kita ({sg.km} km)</Text><Text style={{ fontWeight: '700' }}>{rupiah(sg.our_fare)}</Text></Row>
                 <Row between><Text style={font.small}>Rata-rata kompetitor</Text><Text style={{ fontWeight: '700' }}>{sg.competitor_avg ? rupiah(Math.round(sg.competitor_avg)) : '—'}</Text></Row>

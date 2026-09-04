@@ -1,165 +1,152 @@
+// AntarRide / AntarCar — alur pemesanan "form dulu" (tahap 5):
+//  layanan dikunci sesuai pilihan di beranda; peta disembunyikan (ikon peta per baris untuk titik presisi);
+//  tujuan terakhir & sering dikunjungi; kelas kendaraan (hemat/standar/premium/listrik); booking terjadwal; iklan merchant.
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
-import { MapView } from '@/components/map';
-import type { MapMarker } from '@/components/map';
-import { Button, Row, Badge, toast } from '@/components/ui';
-import { MapScreen, FloatingButton } from '@/components/MapScreen';
-import { PressableScale, Skeleton } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
+import { Screen, Button, Row, Badge, toast } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
 import { LocationFields } from '@/components/LocationField';
-import { PaymentSection, PriceSummary } from '@/components/BookingSheet';
+import { DestinationSuggestions, VehicleClassPicker, SchedulePicker, MerchantAds, RoutePreview } from '@/components/BookingExtras';
+import { PaymentSection, PriceSummary, paidViaOf, handleShortfall, type PayChoice } from '@/components/BookingSheet';
+import { ServiceArt } from '@/components/ServiceArt';
+import { usePayPrefs } from '@/store/payprefs';
 import { useBooking } from '@/store/booking';
 import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { getRoute, reverseGeocode, type RouteResult } from '@/lib/geo';
-import { rpc, supabase } from '@/lib/supabase';
-import { colors, font, radius, shadow, motion, glass } from '@/lib/theme';
+import { rpc } from '@/lib/supabase';
+import { colors, font, radius, motion, glass } from '@/lib/theme';
 import { rupiah, minutes, km } from '@/lib/format';
-import type { FareEstimate, Order, PaymentMethod, ServiceType } from '@/lib/types';
+import { serviceDef } from '@/lib/services';
+import type { FareOptions, Order, ServiceType } from '@/lib/types';
 
 export default function RideScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ service?: string }>();
-  const [service, setService] = useState<ServiceType>(params.service === 'ride_car' ? 'ride_car' : 'ride_motor');
-  const { pickup, dropoff, setPickup } = useBooking();
+  const service: ServiceType = params.service === 'ride_car' ? 'ride_car' : 'ride_motor';
+  const def = serviceDef(service);
+  const accent = def.color;
+  const { pickup, dropoff, setPickup, setDropoff } = useBooking();
   const { location, hasFix, refresh } = useCurrentLocation();
   const refreshWallet = useAuth((s) => s.refreshWallet);
   const [route, setRoute] = useState<RouteResult | null>(null);
-  const [est, setEst] = useState<Partial<Record<ServiceType, FareEstimate>>>({});
-  const [loadingEst, setLoadingEst] = useState(false);
-  const [method, setMethod] = useState<PaymentMethod>('cash');
+  const [opts, setOpts] = useState<FareOptions | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [cls, setCls] = useState<string | null>(null);
+  const [when, setWhen] = useState<Date | null>(null);
+  const [method, setMethod] = useState<PayChoice>('cash');
+  const payPrefs = usePayPrefs((st) => st.prefs);
   const [promo, setPromo] = useState('');
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
-  const [nearby, setNearby] = useState<MapMarker[]>([]);
   const [showDetails, setShowDetails] = useState(false);
+  const [ordering, setOrdering] = useState(false);
 
   useEffect(() => {
     if (!pickup && hasFix) reverseGeocode(location).then((address) => { if (!useBooking.getState().pickup) setPickup({ ...location, address, name: 'Lokasi saya' }); });
   }, [hasFix]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const p = pickup ?? location;
-    supabase.rpc('nearby_drivers', { p_lat: p.lat, p_lng: p.lng, p_vehicle: service === 'ride_car' ? 'car' : 'motor', p_radius_km: 6 })
-      .then(({ data }) => setNearby(((data as { id: string; lat: number; lng: number; heading: number | null }[]) ?? []).map((d) => ({ id: d.id, lat: d.lat, lng: d.lng, heading: d.heading, kind: service === 'ride_car' ? 'car' : 'motor' }))));
-  }, [pickup?.lat, pickup?.lng, service]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!pickup || !dropoff) { setRoute(null); setEst({}); return; }
+    if (!pickup || !dropoff) { setRoute(null); setOpts(null); return; }
     let cancelled = false;
     (async () => {
-      setLoadingEst(true);
+      setLoading(true);
       const r = await getRoute(pickup, dropoff);
       if (cancelled) return;
       setRoute(r);
-      const [m, c] = await Promise.all((['ride_motor', 'ride_car'] as ServiceType[]).map((sv) =>
-        rpc<FareEstimate>('estimate_fare', { p_service: sv, p_pickup_lat: pickup.lat, p_pickup_lng: pickup.lng, p_drop_lat: dropoff.lat, p_drop_lng: dropoff.lng, p_route_km: r.distance_km }).catch(() => null)));
+      const o = await rpc<FareOptions>('fare_options', { p_service: service, p_pickup_lat: pickup.lat, p_pickup_lng: pickup.lng, p_drop_lat: dropoff.lat, p_drop_lng: dropoff.lng, p_route_km: r.distance_km, p_helpers: 0 }).catch(() => null);
       if (cancelled) return;
-      setEst({ ride_motor: m ?? undefined, ride_car: c ?? undefined });
-      setLoadingEst(false);
+      setOpts(o);
+      if (o && !o.classes.some((c) => c.code === cls)) setCls((o.classes.find((c) => c.rank === 2 && !c.is_ev) ?? o.classes[0])?.code ?? null);
+      setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, service]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fare = est[service];
-  const total = fare ? Math.max(0, fare.fare + fare.platform_fee - discount) : 0;
-  const markers = useMemo<MapMarker[]>(() => [
-    ...nearby,
-    ...(pickup ? [{ id: 'pickup', lat: pickup.lat, lng: pickup.lng, kind: 'pickup' as const }] : []),
-    ...(dropoff ? [{ id: 'dropoff', lat: dropoff.lat, lng: dropoff.lng, kind: 'dropoff' as const }] : []),
-    ...(!pickup && hasFix ? [{ id: 'me', lat: location.lat, lng: location.lng, kind: 'me' as const }] : []),
-  ], [nearby, pickup, dropoff, hasFix, location]);
-  const fitTo = useMemo(() => (pickup && dropoff ? [pickup, dropoff] : pickup ? [pickup] : null), [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  const chosen = useMemo(() => opts?.classes.find((c) => c.code === cls) ?? null, [opts, cls]);
+  const total = chosen ? Math.max(0, chosen.total - discount) : 0;
 
   const order = async () => {
-    if (!pickup || !dropoff || !fare) return;
+    if (!pickup || !dropoff || !chosen) return;
+    setOrdering(true);
     try {
       const o = await rpc<Order>('create_order', { p: {
         service, pickup: { lat: pickup.lat, lng: pickup.lng, address: pickup.address }, dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: dropoff.address },
-        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords, payment_method: method, promo_code: promo || null, notes: notes || null,
+        route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords,
+        payment_method: method === 'ewallet' ? 'wallet' : method, paid_via: paidViaOf(method, payPrefs?.ewallet), promo_code: promo || null, notes: notes || null,
+        vehicle_class: chosen.code, scheduled_at: when ? when.toISOString() : null,
       } });
       await refreshWallet();
       useBooking.getState().reset();
+      toast.success(when ? 'Booking terjadwal tersimpan' : 'Pesanan dibuat, mencari driver…');
       router.replace(`/order/${o.id}` as never);
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { if (!handleShortfall(e, router, payPrefs?.ewallet)) toast.error((e as Error).message); }
+    finally { setOrdering(false); }
   };
 
-  const accent = service === 'ride_car' ? colors.car : colors.ride;
-  const header = (
-    <Row gap={8}>
-      {(['ride_motor', 'ride_car'] as ServiceType[]).map((sv) => {
-        const active = service === sv; const c = sv === 'ride_car' ? colors.car : colors.ride;
-        return (
-          <PressableScale key={sv} onPress={() => setService(sv)} scaleTo={0.96} style={{ flex: 1 }}>
-            <Animated.View layout={LinearTransition.springify()} style={[s.vehicle, active && { borderColor: c, backgroundColor: c + '14', ...shadow.glow(c) }]}>
-              <View style={[s.vehicleIcon, { backgroundColor: active ? c : 'rgba(11,31,42,0.06)' }]}>
-                <Ionicons name={sv === 'ride_car' ? 'car-sport' : 'bicycle'} size={20} color={active ? '#fff' : colors.textSecondary} />
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontWeight: '800', color: colors.text, fontSize: 14 }} numberOfLines={1}>{sv === 'ride_car' ? 'AntarCar' : 'AntarRide'}</Text>
-                {loadingEst && pickup && dropoff ? <Skeleton width={70} height={12} /> : est[sv]
-                  ? <Text style={{ fontWeight: '700', color: c, fontSize: 13 }} numberOfLines={1}>{rupiah(est[sv]!.fare + est[sv]!.platform_fee)}</Text>
-                  : <Text style={font.tiny} numberOfLines={1}>{sv === 'ride_car' ? 'Mobil, 4 orang' : 'Motor, 1 orang'}</Text>}
-              </View>
-            </Animated.View>
-          </PressableScale>
-        );
-      })}
-    </Row>
-  );
-
+  const ready = !!(pickup && dropoff);
   return (
-    <MapScreen
-      map={<MapView center={pickup ?? location} zoom={15} markers={markers} polyline={route?.coords} fitTo={fitTo} paddingBottom={40} />}
-      floatingRight={<FloatingButton icon="locate" color={colors.info} onPress={async () => { const p = await refresh(); if (p) { const a = await reverseGeocode(p); setPickup({ ...p, address: a, name: 'Lokasi saya' }); } }} />}
-      header={header}
-      minHeight={230}
-      maxRatio={0.66}
-    >
+    <Screen title={def.label} back maxWidth={640} footer={ready && chosen ? (
+      <Button title={`${when ? 'Booking' : 'Pesan'} ${chosen.label} · ${rupiah(total)}`} size="lg" color={accent} loading={ordering} disabled={loading} onPress={order} />
+    ) : undefined}>
       <View style={{ gap: 14 }}>
-        <LocationFields pickup={pickup} dropoff={dropoff} />
-        {!dropoff && <Text style={[font.small, { textAlign: 'center' }]}>Pilih tujuan untuk melihat tarif.</Text>}
-        {pickup && dropoff && (
-          <Animated.View entering={FadeInDown.duration(motion.base)} style={{ gap: 12 }}>
+        <Row gap={12} style={s.hero}>
+          <ServiceArt kind={def.art} color={accent} size={54} glow={false} />
+          <View style={{ flex: 1 }}>
+            <Text style={font.h3}>{service === 'ride_car' ? 'Mobil nyaman, pilih kelas sesuai kebutuhan' : 'Ojek motor cepat & hemat'}</Text>
+            <Text style={font.tiny}>{service === 'ride_car' ? 'Hemat · Standar · Premium · Listrik' : 'Hemat · Standar · Listrik'} · bisa booking terjadwal</Text>
+          </View>
+        </Row>
+
+        <LocationFields pickup={pickup} dropoff={dropoff} accent={accent} />
+        <Row gap={8}>
+          <PressableScale onPress={async () => { const p = await refresh(); if (p) { const a = await reverseGeocode(p); setPickup({ ...p, address: a, name: 'Lokasi saya' }); } }} scaleTo={0.96} style={s.smallBtn}><Ionicons name="locate" size={14} color={colors.info} /><Text style={s.smallBtnText}>Lokasi saya</Text></PressableScale>
+          {pickup && dropoff && <PressableScale onPress={() => { const p = pickup; setPickup(dropoff); setDropoff(p); }} scaleTo={0.96} style={s.smallBtn}><Ionicons name="swap-vertical" size={14} color={colors.info} /><Text style={s.smallBtnText}>Tukar</Text></PressableScale>}
+        </Row>
+
+        {!dropoff && <DestinationSuggestions onPick={(p) => setDropoff(p)} service={service} />}
+
+        {ready && (
+          <Animated.View entering={FadeInDown.duration(motion.base)} layout={LinearTransition.springify().stiffness(300).damping(22)} style={{ gap: 14 }}>
             <Row gap={8} style={{ flexWrap: 'wrap' }}>
-              <Badge text={loadingEst || !route ? 'Menghitung rute…' : `${km(route.distance_km)} · ${minutes(route.duration_min)}${route.estimated ? ' (perkiraan)' : ''}`} color={colors.info} />
-              {nearby.length > 0 && <Badge text={`${nearby.length} driver di dekat Anda`} color={colors.success} />}
-              {fare?.session && fare.session.multiplier !== 1 && <Badge text={`${fare.session.level === 'high' ? 'Jam sibuk' : 'Jam sepi'} ${fare.session.multiplier}×`} color={fare.session.level === 'high' ? colors.danger : colors.success} />}
+              <Badge text={loading || !route ? 'Menghitung rute…' : `${km(route.distance_km)} · ${minutes(route.duration_min)}${route.estimated ? ' (perkiraan)' : ''}`} color={colors.info} />
+              {opts?.session && opts.session.multiplier !== 1 && <Badge text={`${opts.session.level === 'high' ? 'Jam sibuk' : 'Jam sepi'} ${opts.session.multiplier}×`} color={opts.session.level === 'high' ? colors.danger : colors.success} />}
             </Row>
-            {fare && (
+            <RoutePreview pickup={pickup} dropoff={dropoff} polyline={route?.coords} accent={accent} />
+            <VehicleClassPicker options={opts?.classes ?? []} value={cls} onChange={setCls} accent={accent} loading={loading} />
+            <SchedulePicker value={when} onChange={setWhen} accent={accent} />
+            {chosen && (
               <PressableScale onPress={() => setShowDetails(!showDetails)} scaleTo={0.99} haptic={false}>
-                <Animated.View layout={LinearTransition.springify()} style={s.fareBox}>
+                <Animated.View layout={LinearTransition.springify().stiffness(300).damping(22)} style={s.fareBox}>
                   <Row between>
-                    <View>
-                      <Text style={font.label}>Estimasi biaya</Text>
-                      <Text style={{ fontSize: 26, fontWeight: '900', color: accent, letterSpacing: -0.5 }}>{rupiah(total)}</Text>
-                    </View>
+                    <View><Text style={font.label}>Total {when ? 'booking' : 'estimasi'}</Text><Text style={{ fontSize: 26, fontWeight: '900', color: accent, letterSpacing: -0.5 }}>{rupiah(total)}</Text></View>
                     <View style={s.chev}><Ionicons name={showDetails ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textSecondary} /></View>
                   </Row>
                   {showDetails && (
                     <Animated.View entering={FadeInDown.duration(motion.fast)} style={{ marginTop: 10 }}>
-                      <PriceSummary rows={[{ label: `Tarif perjalanan (${km(fare.distance_km)})`, value: fare.fare }, { label: 'Biaya layanan', value: fare.platform_fee }, { label: 'Diskon promo', value: discount, minus: true }]} total={total} />
+                      <PriceSummary rows={[{ label: `${chosen.label} (${km(opts?.distance_km ?? 0)})`, value: chosen.fare }, { label: 'Biaya layanan', value: opts?.platform_fee ?? 0 }, { label: 'Diskon promo', value: discount, minus: true }]} total={total} />
                     </Animated.View>
                   )}
                 </Animated.View>
               </PressableScale>
             )}
-            <PaymentSection method={method} onMethod={setMethod} promo={promo} onPromo={setPromo} notes={notes} onNotes={setNotes} subtotal={fare?.fare ?? 0} service={service} onDiscount={setDiscount} />
-            <Button title={fare ? `Pesan ${service === 'ride_car' ? 'AntarCar' : 'AntarRide'} · ${rupiah(total)}` : 'Menghitung…'} size="lg" disabled={!fare || loadingEst} onPress={order} color={accent} />
+            <PaymentSection method={method} onMethod={setMethod} promo={promo} onPromo={setPromo} notes={notes} onNotes={setNotes} subtotal={chosen?.fare ?? 0} service={service} onDiscount={setDiscount} />
+            <MerchantAds near={dropoff} title="Lapar sesampainya? Merchant dekat tujuan" />
           </Animated.View>
         )}
+        {!ready && <MerchantAds near={pickup} title="Promo merchant di sekitar Anda" max={4} />}
       </View>
-    </MapScreen>
+    </Screen>
   );
 }
 
-export { BrandGradient };
 const s = StyleSheet.create({
-  vehicle: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.08)', borderRadius: radius.lg, padding: 10, backgroundColor: 'rgba(255,255,255,0.6)' },
-  vehicleIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  hero: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
+  smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: glass.border },
+  smallBtnText: { fontSize: 12, fontWeight: '700', color: colors.info },
   fareBox: { backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border },
   chev: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
 });

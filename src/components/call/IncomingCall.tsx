@@ -22,7 +22,7 @@ export function IncomingCallOverlay() {
   if (phase !== 'incoming' || !incomingFrom) return null;
   return (
     <Animated.View entering={FadeIn.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} style={s.wrap} pointerEvents="box-none">
-      <Animated.View entering={ZoomIn.springify().damping(16)} style={[s.card, shadow.sheet]}>
+      <Animated.View entering={ZoomIn.springify().stiffness(280).damping(16)} style={[s.card, shadow.sheet]}>
         {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
         <View style={{ alignItems: 'center', gap: 10, padding: 20 }}>
           <Radar color={colors.success} size={130}><Avatar name={incomingFrom.name} url={incomingFrom.avatar} size={52} /></Radar>
