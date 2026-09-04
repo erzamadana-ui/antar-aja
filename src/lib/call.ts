@@ -51,7 +51,8 @@ const sigSend = (event: string, payload: Record<string, unknown>) => sig?.send({
 
 async function setupPeer(set: (p: Partial<CallState>) => void, get: () => CallState) {
   if (!rtc.supported) throw new Error(Platform.OS === 'web' ? 'Browser tidak mendukung panggilan suara' : 'Panggilan suara butuh APK build (tidak tersedia di Expo Go)');
-  local = await rtc.getUserMedia({ audio: true, video: false });
+  try { local = await rtc.getUserMedia({ audio: true, video: false }); }
+  catch (e) { const n = (e as Error).name; throw new Error(n === 'NotAllowedError' || n === 'SecurityError' ? 'Izin mikrofon ditolak. Izinkan mikrofon untuk menelepon.' : n === 'NotFoundError' ? 'Mikrofon tidak ditemukan' : 'Mikrofon tidak tersedia: ' + (e as Error).message); }
   pc = new rtc.RTCPeerConnection({ iceServers: ICE });
   local.getTracks().forEach((t: any) => pc.addTrack(t, local));
   pc.onicecandidate = (e: any) => { if (e.candidate) sigSend('ice', { candidate: e.candidate }); };
@@ -84,6 +85,7 @@ export const useCall = create<CallState>((set, get) => ({
     });
     inbox.on('broadcast', { event: 'accept' }, async ({ payload }) => {
       if (get().phase !== 'outgoing' || payload.callId !== get().callId) return;
+      if (ringTimer) { clearTimeout(ringTimer); ringTimer = null; }
       set({ phase: 'connecting' });
       try {
         await setupPeer(set, get);
@@ -149,7 +151,7 @@ export const useCall = create<CallState>((set, get) => ({
     if (callId) {
       sigSend('end', {});
       if (peer && (phase === 'outgoing' || phase === 'incoming')) sendTo(peer.id, 'end', { callId });
-      supabase.from('call_logs').update({ status: phase === 'active' || phase === 'connecting' ? 'ended' : 'missed', ended_at: new Date().toISOString() }).eq('id', callId).then(() => {});
+      supabase.from('call_logs').update({ status: phase === 'active' || phase === 'connecting' ? 'ended' : phase === 'incoming' ? 'declined' : 'missed', ended_at: new Date().toISOString() }).eq('id', callId).then(() => {});
     }
     teardown(); set({ phase: 'ended', endReason: reason ?? 'Panggilan berakhir' });
   },

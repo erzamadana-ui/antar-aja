@@ -94,11 +94,13 @@ export default function Gateway() {
             <Text style={font.label}>{t('pay_with')}</Text>
             <View style={s.grid}>
               {METHODS.map((x) => (
-                <PressableScale key={x.key} onPress={() => setMethod(x.key)} scaleTo={0.95} style={[s.method, method === x.key && { borderColor: x.color, backgroundColor: x.color + '14', ...shadow.glow(x.color) }]}>
-                  <View style={[s.mIcon, { backgroundColor: x.color }]}><Ionicons name={x.icon as never} size={18} color="#fff" /></View>
-                  <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }}>{x.label}</Text>
-                  {method === x.key && <Ionicons name="checkmark-circle" size={16} color={x.color} style={{ position: 'absolute', top: 6, right: 6 }} />}
-                </PressableScale>
+                <View key={x.key} style={{ width: '31%', flexGrow: 1 }}>
+                  <PressableScale onPress={() => setMethod(x.key)} scaleTo={0.95} style={[s.method, method === x.key && { borderColor: x.color, backgroundColor: x.color + '14', ...shadow.glow(x.color) }]}>
+                    <View style={[s.mIcon, { backgroundColor: x.color }]}><Ionicons name={x.icon as never} size={18} color="#fff" /></View>
+                    <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{x.label}</Text>
+                    {method === x.key && <Ionicons name="checkmark-circle" size={16} color={x.color} style={{ position: 'absolute', top: 6, right: 6 }} />}
+                  </PressableScale>
+                </View>
               ))}
             </View>
             <Text style={[font.tiny, { marginTop: 8 }]}>Diproses oleh Midtrans (PCI-DSS). Antar Aja tidak menyimpan data kartu/akun e-wallet Anda.</Text>
@@ -107,7 +109,7 @@ export default function Gateway() {
         </View>
       ) : (
         <Animated.View entering={ZoomIn.duration(motion.base)} layout={LinearTransition.springify()} style={{ gap: 16 }}>
-          <Card style={{ alignItems: 'center', gap: 10 }}>
+          <Card><View style={{ alignItems: 'center', gap: 10 }}>
             {status === 'settlement' ? <View style={[s.big, { backgroundColor: colors.success }]}><Ionicons name="checkmark" size={44} color="#fff" /></View>
               : status === 'pending' ? <Radar color={m.color} size={130}><Ionicons name={m.icon as never} size={30} color={m.color} /></Radar>
               : <View style={[s.big, { backgroundColor: colors.danger }]}><Ionicons name="close" size={44} color="#fff" /></View>}
@@ -129,7 +131,7 @@ export default function Gateway() {
               </Animated.View>
             )}
             {status !== 'pending' && <Button title={status === 'settlement' ? t('done') : 'Coba lagi'} size="lg" style={{ alignSelf: 'stretch' }} onPress={() => (status === 'settlement' ? finish() : (setResp(null), setStatus(null)))} />}
-          </Card>
+          </View></Card>
           <Text style={[font.tiny, { textAlign: 'center' }]}>Untuk mengaktifkan gateway asli: isi secret MIDTRANS_SERVER_KEY & MIDTRANS_CLIENT_KEY di Supabase → Edge Functions, dan set URL notifikasi Midtrans ke fungsi midtrans-webhook (lihat docs/INTEGRASI.md).</Text>
         </Animated.View>
       )}
@@ -140,7 +142,7 @@ export default function Gateway() {
 const s = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
-  method: { width: '30%', flexGrow: 1, alignItems: 'center', gap: 6, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
+  method: { width: '100%', alignItems: 'center', gap: 6, padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.6)' },
   mIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   big: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center' },
   simBox: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: 'rgba(245,158,11,0.12)', borderRadius: radius.md, padding: 10 },
