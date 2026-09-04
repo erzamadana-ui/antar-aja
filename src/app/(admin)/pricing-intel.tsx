@@ -79,7 +79,7 @@ export default function PricingIntel() {
       <Entrance index={1}><Card style={{ gap: 12 }}>
         <Row between style={{ flexWrap: 'wrap', gap: 8 }}>
           <View><Text style={font.h3}>Usulan penyesuaian tarif</Text><Text style={font.tiny}>Strategi: low 5% di bawah kompetitor, middle setara, high 3% di bawah (tetap unggul saat sibuk). Bonus driver diambil dari komisi platform.</Text></View>
-          <Row gap={8}><Text style={font.small}>Simulasi jarak</Text><Input value={km} onChangeText={setKm} keyboardType="decimal-pad" containerStyle={{ width: 70 }} style={{ textAlign: 'center' }} /><Text style={font.small}>km</Text></Row>
+          <Row gap={8}><Text style={font.small}>Simulasi jarak</Text><Input value={km} onChangeText={setKm} keyboardType="decimal-pad" containerStyle={{ width: 96 }} /><Text style={font.small}>km</Text></Row>
         </Row>
         <FilterBar value={svc} onChange={setSvc} options={SERVICES.map((k) => ({ key: k, label: serviceLabel[k] }))} />
         <Row gap={12} style={{ flexWrap: 'wrap', alignItems: 'stretch' }}>

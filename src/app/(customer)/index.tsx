@@ -104,7 +104,7 @@ export default function CustomerHome() {
                   <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
                     <ServiceArt kind={sv.art} color={sv.color} size={66} />
                     <Text style={s.serviceLabel}>{sv.label.replace('Antar', '')}</Text>
-                    <Text style={s.serviceTag} numberOfLines={2}>{sv.tagline}</Text>
+                    <Text style={s.serviceTag} numberOfLines={2}>{t(`tag_${sv.id}` as never)}</Text>
                   </PressableScale>
                 </Entrance>
               ))}
@@ -115,7 +115,7 @@ export default function CustomerHome() {
               <Entrance index={8}>
                 <Row between style={{ marginTop: 22, marginBottom: 8 }}>
                   <Text style={font.label}>{t('active_orders')}</Text>
-                  <Text style={font.tiny}>{active.length} · ketuk untuk detail</Text>
+                  <Text style={font.tiny}>{active.length} · {t('tap_detail')}</Text>
                 </Row>
                 <ActiveOrderBubbles orders={active} />
               </Entrance>

@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { colors, glass, motion, radius, shadow } from '@/lib/theme';
-import { useI18n, translate, type TKey } from '@/lib/i18n';
+import { useI18n, translate, isRTL, type TKey } from '@/lib/i18n';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 export type TabSpec = Record<string, { label: string; icon: IconName; iconActive: IconName; tk?: TKey }>;
@@ -23,8 +23,9 @@ export function makeGlassTabBar(spec: TabSpec, accent = colors.primary) {
     const barWidth = Math.min(width - 32, 520);
     const tabW = (barWidth - 12) / routes.length;
     const activeIdx = Math.max(0, routes.findIndex((r) => r.key === state.routes[state.index].key));
-    const x = useSharedValue(activeIdx * tabW);
-    useEffect(() => { x.value = reduce ? activeIdx * tabW : withSpring(activeIdx * tabW, motion.spring); }, [activeIdx, tabW, reduce, x]);
+    const visualIdx = isRTL(locale) ? routes.length - 1 - activeIdx : activeIdx;   // RTL: baris dibalik
+    const x = useSharedValue(visualIdx * tabW);
+    useEffect(() => { x.value = reduce ? visualIdx * tabW : withSpring(visualIdx * tabW, motion.spring); }, [visualIdx, tabW, reduce, x]);
     const pill = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
     return (
       <View pointerEvents="box-none" style={[s.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>

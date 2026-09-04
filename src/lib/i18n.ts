@@ -35,6 +35,7 @@ const id = {
   become_driver: 'Daftar jadi Mitra Driver', become_merchant: 'Daftar jadi Merchant AntarFood', switch_driver: 'Beralih ke Mode Driver', switch_merchant: 'Beralih ke Mode Merchant', switch_customer: 'Beralih ke Mode Pelanggan', admin_panel: 'Panel Admin',
   status_searching: 'Mencari driver', status_accepted: 'Driver menuju lokasi', status_arrived: 'Driver sudah tiba', status_in_progress: 'Dalam perjalanan', status_completed: 'Selesai', status_cancelled: 'Dibatalkan',
   online: 'ONLINE', offline: 'OFFLINE', orders_available: 'order tersedia', accept_order: 'Terima Order', active_order: 'Order aktif',
+  tag_ride_motor: 'Ojek motor cepat & hemat', tag_ride_car: 'Mobil nyaman untuk keluarga', tag_food: 'Makanan favorit diantar', tag_send: 'Kirim paket dalam kota', tag_shop: 'Titip belanja Alfamart, Indomaret & lainnya', tag_pay: 'Saldo & top up', tap_detail: 'ketuk untuk detail',
 };
 export type TKey = keyof typeof id;
 
@@ -59,6 +60,7 @@ const en: Partial<Record<TKey, string>> = {
   become_driver: 'Become a Driver Partner', become_merchant: 'Become an AntarFood Merchant', switch_driver: 'Switch to Driver Mode', switch_merchant: 'Switch to Merchant Mode', switch_customer: 'Switch to Customer Mode', admin_panel: 'Admin Panel',
   status_searching: 'Finding a driver', status_accepted: 'Driver on the way', status_arrived: 'Driver has arrived', status_in_progress: 'On the way', status_completed: 'Completed', status_cancelled: 'Cancelled',
   online: 'ONLINE', offline: 'OFFLINE', orders_available: 'orders available', accept_order: 'Accept Order', active_order: 'Active order',
+  tag_ride_motor: 'Fast & cheap motorbike rides', tag_ride_car: 'Comfortable cars for families', tag_food: 'Favorite food delivered', tag_send: 'Same-city parcel delivery', tag_shop: 'Shopping from Alfamart, Indomaret & more', tag_pay: 'Balance & top up', tap_detail: 'tap for details',
 };
 
 const zh: Partial<Record<TKey, string>> = {
@@ -82,6 +84,7 @@ const zh: Partial<Record<TKey, string>> = {
   become_driver: '成为司机合作伙伴', become_merchant: '成为 AntarFood 商家', switch_driver: '切换到司机模式', switch_merchant: '切换到商家模式', switch_customer: '切换到顾客模式', admin_panel: '管理面板',
   status_searching: '正在寻找司机', status_accepted: '司机正在前来', status_arrived: '司机已到达', status_in_progress: '行程中', status_completed: '已完成', status_cancelled: '已取消',
   online: '在线', offline: '离线', orders_available: '个可接订单', accept_order: '接单', active_order: '进行中的订单',
+  tag_ride_motor: '快捷实惠的摩托出行', tag_ride_car: '舒适的家庭用车', tag_food: '最爱美食送到家', tag_send: '同城包裹配送', tag_shop: '代购 Alfamart、Indomaret 等', tag_pay: '余额与充值', tap_detail: '点击查看详情',
 };
 
 const ar: Partial<Record<TKey, string>> = {
@@ -105,6 +108,7 @@ const ar: Partial<Record<TKey, string>> = {
   become_driver: 'كن سائقًا شريكًا', become_merchant: 'كن تاجرًا في AntarFood', switch_driver: 'التبديل إلى وضع السائق', switch_merchant: 'التبديل إلى وضع التاجر', switch_customer: 'التبديل إلى وضع العميل', admin_panel: 'لوحة المشرف',
   status_searching: 'جارٍ البحث عن سائق', status_accepted: 'السائق في الطريق', status_arrived: 'وصل السائق', status_in_progress: 'في الطريق', status_completed: 'مكتمل', status_cancelled: 'ملغى',
   online: 'متصل', offline: 'غير متصل', orders_available: 'طلبات متاحة', accept_order: 'قبول الطلب', active_order: 'طلب نشط',
+  tag_ride_motor: 'رحلات دراجة سريعة واقتصادية', tag_ride_car: 'سيارات مريحة للعائلة', tag_food: 'طعامك المفضل يصل إليك', tag_send: 'توصيل الطرود داخل المدينة', tag_shop: 'تسوّق من Alfamart وIndomaret وغيرها', tag_pay: 'الرصيد والشحن', tap_detail: 'اضغط للتفاصيل',
 };
 
 const DICT: Record<Locale, Partial<Record<TKey, string>>> = { id, en, zh, ar };
