@@ -39,3 +39,28 @@ Saat ini driver memilih order dari daftar terdekat (first-come). Untuk penugasan
 * Supabase Free: 500 MB DB, 1 GB storage, 2 juta pesan realtime/bulan — cukup untuk uji hingga ratusan pengguna. Upgrade Pro (US$25/bln) saat produksi.
 * OSRM/Nominatim publik: batasi ≤1 req/detik. Untuk produksi sewa MapTiler/Google atau host OSRM sendiri.
 * GitHub Pages gratis; custom domain (mis. `app.antaraja.id`) bisa dipasang di Settings → Pages.
+
+## Payment gateway — Midtrans Snap (tahap 3)
+Alur: aplikasi → Edge Function `midtrans-create` → Snap (redirect_url) → Midtrans mengirim notifikasi ke `midtrans-webhook` → `payment_settle()` → saldo AntarPay bertambah.
+Tanpa key, aplikasi berjalan dalam **mode simulasi** (tombol "Bayar (simulasi berhasil)").
+
+Langkah aktivasi (sandbox dulu):
+1. Daftar https://dashboard.midtrans.com → Settings → Access Keys → salin Server Key & Client Key (sandbox: `SB-Mid-server-…`).
+2. Supabase → Edge Functions → Secrets: `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION=false`.
+3. Midtrans → Settings → Configuration → **Payment Notification URL**: `https://qwltshvzrsykxdvhbxcv.supabase.co/functions/v1/midtrans-webhook`.
+4. Uji top up dari aplikasi (Akun/AntarPay → Top Up → Top up instan). Untuk produksi: ganti key produksi & `MIDTRANS_IS_PRODUCTION=true`.
+Metode yang dipetakan: GoPay, ShopeePay, QRIS (OVO/DANA lewat QRIS), VA bank (bank_transfer).
+
+## Telepon dalam aplikasi (WebRTC)
+- Web: langsung jalan di browser modern (butuh izin mikrofon, HTTPS).
+- Android/iOS: memakai `react-native-webrtc` → wajib APK/IPA build (tidak berjalan di Expo Go).
+- Sinyal lewat Supabase Realtime (`call:<userId>`, `callsig:<callId>`); log di tabel `call_logs` (tanpa nomor HP).
+- STUN Google dipakai default. Untuk jaringan seluler/NAT ketat, isi TURN: `EXPO_PUBLIC_TURN_URL`, `EXPO_PUBLIC_TURN_USER`, `EXPO_PUBLIC_TURN_PASS` (mis. Metered.ca / coturn).
+
+## Sesi harga & intelijen harga
+- Tabel `pricing_sessions` (level high/middle/low, hari, jam WIB, multiplier, bonus driver %) → dipakai `calc_fare()`.
+- Tabel `competitor_prices` diisi admin (survei manual tarif kompetitor). `pricing_suggestions(km)` menghitung usulan multiplier per sesi.
+- Halaman: Panel Admin → Intelijen Harga.
+
+## Multi-bahasa
+`src/lib/i18n.ts` — kamus ID/EN/ZH/AR; tambah kunci di objek `id` lalu terjemahannya. Arab = RTL (web: `dir=rtl`; native: I18nManager, perlu muat ulang).

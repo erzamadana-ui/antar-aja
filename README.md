@@ -118,3 +118,10 @@ Untuk produksi:
 ## Lisensi
 
 Hak cipta © 2026 Erza Pradipta Madana. Seluruh hak dilindungi.
+
+
+## Tahap 3 (Sep 2026)
+- Ikon layanan kartun (SVG) + logo baru (5 konsep di `assets/logo/`, aktif: `LOGO_VARIANT` di `src/components/Logo.tsx`).
+- AntarShop (belanja titip), tip & biaya tambahan (parkir/tol/tunggu), telepon in-app WebRTC (nomor HP tersembunyi — UU PDP),
+  payment gateway Midtrans Snap (+ mode simulasi), sesi harga high/middle/low & intelijen harga kompetitor (admin), multi-bahasa ID/EN/ZH/AR.
+- Migrasi: `supabase/migrations/0005_shop_enum.sql`, `0006_features.sql`; edge functions: `supabase/functions/midtrans-*`.
