@@ -8,7 +8,6 @@ import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { colors, font, radius, shadow } from '@/lib/theme';
-import { openApp } from '@/lib/app';
 
 type Item = { icon: IconName; color?: string; title: string; subtitle?: string; onPress: () => void; danger?: boolean };
 
@@ -84,7 +83,6 @@ export default function DriverAccount() {
 
       <Entrance index={4} style={{ marginTop: 22, gap: 10 }}>
         {merchant ? <Button title="Beralih ke Mode Merchant" variant="secondary" icon="storefront-outline" onPress={async () => { await setMode('merchant'); router.replace('/(merchant)'); }} /> : null}
-        <Button title="Buka aplikasi Pelanggan" variant="outline" icon="open-outline" onPress={() => openApp('pelanggan')} />
         <Button title="Keluar" variant="outline" color={colors.danger} icon="log-out-outline" onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} />
       </Entrance>
       <Row style={{ justifyContent: 'center', marginTop: 24 }}><Text style={font.tiny}>AntarKita Mitra v3.0</Text></Row>

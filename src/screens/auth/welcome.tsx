@@ -85,7 +85,7 @@ export default function Welcome() {
                 <Button title={APP === 'mitra' ? 'Daftar jadi mitra' : t('create_account')} size="lg" onPress={() => router.push('/(auth)/register')} />
               ) : null}
               <Button title={t('login')} size="lg" variant={last && APP === 'admin' ? 'primary' : 'outline'} color={last && APP === 'admin' ? colors.primary : colors.text} style={!(last && APP === 'admin') ? s.whiteBtn : undefined} onPress={() => router.push('/(auth)/login')} />
-              <Text style={[font.tiny, { textAlign: 'center' }]}>{APP === 'mitra' ? 'Sudah punya akun AntarKita? Masuk dengan akun yang sama, lalu daftar sebagai mitra.' : APP === 'admin' ? 'Akun pelanggan/mitra tidak bisa masuk ke panel ini.' : t('partner_hint')}</Text>
+              <Text style={[font.tiny, { textAlign: 'center' }]}>{APP === 'mitra' ? 'Sudah punya akun mitra? Masuk, lalu lanjutkan pengajuan kemitraan Anda.' : APP === 'admin' ? 'Akun pelanggan/mitra tidak bisa masuk ke panel ini.' : t('partner_hint')}</Text>
               <LanguageRow />
             </View>
           </Entrance>

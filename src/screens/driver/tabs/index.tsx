@@ -65,7 +65,7 @@ export default function DriverHome() {
         <SafeAreaView style={{ flex: 1 }}>
           <Empty icon="hourglass-outline" title={driver.status === 'pending' ? 'Menunggu verifikasi admin' : driver.status === 'suspended' ? 'Akun mitra ditangguhkan' : 'Pendaftaran ditolak'}
             subtitle={driver.status === 'pending' ? 'Data Anda sedang diperiksa. Biasanya kurang dari 1×24 jam.' : 'Hubungi CS AntarKita untuk informasi lebih lanjut.'}
-            action={<Button title="Kembali ke mode pelanggan" variant="secondary" onPress={() => router.replace('/(customer)')} />} />
+            action={<Button title="Lihat akun & status pengajuan" variant="secondary" icon="person-outline" onPress={() => router.push('/(driver)/account' as never)} />} />
         </SafeAreaView>
       </View>
     );

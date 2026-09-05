@@ -8,7 +8,6 @@ import { Entrance, PressableScale } from '@/components/motion';
 import { ServiceIllustration, type ArtKind } from '@/components/ServiceArt';
 import { useAuth } from '@/store/auth';
 import { colors, font, radius, shadow } from '@/lib/theme';
-import { openApp } from '@/lib/app';
 
 const OPTIONS: { key: string; title: string; sub: string; art: ArtKind; color: string; href: string }[] = [
   { key: 'driver', title: 'Driver motor / mobil', sub: 'AntarRide, AntarCar, AntarFood, AntarSend, AntarShop, AntarMarket', art: 'rider', color: colors.ride, href: '/account/become-driver' },
@@ -16,8 +15,7 @@ const OPTIONS: { key: string; title: string; sub: string; art: ArtKind; color: s
   { key: 'travel', title: 'Mitra travel & sopir pribadi', sub: 'Kursi bersama, carter privat, atau sopir harian antar kota', art: 'travel', color: colors.travel, href: '/account/become-travel' },
   { key: 'merchant', title: 'Merchant makanan & minuman', sub: 'Jual ke pelanggan AntarFood, badge halal', art: 'food', color: colors.food, href: '/account/become-merchant' },
 ];
-const LINKS: { icon: IconName; color?: string; title: string; subtitle?: string; key: 'customer' | 'support' | 'logout'; danger?: boolean }[] = [
-  { icon: 'open-outline', title: 'Buka aplikasi Pelanggan', subtitle: 'Untuk memesan layanan sebagai pelanggan', key: 'customer' },
+const LINKS: { icon: IconName; color?: string; title: string; subtitle?: string; key: 'support' | 'logout'; danger?: boolean }[] = [
   { icon: 'chatbubbles-outline', color: colors.info, title: 'Bantuan & tiket aduan', key: 'support' },
   { icon: 'log-out-outline', title: 'Keluar', key: 'logout', danger: true },
 ];
@@ -33,7 +31,7 @@ export default function MitraOnboarding() {
     Alert.alert('Keluar', 'Keluar dari akun?', [{ text: 'Batal' }, { text: 'Keluar', style: 'destructive', onPress: doIt }]);
   };
   const selected = OPTIONS.find((o) => o.key === choice) ?? OPTIONS[0];
-  const onLink = (k: typeof LINKS[number]['key']) => k === 'customer' ? openApp('pelanggan') : k === 'support' ? router.push('/support' as never) : confirmSignOut();
+  const onLink = (k: typeof LINKS[number]['key']) => k === 'support' ? router.push('/support' as never) : confirmSignOut();
 
   return (
     <Screen title="Jadi Mitra" footer={<Button title={`Lanjut daftar · ${selected.title}`} size="lg" icon="arrow-forward" onPress={() => router.push(selected.href as never)} />}>

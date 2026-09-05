@@ -12,7 +12,6 @@ import { supabase } from '@/lib/supabase';
 import { pickAndUpload } from '@/lib/upload';
 import { colors, font, radius, shadow } from '@/lib/theme';
 import { HalalBadge } from '@/components/MerchantStatus';
-import { openApp } from '@/lib/app';
 
 type Item = { icon: IconName; color?: string; title: string; subtitle?: string; onPress: () => void; danger?: boolean };
 
@@ -36,9 +35,7 @@ export default function MerchantStore() {
     { icon: 'chatbubbles-outline', color: colors.info, title: 'Bantuan & tiket aduan', subtitle: 'Hubungi CS online', onPress: () => router.push('/support' as never) },
     { icon: 'person-outline', title: 'Edit profil pemilik', onPress: () => router.push('/account/edit') },
     { icon: 'language-outline', title: 'Bahasa / Language', onPress: () => router.push('/account/language') },
-    driver
-      ? { icon: 'bicycle-outline', title: 'Beralih ke Mode Driver', onPress: async () => { await setMode('driver'); router.replace('/(driver)'); } }
-      : { icon: 'open-outline', title: 'Buka aplikasi Pelanggan', subtitle: 'Pesan layanan sebagai pelanggan', onPress: () => openApp('pelanggan') },
+    ...(driver ? [{ icon: 'bicycle-outline' as IconName, title: 'Beralih ke Mode Driver', onPress: async () => { await setMode('driver'); router.replace('/(driver)'); } }] : []),
     { icon: 'log-out-outline', title: 'Keluar', danger: true, onPress: async () => { await signOut(); router.replace('/(auth)/welcome'); } },
   ];
   const tabs = (

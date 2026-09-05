@@ -36,7 +36,7 @@ export default function Register() {
       <Entrance index={1} style={{ alignItems: 'center', marginTop: 16 }}>
         <LogoLockup size={28} />
         <Text style={[font.h1, { marginTop: 10, textAlign: 'center' }]}>{t('register')} {BRAND}</Text>
-        <Text style={[font.small, { textAlign: 'center', marginTop: 4 }]}>{APP === 'mitra' ? 'Satu akun untuk pelanggan dan mitra. Setelah daftar, ajukan diri sebagai mitra.' : t('start_sub')}</Text>
+        <Text style={[font.small, { textAlign: 'center', marginTop: 4 }]}>{APP === 'mitra' ? 'Buat akun mitra, lalu pilih jenis kemitraan: driver, mobil box, travel, atau merchant.' : t('start_sub')}</Text>
       </Entrance>
       <Entrance index={2}><View style={s.card}>
         <Input label={t('full_name')} icon="person-outline" value={f.full_name} onChangeText={set('full_name')} placeholder="Nama sesuai KTP" />
