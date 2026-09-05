@@ -105,7 +105,7 @@ export default function OrderTracking() {
   return (
     <MapScreen
       map={<MapView center={{ lat: order.pickup_lat, lng: order.pickup_lng }} markers={markers} polyline={order.route_geometry} fitTo={fitTo} paddingBottom={20} />}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/(customer)/orders'))}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/' as never))}
       floatingTag={<Text style={{ fontWeight: '800', fontSize: 12, color: colors.text, letterSpacing: 0.5 }}>{order.code}</Text>}
       header={header}
       minHeight={searching ? 250 : 210}

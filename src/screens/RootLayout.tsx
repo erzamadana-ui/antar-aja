@@ -14,7 +14,7 @@ import { AmbientBackground } from '@/components/glass';
 import { colors, FONT_ASSETS } from '@/lib/theme';
 import { useFonts } from 'expo-font';
 import { APP, APP_NAME } from '@/lib/app';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments, useRootNavigationState } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -28,7 +28,16 @@ export default function RootLayout() {
   const loadLocale = useI18n((s) => s.load);
   const locale = useI18n((s) => s.locale);
 
+  const session = useAuth((s) => s.session);
+  const segments = useSegments();
+  const navKey = useRootNavigationState()?.key;
   useEffect(() => { init(); loadMode(); loadLocale(); }, [init, loadMode, loadLocale]);
+  // Penjaga global: tanpa sesi, semua rute di luar grup (auth) diarahkan ke layar sambutan (mis. tautan langsung /food, /admin/users)
+  const top = segments[0] as string | undefined;
+  useEffect(() => {
+    if (!ready || !navKey) return;
+    if (!session && top !== '(auth)') router.replace('/(auth)/welcome' as never);
+  }, [ready, navKey, session, top]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { applyDirection(locale); }, [locale]);
   useEffect(() => { if (ready && modeLoaded && fontsLoaded) SplashScreen.hideAsync().catch(() => {}); }, [ready, modeLoaded, fontsLoaded]);
   useEffect(() => {

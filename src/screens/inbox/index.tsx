@@ -30,8 +30,8 @@ export default function Inbox() {
                 const d = n.data ?? {};
                 if (typeof d.travel_request_id === 'string') router.push((APP === 'mitra' ? '/driver/travel' : `/travel/request/${d.travel_request_id}`) as never);
                 else if (d.payment_id) router.push((APP === 'mitra' ? '/(driver)/earnings' : '/(customer)/pay') as never);
-                else if (n.merchant_id) router.push(`/food/${n.merchant_id}` as never);
-                else if (n.promo_code) router.push('/food' as never);
+                else if (n.merchant_id && APP === 'pelanggan') router.push(`/food/${n.merchant_id}` as never);
+                else if (n.promo_code && APP === 'pelanggan') router.push('/food' as never);
               }} scaleTo={0.985} haptic={false} style={[s.card, !n.read_at && { borderColor: colors.primary }]}>
                 {n.image_url && <Image source={{ uri: n.image_url }} style={s.img} />}
                 <Row gap={12} style={{ padding: 12, alignItems: 'flex-start' }}>

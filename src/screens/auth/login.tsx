@@ -61,9 +61,11 @@ export default function Login() {
           right={<Pressable onPress={() => setShow(!show)} hitSlop={8}><Icon name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} /></Pressable>} />
         {err ? <Text style={{ color: colors.danger, fontSize: 13 }}>{err}</Text> : null}
         <Button title={t('login')} size="lg" onPress={submit} />
-        <Pressable onPress={() => router.push('/(auth)/register')} style={{ alignItems: 'center', padding: 6 }}>
-          <Text style={font.small}>{t('no_account')} <Text style={{ color: colors.primary, fontWeight: '800' }}>{t('register')}</Text></Text>
-        </Pressable>
+        {APP !== 'admin' ? (
+          <Pressable onPress={() => router.push('/(auth)/register')} style={{ alignItems: 'center', padding: 6 }}>
+            <Text style={font.small}>{t('no_account')} <Text style={{ color: colors.primary, fontWeight: '800' }}>{t('register')}</Text></Text>
+          </Pressable>
+        ) : <Text style={[font.tiny, { textAlign: 'center', padding: 6 }]}>Akun admin dibuat oleh admin lain lewat menu Pengguna.</Text>}
       </View></Entrance>
       <Entrance index={3}>
         <View style={s.demo}>
