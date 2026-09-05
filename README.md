@@ -165,3 +165,10 @@ Hak cipta © 2026 Erza Pradipta Madana. Seluruh hak dilindungi.
 - **AntarTravel v2**: mitra = agen travel ATAU pemilik mobil pribadi; 3 mode: kursi bersama, **carter privat**, **sopir harian** (12 jam/hari, overtime/jam); permintaan → penawaran mitra → terima & bayar (AntarPay/tunai) → berjalan → selesai (payout, komisi 10%) → rating; **akomodasi sopir** saat menginap: ditanggung pelanggan atau mandiri (kompensasi ±Rp150.000/malam); BBM/tol/parkir ditanggung pelanggan atau termasuk; direktori mitra; refund penuh ≥12 jam sebelum berangkat, 70% jika kurang.
 - **Payment gateway plug-and-play** (Midtrans Snap): kunci diisi dari Panel Admin → Payment Gateway (tabel `gateway_secrets`, hanya Edge Function yang bisa baca) atau secret; uji koneksi; metode aktif; Snap.js popup di web; webhook + notifikasi; lihat `docs/PAYMENT-GATEWAY.md`.
 - Migrasi `0012`–`0016`; edge functions `midtrans-create` (v2) & `midtrans-webhook` (v2).
+
+## Tahap 7 (5 Sep 2026) — data pengguna, mitra pasar, otomasi & keamanan
+- Pelanggan: usulkan/perbarui toko & pasar dari lokasi (aktif otomatis setelah 3 laporan konsisten); pedagang pasar terverifikasi (grade A/B/C) di AntarMarket; menu kemitraan dihapus.
+- Mitra: jenis mitra baru **Pedagang pasar tradisional** (lapak, barang, skor kualitas); aplikasi Mitra tanpa fitur pelanggan.
+- Admin: Usulan Data, Mitra Pasar, Otomasi (verifikasi bertingkat, pencairan otomatis, retensi, harga dinamis, anti-fraud & koefisien harga, laporan terjadwal), Pusat Keamanan (PIN panel, flag fraud, log), sidebar scroll.
+- Portal Eksekutif: keuangan (take rate, net revenue, margin, P&L bulanan) + rekomendasi otomatis + laporan terjadwal.
+- Dokumentasi: `docs/TAHAP7-OTOMASI-KEAMANAN.md`. Migrasi `supabase/migrations/0018–0020`.

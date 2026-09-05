@@ -14,6 +14,7 @@ const OPTIONS: { key: string; title: string; sub: string; art: ArtKind; color: s
   { key: 'box', title: 'Mobil box / pick up', sub: 'AntarBox: kirim barang, pindahan rumah/kost', art: 'box', color: colors.box, href: '/account/become-driver?vehicle=box' },
   { key: 'travel', title: 'Mitra travel & sopir pribadi', sub: 'Kursi bersama, carter privat, atau sopir harian antar kota', art: 'travel', color: colors.travel, href: '/account/become-travel' },
   { key: 'merchant', title: 'Merchant makanan & minuman', sub: 'Jual ke pelanggan AntarFood, badge halal', art: 'food', color: colors.food, href: '/account/become-merchant' },
+  { key: 'vendor', title: 'Pedagang pasar tradisional', sub: 'Daftarkan lapak & barang dagangan Anda di AntarMarket', art: 'market', color: colors.market, href: '/account/become-vendor' },
 ];
 const LINKS: { icon: IconName; color?: string; title: string; subtitle?: string; key: 'support' | 'logout'; danger?: boolean }[] = [
   { icon: 'chatbubbles-outline', color: colors.info, title: 'Bantuan & tiket aduan', key: 'support' },
@@ -22,9 +23,9 @@ const LINKS: { icon: IconName; color?: string; title: string; subtitle?: string;
 
 export default function MitraOnboarding() {
   const router = useRouter();
-  const { profile, driver, merchant, travelPartner, signOut } = useAuth();
+  const { profile, driver, merchant, travelPartner, marketVendor, signOut } = useAuth();
   const [choice, setChoice] = useState(OPTIONS[0].key);
-  const pending = [driver && driver.status !== 'approved' ? `Driver: ${driver.status}` : null, merchant && merchant.status !== 'approved' ? `Merchant: ${merchant.status}` : null, travelPartner && travelPartner.status !== 'approved' ? `Travel: ${travelPartner.status}` : null].filter(Boolean) as string[];
+  const pending = [driver && driver.status !== 'approved' ? `Driver: ${driver.status}` : null, merchant && merchant.status !== 'approved' ? `Merchant: ${merchant.status}` : null, travelPartner && travelPartner.status !== 'approved' ? `Travel: ${travelPartner.status}` : null, marketVendor && marketVendor.status !== 'approved' ? `Pedagang pasar: ${marketVendor.status}` : null].filter(Boolean) as string[];
   const confirmSignOut = () => {
     const doIt = async () => { await signOut(); router.replace('/(auth)/welcome'); };
     if (Platform.OS === 'web') { if (confirm('Keluar dari akun?')) doIt(); return; }
@@ -40,7 +41,7 @@ export default function MitraOnboarding() {
         <View style={{ alignItems: 'center', marginTop: 6 }}>
           <View style={s.artCircle}><ServiceIllustration kind={selected.art} size={84} /></View>
           <Text style={[font.display, { textAlign: 'center', marginTop: 16 }]}>Satu akun,{'\n'}banyak peluang</Text>
-          <Text style={[font.small, { textAlign: 'center', marginTop: 6 }]}>Driver, mitra travel, atau merchant — pilih jenis kemitraan yang cocok untuk Anda.</Text>
+          <Text style={[font.small, { textAlign: 'center', marginTop: 6 }]}>Driver, mitra travel, merchant, atau pedagang pasar — pilih jenis kemitraan yang cocok untuk Anda.</Text>
         </View>
       </Entrance>
 
@@ -75,7 +76,7 @@ export default function MitraOnboarding() {
         })}
       </View>
 
-      <Entrance index={6}>
+      <Entrance index={7}>
         <Text style={[font.label, { marginTop: 22, marginBottom: 8 }]}>Lainnya</Text>
         <View style={s.card}>
           {LINKS.map((it, i) => (

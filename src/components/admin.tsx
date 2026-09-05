@@ -36,7 +36,7 @@ export function StatCard({ label, value, hint, color = colors.primary, index = 0
           <View style={[s.statBar, { backgroundColor: color }]} />
           <View style={[s.statGlow, { backgroundColor: color }]} />
           <Text style={font.tiny}>{label}</Text>
-          {numeric ? <AnimatedNumber value={value} format={(n) => String(Math.round(n))} style={s.statValue} /> : <Text style={s.statValue}>{value}</Text>}
+          {numeric ? <AnimatedNumber value={value} format={(n) => String(Math.round(n))} style={s.statValue} /> : <Text style={[s.statValue, String(value).length > 9 && { fontSize: 18 }, String(value).length > 12 && { fontSize: 15 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{value}</Text>}
           {hint ? <Text style={font.tiny}>{hint}</Text> : null}
         </Animated.View>
       </Pressable>
@@ -126,11 +126,11 @@ const s = StyleSheet.create({
 
 // ---- Tahap 5 ----
 /** Prompt alasan (suspend/tolak/nonaktif) — alasan tersimpan di log aktivitas & terlihat oleh mitra. */
-export function ReasonPrompt({ visible, title, subtitle, onCancel, onSubmit, confirmLabel = 'Simpan', color = colors.danger, optional }: { visible: boolean; title: string; subtitle?: string; onCancel: () => void; onSubmit: (reason: string) => Promise<void> | void; confirmLabel?: string; color?: string; optional?: boolean }) {
+export function ReasonPrompt({ visible, title, subtitle, onCancel, onSubmit, confirmLabel = 'Simpan', color = colors.danger, optional, quick }: { visible: boolean; title: string; subtitle?: string; onCancel: () => void; onSubmit: (reason: string) => Promise<void> | void; confirmLabel?: string; color?: string; optional?: boolean; quick?: string[] }) {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (visible) setReason(''); }, [visible]);
-  const QUICK = ['Rating rendah & banyak keluhan pelanggan', 'Dokumen tidak valid / kedaluwarsa', 'Pelanggaran SOP keselamatan', 'Penipuan / manipulasi order', 'Permintaan mitra sendiri', 'Sudah diperbaiki, diaktifkan kembali'];
+  const QUICK = quick ?? ['Rating rendah & banyak keluhan pelanggan', 'Dokumen tidak valid / kedaluwarsa', 'Pelanggaran SOP keselamatan', 'Penipuan / manipulasi order', 'Permintaan mitra sendiri', 'Sudah diperbaiki, diaktifkan kembali'];
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable onPress={onCancel} style={s.backdrop}>

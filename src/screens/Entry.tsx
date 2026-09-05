@@ -7,7 +7,7 @@ import { Loading } from '@/components/ui';
 import { APP } from '@/lib/app';
 
 export default function Entry() {
-  const { session, profile, driver, merchant, travelPartner, ready } = useAuth();
+  const { session, profile, driver, merchant, travelPartner, marketVendor, ready } = useAuth();
   const mode = useMode((s) => s.mode);
   const persisted = useMode((s) => s.persisted);
   if (!ready) return <Loading />;
@@ -25,7 +25,7 @@ export default function Entry() {
     if (target === 'driver' && !driver) target = 'customer';
     if (target === 'merchant' && !merchant) target = 'customer';
     if (target === 'customer' || target === 'admin' || !persisted) {
-      if (driver) target = 'driver'; else if (merchant) target = 'merchant'; else if (travelPartner) return <Redirect href={'/driver/travel' as never} />; else return <Redirect href={'/mitra/onboarding' as never} />;
+      if (driver) target = 'driver'; else if (merchant) target = 'merchant'; else if (travelPartner) return <Redirect href={'/driver/travel' as never} />; else if (marketVendor) return <Redirect href={'/(vendor)' as never} />; else return <Redirect href={'/mitra/onboarding' as never} />;
     }
     return <Redirect href={modeHome[target] as never} />;
   }

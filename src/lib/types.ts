@@ -149,13 +149,20 @@ export interface ExecReport {
   level: string; generated_at: string; from: string;
   summary: { gmv: number; orders: number; completed: number; cancelled: number; revenue: number; driver_payout: number; merchant_payout: number; avg_ticket: number; customers: number; cities: number };
   prev_gmv: number;
-  monthly: { month: string; gmv: number; orders: number; completed: number; revenue: number; new_users: number; new_drivers: number }[];
-  by_service: { service: ServiceType; orders: number; gmv: number }[];
+  monthly: { month: string; gmv: number; orders: number; completed: number; revenue: number; new_users: number; new_drivers: number; promo?: number; driver_payout?: number; topups?: number; withdrawals?: number }[];
+  by_service: { service: ServiceType; orders: number; gmv: number; revenue?: number }[];
   by_city: { city: string; orders: number; gmv: number; customers: number }[];
   top_merchants: { name: string; orders: number; gmv: number }[];
-  supply: { drivers_total: number; drivers_online: number; drivers_pending: number; merchants_total: number; merchants_pending: number; users_total: number; wallet_float: number; wallet_negative: number };
+  supply: { drivers_total: number; drivers_online: number; drivers_pending: number; merchants_total: number; merchants_pending: number; users_total: number; wallet_float: number; wallet_negative: number; vendors_total?: number; vendors_pending?: number; travel_partners?: number };
   quality: { cancel_rate: number; avg_driver_rating: number | null; tickets: number; tickets_open: number; avg_first_response_min: number | null; cs_rating: number | null; sos: number };
+  // Tahap 7: keuangan, anti-fraud, otomasi & rekomendasi
+  finance?: ExecFinance;
+  fraud?: { open: number; open_high: number; auto_suspended: number };
+  automation?: { auto_verified: number; auto_payouts: number; place_suggestions: number; place_auto_approved: number };
+  gmv_growth_pct?: number | null;
+  recommendations?: Recommendation[];
 }
+export interface ExecFinance { gmv: number; revenue: number; take_rate_pct: number; promo_discount: number; promo_pct_gmv: number; tips: number; refunds: number; topups: number; topups_gateway: number; withdrawals: number; withdrawals_pending: number; topups_pending: number; wallet_liability: number; receivable_negative: number; gateway_fee_pct: number; gateway_fee_est: number; cash_orders_pct: number; net_revenue: number; contribution_margin_pct: number }
 // ---- AntarTravel ----
 export interface TravelRoute { id: string; from_city: string; to_city: string; distance_km: number; duration_h: number; seat_price: number; private_price: number; private_price_large: number | null; min_pax: number; active: boolean }
 export type TravelPartnerType = 'agency' | 'private';
@@ -193,3 +200,17 @@ export interface AdminTravelRequestRow { id: string; code: string; kind: TravelR
 // ---------- Tahap 6: payment gateway ----------
 export interface GatewayPublicConfig { provider: string; methods: string[]; topup_min: number; topup_max: number; configured: boolean; is_production: boolean; client_key: string | null }
 export interface GatewayStatus extends GatewayPublicConfig { server_key_masked: string | null; merchant_id: string | null; updated_at: string | null; updated_by: string | null; last_webhook_at: string | null; stats: { total: number; settlement: number; pending: number; failed: number; amount_settled: number; simulated: number; last_7d: number }; recent: (Payment & { user: string | null })[] }
+
+// ---------- Tahap 7 ----------
+export type VendorGrade = 'A' | 'B' | 'C';
+export interface MarketVendor { id: string; market_id: string; stall_name: string; stall_no: string | null; categories: string[]; description: string | null; photo_url: string | null; id_card_url: string | null; market_card_url: string | null; phone: string | null; bank_name: string | null; bank_account: string | null; bank_holder: string | null; status: ApprovalStatus; status_reason: string | null; quality_score: number; rating_avg: number; rating_count: number; total_orders: number; open_hours: string | null; created_at: string; updated_at: string; market_name?: string; owner_name?: string; owner_phone?: string; items?: number; items_photo?: number }
+export interface MarketVendorItem { id: string; vendor_id: string; item_id: string | null; name: string; category: string; unit: string; price: number; grade: VendorGrade; origin: string | null; photo_url: string | null; in_stock: boolean; active: boolean; updated_at: string; ref_price?: number | null }
+export interface VendorCatalogEntry { id: string; stall_name: string; stall_no: string | null; categories: string[]; photo_url: string | null; quality_score: number; rating_avg: number; rating_count: number; open_hours: string | null; items: MarketVendorItem[] }
+export type PlaceSuggestionStatus = 'pending' | 'approved' | 'rejected' | 'merged';
+export interface PlaceSuggestion { id: string; kind: 'store' | 'market'; target_id: string | null; name: string; brand: string | null; category: string | null; address: string | null; lat: number; lng: number; open_hours: string | null; phone: string | null; notes: string | null; photo_url: string | null; submitted_by: string; reports: number; status: PlaceSuggestionStatus; auto: boolean; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null; created_at: string; updated_at: string; submitter?: string; existing_name?: string | null; nearby_conflicts?: number }
+export interface FraudFlag { id: string; kind: string; severity: 'low' | 'med' | 'high'; subject_id: string | null; order_id: string | null; detail: Record<string, unknown>; auto_action: string | null; status: 'open' | 'confirmed' | 'dismissed'; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null; created_at: string; subject_name?: string | null; subject_role?: string | null; order_code?: string | null; driver_status?: string | null }
+export interface SecurityEvent { id: number; kind: string; user_id: string | null; detail: Record<string, unknown>; created_at: string; user_name?: string | null }
+export interface ScheduledReport { id: string; name: string; cadence: 'daily' | 'weekly' | 'monthly'; hour: number; months: number; recipients: string[]; active: boolean; last_run_at: string | null; next_run_at: string | null; created_at: string }
+export interface ReportRun { id: number; name: string; period: string; created_at: string; summary: Record<string, number>; finance: Record<string, number>; recommendations: Recommendation[] }
+export interface Recommendation { priority: 'high' | 'med' | 'low'; area: string; title: string; detail: string; action: string }
+export interface AutomationRun { id: number; kind: string; started_at: string; finished_at: string | null; ok: boolean; count: number; detail: Record<string, unknown>; triggered_by: string | null }

@@ -20,7 +20,7 @@ export default function Account() {
   const [hasExec, setHasExec] = useState(false);
   const uid = useAuth((st) => st.session?.user.id);
   useEffect(() => { if (uid) supabase.from('exec_access').select('user_id').eq('user_id', uid).eq('active', true).maybeSingle().then(({ data }) => setHasExec(!!data)); }, [uid]);
-  const { profile, driver, merchant, wallet, signOut } = useAuth();
+  const { profile, wallet, signOut } = useAuth();
   const { orders } = useMyOrders('customer', uid);
   const t = useT();
   const locale = useI18n((s) => s.locale);
@@ -39,12 +39,9 @@ export default function Account() {
       { icon: 'language-outline', title: t('language'), subtitle: LOCALES.find((l) => l.code === locale)?.native, onPress: () => router.push('/account/language') },
       { icon: 'wallet-outline', title: 'AntarPay', subtitle: `Saldo ${rupiah(wallet?.balance ?? 0)}`, onPress: () => router.push('/(customer)/pay') },
     ] },
-    { title: t('mode_partner'), items: [
-      { icon: 'bicycle-outline', title: driver || merchant ? 'Buka aplikasi AntarKita Mitra' : 'Jadi Mitra AntarKita', subtitle: driver || merchant ? 'Pesanan mitra dikelola di aplikasi Mitra (terpisah)' : 'Driver motor/mobil/box, merchant, atau mitra travel', onPress: () => openApp('mitra') },
+    { title: t('others'), items: [
       ...(hasExec ? [{ icon: 'shield-half-outline' as IconName, color: colors.primaryDeep, title: 'Portal Eksekutif', subtitle: 'Laporan manajemen & pemegang saham (di aplikasi Admin)', onPress: () => openApp('admin') }] : []),
       ...(profile?.role === 'admin' ? [{ icon: 'shield-checkmark-outline' as IconName, color: colors.info, title: t('admin_panel'), subtitle: APP_URL.admin, onPress: () => openApp('admin') }] : []),
-    ] },
-    { title: t('others'), items: [
       { icon: 'shield-checkmark-outline', color: colors.danger, title: 'Pusat Keamanan', subtitle: 'Kontak darurat, bagikan perjalanan, SOS', onPress: () => router.push('/safety' as never) },
       { icon: 'chatbubbles-outline', color: colors.info, title: t('help'), subtitle: t('help_sub'), onPress: () => router.push('/support' as never) },
       { icon: 'log-out-outline', title: t('logout'), danger: true, onPress: confirmSignOut },

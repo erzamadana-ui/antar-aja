@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Card, Row, Button, Badge, Input, Chip, Empty, toast } from '@/components/ui';
+import { Screen, Card, Row, Button, Badge, Input, Chip, Empty, Stepper, toast } from '@/components/ui';
 import { Entrance, PressableScale, Skeleton } from '@/components/motion';
 import { PaymentSection, PriceSummary, paidViaOf, handleShortfall, type PayChoice } from '@/components/BookingSheet';
 import { usePayPrefs } from '@/store/payprefs';
@@ -15,10 +15,18 @@ import { rpc } from '@/lib/supabase';
 import { colors, font, radius, shadow } from '@/lib/theme';
 import { ServiceIllustration } from '@/components/ServiceArt';
 import { rupiah, km, minutes, marketCategoryLabel } from '@/lib/format';
-import type { Market, MarketItem, Order, ShoppingEstimate } from '@/lib/types';
+import type { Market, MarketItem, MarketVendorItem, Order, ShoppingEstimate, VendorCatalogEntry, VendorGrade } from '@/lib/types';
 
 type Vehicle = 'motor' | 'car';
 type Line = { qty: number; note: string };
+type VendorLine = MarketVendorItem & { vendor_id: string; vendor_name: string; stall_no: string | null };
+
+const GRADE: Record<VendorGrade, { label: string; color: string; desc: string }> = {
+  A: { label: 'Grade A', color: colors.success, desc: 'kualitas terbaik' },
+  B: { label: 'Grade B', color: colors.primary, desc: 'kualitas standar' },
+  C: { label: 'Grade C', color: colors.textMuted, desc: 'ekonomis' },
+};
+const qualityColor = (n: number) => (n >= 85 ? colors.success : n >= 70 ? colors.primary : colors.warning);
 
 const priceSourceLabel = (source: string, samples?: number) =>
   source === 'pasar' ? 'survei pasar' : source === 'nota_driver' ? `nota driver (${samples ?? 0})` : 'acuan admin';
@@ -36,6 +44,9 @@ export default function MarketScreen() {
   const [market, setMarket] = useState<Market | null>(null);
   const [items, setItems] = useState<MarketItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
+  const [vendors, setVendors] = useState<VendorCatalogEntry[]>([]);
+  const [loadingVendors, setLoadingVendors] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState<string | null>(null);
   const [cat, setCat] = useState('all');
   const [q, setQ] = useState('');
   const [gridW, setGridW] = useState(0);
@@ -77,11 +88,26 @@ export default function MarketScreen() {
     return () => { cancelled = true; };
   }, [market?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // pedagang terverifikasi di pasar terpilih
+  useEffect(() => {
+    if (!market) { setVendors([]); setVendorOpen(null); return; }
+    let cancelled = false;
+    setLoadingVendors(true);
+    rpc<VendorCatalogEntry[]>('market_vendor_catalog', { p_market: market.id })
+      .then((r) => { if (!cancelled) { const list = r ?? []; setVendors(list); setVendorOpen(list[0]?.id ?? null); } })
+      .catch(() => { if (!cancelled) setVendors([]); })
+      .finally(() => { if (!cancelled) setLoadingVendors(false); });
+    return () => { cancelled = true; };
+  }, [market?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const vendorItems = useMemo<VendorLine[]>(() => vendors.flatMap((v) => v.items.map((it) => ({ ...it, vendor_id: v.id, vendor_name: v.stall_name, stall_no: v.stall_no }))), [vendors]);
   const categories = useMemo(() => Array.from(new Set(items.map((i) => i.category))), [items]);
   const ql = q.trim().toLowerCase();
   const shown = items.filter((i) => (cat === 'all' || i.category === cat) && (!ql || i.name.toLowerCase().includes(ql)));
   const chosen = items.filter((i) => (lines[i.id]?.qty ?? 0) > 0);
-  const subtotal = chosen.reduce((a, i) => a + i.price * (lines[i.id]?.qty ?? 0), 0);
+  const chosenVendor = vendorItems.filter((i) => (lines[i.id]?.qty ?? 0) > 0);
+  const chosenCount = chosen.length + chosenVendor.length;
+  const subtotal = chosen.reduce((a, i) => a + i.price * (lines[i.id]?.qty ?? 0), 0) + chosenVendor.reduce((a, i) => a + i.price * (lines[i.id]?.qty ?? 0), 0);
   const setQty = (id: string, qty: number) => setLines((l) => {
     const v = Math.max(0, Math.min(50, Math.round(qty * 2) / 2));
     if (v <= 0) { const { [id]: _drop, ...rest } = l; return rest; }
@@ -110,18 +136,21 @@ export default function MarketScreen() {
   }, [market?.lat, market?.lng, dropoff?.lat, dropoff?.lng, subtotal, vehicle, route?.distance_km]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = est ? Math.max(0, est.fare + est.platform_fee + est.service_fee - discount) + subtotal : 0;
-  const ready = !!market && !!dropoff && !!est && chosen.length > 0;
+  const ready = !!market && !!dropoff && !!est && chosenCount > 0;
   const pickVehicle = (v: Vehicle) => { vehicleManual.current = true; setVehicle(v); };
 
   const order = async () => {
-    if (!market || !dropoff || !est || chosen.length === 0) return;
+    if (!market || !dropoff || !est || chosenCount === 0) return;
     setOrdering(true);
     try {
       const o = await rpc<Order>('create_order', { p: {
         service: 'market', market_id: market.id, dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: dropoff.address },
         route_km: route?.distance_km, duration_min: route?.duration_min, route_geometry: route?.coords,
         payment_method: method === 'ewallet' ? 'wallet' : method, paid_via: paidViaOf(method, payPrefs?.ewallet), promo_code: promo || null, notes: notes || null, shop_vehicle: vehicle,
-        shopping_list: chosen.map((i) => ({ item_id: i.id, name: i.name, qty: lines[i.id]?.qty ?? 1, note: lines[i.id]?.note?.trim() || null })),
+        shopping_list: [
+          ...chosen.map((i) => ({ item_id: i.id, name: i.name, qty: lines[i.id]?.qty ?? 1, note: lines[i.id]?.note?.trim() || null })),
+          ...chosenVendor.map((i) => ({ item_id: i.item_id ?? null, vendor_item_id: i.id, vendor_id: i.vendor_id, vendor_name: i.vendor_name, grade: i.grade, name: i.name, unit: i.unit, price: i.price, qty: lines[i.id]?.qty ?? 1, note: [`Lapak ${i.vendor_name}${i.stall_no ? ` no. ${i.stall_no}` : ''} · grade ${i.grade}`, lines[i.id]?.note?.trim()].filter(Boolean).join(' · ') })),
+        ],
       } });
       await refreshWallet(); useBooking.getState().reset();
       router.replace(`/order/${o.id}` as never);
@@ -135,11 +164,11 @@ export default function MarketScreen() {
       <Row between>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={font.tiny}>Perkiraan total · disesuaikan nota</Text>
-          <Text style={[font.h1, { color: colors.primary }]}>{ready && !estimating ? rupiah(total) : chosen.length ? 'Menghitung…' : rupiah(0)}</Text>
+          <Text style={[font.h1, { color: colors.primary }]}>{ready && !estimating ? rupiah(total) : chosenCount ? 'Menghitung…' : rupiah(0)}</Text>
         </View>
         <Badge text="Dana ditahan · sisa dikembalikan" color={colors.primary} />
       </Row>
-      <Button title={chosen.length === 0 ? 'Pilih bahan belanja dulu' : 'Pesan ke pasar'} size="lg" disabled={!ready || ordering} loading={ordering} onPress={order} />
+      <Button title={chosenCount === 0 ? 'Pilih bahan belanja dulu' : 'Pesan ke pasar'} size="lg" disabled={!ready || ordering} loading={ordering} onPress={order} />
     </View>
   );
 
@@ -162,11 +191,26 @@ export default function MarketScreen() {
                         <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{km(m.distance_km)}{m.address ? ` · ${m.address}` : ''}</Text></Row>
                         {active ? <Text style={font.tiny} numberOfLines={1}>{m.open_hours ? `${m.open_hours}` : 'Jam buka menyesuaikan pasar'}{route ? ` · ${minutes(route.duration_min)} ke alamat` : ''}</Text> : null}
                       </View>
-                      {active ? <Button title="Ganti" size="sm" variant="secondary" onPress={() => { setMarket(null); setLines({}); setCat('all'); }} /> : <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>}
+                      <View style={{ alignItems: 'center', gap: 6 }}>
+                        {active ? <Button title="Ganti" size="sm" variant="secondary" onPress={() => { setMarket(null); setLines({}); setCat('all'); }} /> : <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>}
+                        <PressableScale haptic={false} hitSlop={6} accessibilityRole="button" accessibilityLabel="Perbarui data pasar" onPress={() => router.push({ pathname: '/places/suggest', params: { kind: 'market', target: m.id, name: m.name } } as never)} style={s.updateBtn}>
+                          <Ionicons name="create-outline" size={12} color={colors.textSecondary} /><Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary }}>Perbarui</Text>
+                        </PressableScale>
+                      </View>
                     </PressableScale>
                   </Entrance>
                 );
               })}
+            {!loadingMarkets && !market && (
+              <PressableScale onPress={() => router.push({ pathname: '/places/suggest', params: { kind: 'market' } } as never)} scaleTo={0.985} haptic={false} style={s.suggestCard}>
+                <View style={s.infoIcon}><Ionicons name="add-circle-outline" size={22} color={colors.primary} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[font.body, { fontWeight: '700' }]}>Pasar belum ada di daftar?</Text>
+                  <Text style={font.tiny}>Tambahkan dari lokasi Anda. Aktif otomatis setelah 3 pengguna mengonfirmasi.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </PressableScale>
+            )}
           </View>
         </Entrance>
 
@@ -189,7 +233,7 @@ export default function MarketScreen() {
 
         {/* Daftar bahan — grid 2 kolom */}
         <View style={{ gap: 10 }}>
-          <Row between><Text style={font.h3}>Bahan belanja</Text>{chosen.length > 0 && <Badge text={`${chosen.length} dipilih`} color={colors.primary} />}</Row>
+          <Row between><Text style={font.h3}>Bahan belanja</Text>{chosenCount > 0 && <Badge text={`${chosenCount} dipilih`} color={colors.primary} />}</Row>
           <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={s.grid}>
             {loadingItems ? [0, 1, 2, 3].map((i) => <View key={i} style={[s.tile, { width: colW }]}><Skeleton width="100%" height={100} radius={18} /><Skeleton width="70%" height={14} /><Skeleton width="50%" height={12} /></View>)
               : !market ? <View style={{ width: '100%' }}><Empty icon="basket-outline" title="Pilih pasar dulu" subtitle="Katalog bahan mengikuti pasar yang dipilih." /></View>
@@ -232,6 +276,74 @@ export default function MarketScreen() {
               })}
           </View>
         </View>
+
+        {/* Pedagang terverifikasi */}
+        {market && (
+          <View style={{ gap: 10 }}>
+            <Row between><Text style={font.h3}>Pedagang terverifikasi</Text>{vendors.length > 0 && <Text style={font.tiny}>{vendors.length} lapak</Text>}</Row>
+            {loadingVendors ? <View style={s.vendorCard}><Row gap={12}><Skeleton width={48} height={48} radius={24} /><View style={{ flex: 1, gap: 6 }}><Skeleton width="60%" height={14} /><Skeleton width="40%" height={12} /></View></Row></View>
+              : vendors.length === 0 ? <Text style={font.tiny}>Belum ada pedagang terverifikasi di pasar ini.</Text>
+              : vendors.map((v, vi) => {
+                const open = vendorOpen === v.id;
+                const picked = v.items.filter((it) => (lines[it.id]?.qty ?? 0) > 0).length;
+                return (
+                  <Entrance key={v.id} index={Math.min(vi, 5)}>
+                    <View style={[s.vendorCard, picked > 0 && { borderColor: colors.primary }]}>
+                      <PressableScale onPress={() => setVendorOpen(open ? null : v.id)} scaleTo={0.99} haptic={false} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        {v.photo_url ? <Image source={{ uri: v.photo_url }} style={s.vendorImg} /> : <View style={[s.vendorImg, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="storefront-outline" size={22} color={colors.primary} /></View>}
+                        <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                          <Row gap={6}><Text style={[font.body, { fontWeight: '700', flexShrink: 1 }]} numberOfLines={1}>{v.stall_name}</Text>{v.stall_no ? <Text style={font.tiny}>No. {v.stall_no}</Text> : null}</Row>
+                          <Row gap={6} style={{ flexWrap: 'wrap' }}>
+                            <Badge text={`Kualitas ${Math.round(v.quality_score)}`} color={qualityColor(v.quality_score)} />
+                            <Row gap={3}><Ionicons name="star" size={12} color={colors.accent} /><Text style={font.tiny}>{v.rating_count > 0 ? `${Number(v.rating_avg).toFixed(1)} (${v.rating_count})` : 'Belum ada ulasan'}</Text></Row>
+                            <Text style={font.tiny}>{v.items.length} barang{picked ? ` · ${picked} dipilih` : ''}</Text>
+                          </Row>
+                        </View>
+                        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+                      </PressableScale>
+                      {open && (
+                        <View style={{ gap: 8, marginTop: 10 }}>
+                          {v.items.length === 0 && <Text style={font.tiny}>Lapak ini belum mengisi daftar barang.</Text>}
+                          {v.items.map((it) => {
+                            const qty = lines[it.id]?.qty ?? 0;
+                            const g = GRADE[it.grade] ?? GRADE.B;
+                            const ref = it.ref_price ?? null;
+                            const diff = ref ? Math.round(((it.price - ref) / ref) * 100) : null;
+                            const out = !it.in_stock;
+                            return (
+                              <View key={it.id} style={[s.vendorItem, out && { opacity: 0.55 }, qty > 0 && { borderColor: colors.primary }]}>
+                                <Row gap={10} style={{ alignItems: 'flex-start' }}>
+                                  {it.photo_url ? <Image source={{ uri: it.photo_url }} style={s.vendorThumb} /> : <View style={[s.vendorThumb, { alignItems: 'center', justifyContent: 'center' }]}><ServiceIllustration kind="market" size={26} /></View>}
+                                  <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                                    <Row gap={6}><Text style={[font.small, { color: colors.text, fontWeight: '700', flexShrink: 1 }]} numberOfLines={1}>{it.name}</Text><Badge text={it.grade} color={g.color} /></Row>
+                                    <Text style={font.tiny} numberOfLines={1}>{g.label} · {g.desc}{it.origin ? ` · asal ${it.origin}` : ''}{out ? ' · stok habis' : ''}</Text>
+                                    <Row gap={6} style={{ flexWrap: 'wrap' }}>
+                                      <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 14 }}>{rupiah(it.price)}<Text style={font.tiny}> /{it.unit}</Text></Text>
+                                      {ref ? <Text style={[font.tiny, { color: diff != null && diff > 0 ? colors.warning : diff != null && diff < 0 ? colors.success : colors.textMuted }]}>acuan {rupiah(ref)}{diff ? ` (${diff > 0 ? '+' : ''}${diff}%)` : ' (sama)'}</Text> : null}
+                                    </Row>
+                                  </View>
+                                  {out ? null : qty > 0 ? <Stepper value={qty} onChange={(n) => setQty(it.id, n)} min={0} max={50} />
+                                    : <PressableScale haptic={false} onPress={() => setQty(it.id, 1)} scaleTo={0.88} style={s.addBtn} accessibilityRole="button" accessibilityLabel="Tambah ke daftar belanja"><Ionicons name="add" size={20} color="#fff" /></PressableScale>}
+                                </Row>
+                                {qty > 0 && (
+                                  <Row between style={{ marginTop: 6 }}>
+                                    <Text style={[font.tiny, { color: colors.text, fontWeight: '700' }]}>Subtotal {rupiah(it.price * qty)}</Text>
+                                    <PressableScale haptic={false} hitSlop={6} onPress={() => setNoteOpen((n) => (n === it.id ? null : it.id))}><Ionicons name={lines[it.id]?.note ? 'chatbox-ellipses' : 'chatbox-ellipses-outline'} size={18} color={lines[it.id]?.note ? colors.primary : colors.textMuted} /></PressableScale>
+                                  </Row>
+                                )}
+                                {qty > 0 && noteOpen === it.id && <TextInput placeholder="Catatan untuk pedagang" placeholderTextColor={colors.textMuted} value={lines[it.id]?.note ?? ''} onChangeText={(val) => setNote(it.id, val)} style={s.noteInput} />}
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
+                    </View>
+                  </Entrance>
+                );
+              })}
+            {vendors.length > 0 && <Text style={font.tiny}>Barang pedagang terverifikasi dibeli driver langsung di lapak tersebut; harga sudah ditetapkan pedagang (bukan acuan).</Text>}
+          </View>
+        )}
 
         {/* Alamat antar */}
         <Card solid style={{ gap: 10 }}>
@@ -287,4 +399,10 @@ const s = StyleSheet.create({
   miniBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   halfBtn: { height: 28, paddingHorizontal: 8, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   noteInput: { height: 40, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgSoft, paddingHorizontal: 12, color: colors.text, fontSize: 13, marginTop: 6 },
+  updateBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, height: 24, borderRadius: 12, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  suggestCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 20, backgroundColor: colors.tint, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primaryLight },
+  vendorCard: { padding: 12, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  vendorImg: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.tint },
+  vendorItem: { padding: 10, borderRadius: 16, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  vendorThumb: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.tint },
 });

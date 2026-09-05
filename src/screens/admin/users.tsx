@@ -1,14 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Modal, StyleSheet } from 'react-native';
+import { View, Text, Modal, StyleSheet, Pressable, Platform } from 'react-native';
 import { AdminPage, Table, FilterBar, ReasonPrompt } from '@/components/admin';
 import { Row, Badge, Button, toast, Input, Chip } from '@/components/ui';
 import { execLevelLabel } from '@/lib/format';
 import { rpc, supabase } from '@/lib/supabase';
 import { colors, font } from '@/lib/theme';
-import { formatDate, phoneDisplay, rupiah } from '@/lib/format';
+import { formatDate, phoneDisplay, phoneMasked, rupiah } from '@/lib/format';
+import { adminExportCsv } from '@/lib/csv';
+import { handleAdminError, useAdminSecurity } from '@/store/adminSecurity';
 import type { Profile, UserRole, Wallet } from '@/lib/types';
 
 type Row_ = Profile & { balance: number };
+/** Samarkan email: na••@gmail.com */
+const emailMasked = (e?: string | null) => { if (!e) return '-'; const [u, d] = e.split('@'); return `${(u ?? '').slice(0, 2)}••@${d ?? ''}`; };
 
 export default function AdminUsers() {
   const [rows, setRows] = useState<Row_[]>([]);
@@ -32,8 +36,16 @@ export default function AdminUsers() {
   };
   const setUser = async (id: string, patch: { role?: UserRole; active?: boolean; reason?: string }) => {
     if (patch.active === false && patch.reason === undefined) { setAsk({ id, name: rows.find((r) => r.id === id)?.full_name ?? 'pengguna' }); return; }
-    try { await rpc('admin_set_user', { p_user: id, p_role: patch.role ?? null, p_active: patch.active ?? null, p_reason: patch.reason ?? null }); toast.success('Diperbarui & tercatat di log'); setAsk(null); load(); } catch (e) { toast.error((e as Error).message); }
+    if (patch.role === 'admin' && !(await useAdminSecurity.getState().ensureUnlocked())) return;
+    try { await rpc('admin_set_user', { p_user: id, p_role: patch.role ?? null, p_active: patch.active ?? null, p_reason: patch.reason ?? null }); toast.success('Diperbarui & tercatat di log'); setAsk(null); load(); } catch (e) { handleAdminError(e); }
   };
+  // Data pribadi (telepon/email) tersamar; "Tampilkan" mencatat admin.pii_reveal di log keamanan
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const reveal = async (u: Row_) => {
+    try { await rpc('admin_log_event', { p_kind: 'admin.pii_reveal', p_detail: { user_id: u.id } }); setRevealed((r) => ({ ...r, [u.id]: true })); }
+    catch (e) { toast.error((e as Error).message); }
+  };
+  const exportCsv = () => adminExportCsv('users', `pengguna-${new Date().toISOString().slice(0, 10)}.csv`, ['ID', 'Nama', 'Email', 'Telepon', 'Peran', 'Saldo', 'Aktif', 'Daftar'], shown.map((u) => [u.id, u.full_name, u.email, phoneDisplay(u.phone), u.role, u.balance, u.is_active ? 'ya' : 'tidak', u.created_at]));
   const [adjusting, setAdjusting] = useState<Row_ | null>(null);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -41,21 +53,29 @@ export default function AdminUsers() {
   const runAdjust = async () => {
     const n = Number(amount.replace(/[^\d-]/g, ''));
     if (!adjusting || !n) return toast.error('Masukkan nominal (negatif untuk mengurangi)');
+    if (!(await useAdminSecurity.getState().ensureUnlocked())) return;
     try { await rpc('admin_adjust_wallet', { p_user: adjusting.id, p_amount: n, p_note: note || 'Penyesuaian admin' }); toast.success('Saldo disesuaikan'); setAdjusting(null); load(); }
-    catch (e) { toast.error((e as Error).message); }
+    catch (e) { handleAdminError(e); }
   };
   const shown = rows.filter((r) => (filter === 'all' || r.role === filter) && (!q || r.full_name.toLowerCase().includes(q.toLowerCase()) || (r.email ?? '').toLowerCase().includes(q.toLowerCase()) || (r.phone ?? '').includes(q)));
   const roleColor: Record<UserRole, string> = { customer: colors.info, driver: colors.ride, merchant: colors.food, admin: colors.accent };
 
   return (
-    <AdminPage title="Pengguna" subtitle={`${rows.length} akun`} onRefresh={load}>
+    <AdminPage title="Pengguna" subtitle={`${rows.length} akun · data pribadi tersamar, tampilkan per baris (tercatat di log keamanan)`} onRefresh={load} right={Platform.OS === 'web' ? <Button size="sm" title="Ekspor CSV" icon="download-outline" variant="secondary" onPress={exportCsv} /> : undefined}>
       <ReasonPrompt visible={!!ask} title={`Nonaktifkan akun ${ask?.name}?`} subtitle="Akun tidak bisa memesan/menerima order. Alasan tersimpan di Log Aktivitas." onCancel={() => setAsk(null)} onSubmit={(r) => setUser(ask!.id, { active: false, reason: r })} confirmLabel="Nonaktifkan" />
       <Row gap={10} style={{ flexWrap: 'wrap' }}>
         <FilterBar value={filter} onChange={setFilter} options={[{ key: 'all', label: 'Semua' }, { key: 'customer', label: 'Pelanggan' }, { key: 'driver', label: 'Driver' }, { key: 'merchant', label: 'Merchant' }, { key: 'admin', label: 'Admin' }]} />
         <Input placeholder="Cari nama / email / HP" value={q} onChangeText={setQ} icon="search" containerStyle={{ minWidth: 240 }} />
       </Row>
       <Table rows={shown as unknown as Record<string, unknown>[]} columns={[
-        { key: 'name', label: 'Pengguna', width: 220, render: (r) => { const u = r as unknown as Row_; return <View><Text style={{ fontWeight: '700' }}>{u.full_name}</Text><Text style={font.tiny}>{u.email} · {phoneDisplay(u.phone)}</Text></View>; } },
+        { key: 'name', label: 'Pengguna', width: 260, render: (r) => { const u = r as unknown as Row_; const open = !!revealed[u.id]; return (
+          <View>
+            <Text style={{ fontWeight: '700' }}>{u.full_name}</Text>
+            <Row gap={6} style={{ flexWrap: 'wrap' }}>
+              <Text style={font.tiny}>{open ? `${u.email ?? '-'} · ${phoneDisplay(u.phone)}` : `${emailMasked(u.email)} · ${phoneMasked(u.phone)}`}</Text>
+              {!open ? <Pressable onPress={() => reveal(u)} hitSlop={6}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 12 }}>Tampilkan</Text></Pressable> : null}
+            </Row>
+          </View>); } },
         { key: 'role', label: 'Peran', width: 110, render: (r) => <Badge text={String(r.role)} color={roleColor[r.role as UserRole]} /> },
         { key: 'balance', label: 'Saldo', width: 120, render: (r) => <Text style={{ fontWeight: '700' }}>{rupiah(Number(r.balance))}</Text> },
         { key: 'is_active', label: 'Status', width: 150, render: (r) => <View><Badge text={r.is_active ? 'Aktif' : 'Nonaktif'} color={r.is_active ? colors.success : colors.danger} />{!r.is_active && r.status_reason ? <Text style={font.tiny} numberOfLines={2}>{String(r.status_reason)}</Text> : null}</View> },

@@ -7,6 +7,7 @@ import { Card, Row, Input, Button, Chip, Badge, toast } from '@/components/ui';
 import { rpc, supabase } from '@/lib/supabase';
 import { colors, font, radius } from '@/lib/theme';
 import { rupiah, formatDate } from '@/lib/format';
+import { handleAdminError, useAdminSecurity } from '@/store/adminSecurity';
 import type { GatewayStatus } from '@/lib/types';
 
 const WEBHOOK_URL = 'https://qwltshvzrsykxdvhbxcv.supabase.co/functions/v1/midtrans-webhook';
@@ -45,17 +46,19 @@ export default function AdminGateway() {
     const min = Number(f.topup_min), max = Number(f.topup_max);
     if (!min || !max || min >= max) return toast.error('Batas top up tidak valid (min < max)');
     if (!f.methods.length) return toast.error('Pilih minimal satu metode pembayaran');
+    if (!(await useAdminSecurity.getState().ensureUnlocked())) return;
     setBusy(true);
     try {
       const p: Record<string, unknown> = { client_key: f.client_key.trim(), merchant_id: f.merchant_id.trim(), is_production: f.is_production, methods: f.methods, topup_min: min, topup_max: max };
       if (f.server_key.trim()) p.server_key = f.server_key.trim();
       apply(await rpc<GatewayStatus>('admin_set_gateway', { p })); toast.success('Konfigurasi gateway disimpan'); setTest(null);
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    } catch (e) { handleAdminError(e); } finally { setBusy(false); }
   };
   const clearKey = async () => {
+    if (!(await useAdminSecurity.getState().ensureUnlocked())) return;
     setBusy(true);
     try { apply(await rpc<GatewayStatus>('admin_set_gateway', { p: { clear_server_key: true } })); toast.success('Server key dihapus — top up kembali ke mode simulasi'); setTest(null); }
-    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    catch (e) { handleAdminError(e); } finally { setBusy(false); }
   };
   const testConn = async () => {
     setTesting(true); setTest(null);

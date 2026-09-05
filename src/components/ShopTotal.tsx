@@ -12,6 +12,16 @@ import type { Order, ShoppingItem } from '@/lib/types';
 
 type RowState = { key: string; item_id?: string; product_id?: string; name: string; unit?: string; qty: string; ref: number; price: string; unavailable: boolean };
 const num = (v: string) => Number(String(v).replace(',', '.').replace(/[^\d.]/g, '')) || 0;
+const COEF_MIN = 0.6, COEF_MAX = 1.25, COEF_HARD = 1.6;
+/** Peringatan koefisien harga riil vs acuan (AntarMarket). */
+const coefWarn = (price: number, ref: number): [string, string] | null => {
+  if (!ref || !price) return null;
+  const k = price / ref;
+  if (k > COEF_HARD) return [`${k.toFixed(2)}× acuan — melebihi ${COEF_HARD}×, akan ditolak`, colors.danger];
+  if (k > COEF_MAX) return [`${k.toFixed(2)}× acuan — di luar koefisien (maks ${COEF_MAX}×), foto nota wajib`, colors.warning];
+  if (k < COEF_MIN) return [`${k.toFixed(2)}× acuan — di luar koefisien (min ${COEF_MIN}×), foto nota wajib`, colors.warning];
+  return null;
+};
 const fmtQty = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
 
 function initialRows(order: Order): RowState[] {
@@ -64,13 +74,21 @@ export function ShopTotalCard({ order, onDone }: { order: Order; onDone: () => v
         {order.payment_method === 'wallet' ? ' Selisih otomatis disesuaikan dari AntarPay pelanggan; penggantian belanja + jasa belanja masuk ke saldo Anda saat order selesai.' : ' Pesanan tunai: tagih total ke pelanggan saat serah terima.'}
       </Text>
 
+      {isMarket && (
+        <View style={s.rule}>
+          <Ionicons name="shield-checkmark-outline" size={16} color={colors.market} style={{ marginTop: 1 }} />
+          <Text style={[font.tiny, { flex: 1, color: colors.text }]}>Aturan koefisien: harga riil wajar {COEF_MIN}×–{COEF_MAX}× harga acuan. Di luar rentang itu foto nota wajib & ditandai untuk peninjauan; di atas {COEF_HARD}× otomatis ditolak.</Text>
+        </View>
+      )}
       {fromCatalog && (
         <View style={{ gap: 6 }}>
-          {rows.map((r) => (
-            <View key={r.key} style={[s.item, r.unavailable && { opacity: 0.55 }]}>
+          {rows.map((r) => {
+            const warn = isMarket && !r.unavailable ? coefWarn(num(r.price), r.ref) : null;
+            return (
+            <View key={r.key} style={[s.item, r.unavailable && { opacity: 0.55 }, warn && { borderColor: warn[1] }]}>
               <Row between>
                 <Text style={[font.body, { fontWeight: '600', flex: 1 }]} numberOfLines={1}>{r.name}</Text>
-                <Text style={font.tiny}>acuan {rupiah(r.ref)}{r.unit ? `/${r.unit}` : ''}</Text>
+                <Text style={font.tiny}>{r.ref ? `acuan ${rupiah(r.ref)}${r.unit ? `/${r.unit}` : ''}` : 'tanpa acuan'}</Text>
               </Row>
               {isMarket ? (
                 <Row gap={8}>
@@ -93,12 +111,14 @@ export function ShopTotalCard({ order, onDone }: { order: Order; onDone: () => v
                   <Text style={{ fontWeight: '800', color: colors.text, textDecorationLine: r.unavailable ? 'line-through' : 'none' }}>{rupiah(r.ref * num(r.qty))}</Text>
                 </Row>
               )}
+              {warn && <Row gap={6}><Ionicons name="alert-circle" size={14} color={warn[1]} /><Text style={[font.tiny, { flex: 1, color: warn[1], fontWeight: '700' }]}>{warn[0]}</Text></Row>}
               <PressableScale haptic={false} onPress={() => patch(r.key, { unavailable: !r.unavailable })} style={s.check}>
                 <Ionicons name={r.unavailable ? 'checkbox' : 'square-outline'} size={18} color={r.unavailable ? colors.danger : colors.textMuted} />
                 <Text style={[font.tiny, { color: r.unavailable ? colors.danger : colors.textSecondary }]}>Tidak tersedia / tidak dibeli</Text>
               </PressableScale>
             </View>
-          ))}
+            );
+          })}
         </View>
       )}
 
@@ -121,4 +141,5 @@ const s = StyleSheet.create({
   input: { height: 46, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 12, color: colors.text, fontSize: 16, fontWeight: '700' },
   small: { height: 38, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 10, color: colors.text, fontSize: 14, marginTop: 2 },
   check: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 2 },
+  rule: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 10, borderRadius: radius.sm, backgroundColor: colors.successLight, borderWidth: 1, borderColor: colors.market + '33' },
 });

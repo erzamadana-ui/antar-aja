@@ -13,7 +13,7 @@ type Item = { icon: IconName; color?: string; title: string; subtitle?: string; 
 
 export default function DriverAccount() {
   const router = useRouter();
-  const { profile, driver, merchant, signOut } = useAuth();
+  const { profile, driver, merchant, signOut, marketVendor } = useAuth();
   const setMode = useMode((s) => s.setMode);
   const approved = driver?.status === 'approved';
 
@@ -83,6 +83,7 @@ export default function DriverAccount() {
 
       <Entrance index={4} style={{ marginTop: 22, gap: 10 }}>
         {merchant ? <Button title="Beralih ke Mode Merchant" variant="secondary" icon="storefront-outline" onPress={async () => { await setMode('merchant'); router.replace('/(merchant)'); }} /> : null}
+        {marketVendor ? <Button title="Beralih ke Lapak Pasar" variant="secondary" icon="basket-outline" onPress={() => router.replace('/(vendor)' as never)} /> : null}
         <Button title="Keluar" variant="outline" color={colors.danger} icon="log-out-outline" onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} />
       </Entrance>
       <Row style={{ justifyContent: 'center', marginTop: 24 }}><Text style={font.tiny}>AntarKita Mitra v3.0</Text></Row>

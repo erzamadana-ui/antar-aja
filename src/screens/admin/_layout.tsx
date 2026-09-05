@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from 'react-native-reanimated';
 import { RequireAuth } from '@/components/AuthGate';
+import { AdminUnlockGate } from '@/components/AdminUnlockGate';
 import { AmbientBackground, BrandGradient } from '@/components/glass';
 import { PressableScale } from '@/components/motion';
 import { BrandLogo } from '@/components/Logo';
@@ -27,7 +28,11 @@ const NAV: { href: string; label: string; icon: IconName; iconActive: IconName }
   { href: '/(admin)/logistics', label: 'Logistik & Travel', icon: 'map-outline', iconActive: 'map' },
   { href: '/(admin)/shop', label: 'AntarShop · Toko', icon: 'basket-outline', iconActive: 'basket' },
   { href: '/(admin)/market', label: 'AntarMarket · Pasar', icon: 'storefront-outline', iconActive: 'storefront' },
+  { href: '/(admin)/places', label: 'Usulan Data', icon: 'map-outline', iconActive: 'map' },
+  { href: '/(admin)/vendors', label: 'Mitra Pasar', icon: 'basket-outline', iconActive: 'basket' },
   { href: '/(admin)/gateway', label: 'Payment Gateway', icon: 'card-outline', iconActive: 'card' },
+  { href: '/(admin)/automation', label: 'Otomasi', icon: 'flash-outline', iconActive: 'flash' },
+  { href: '/(admin)/security', label: 'Pusat Keamanan', icon: 'shield-checkmark-outline', iconActive: 'shield-checkmark' },
   { href: '/(admin)/cs', label: 'CS & Tiket', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
   { href: '/(admin)/activity', label: 'Log Aktivitas', icon: 'time-outline', iconActive: 'time' },
   { href: '/(admin)/settings', label: 'Pengaturan', icon: 'settings-outline', iconActive: 'settings' },
@@ -63,7 +68,7 @@ export default function AdminLayout() {
                     <BrandLogo size={36} />
                     <View><Text style={{ color: colors.text, fontSize: 17, fontWeight: '800' }}>AntarKita</Text><Text style={font.tiny}>Panel Admin</Text></View>
                   </View>
-                  <View style={{ paddingHorizontal: 10, gap: 4 }}>
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 10, gap: 4, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
                     <Animated.View style={[s.indicator, indicator]} />
                     {NAV.map((n) => {
                       const active = isActive(n.href);
@@ -74,8 +79,7 @@ export default function AdminLayout() {
                         </Pressable>
                       );
                     })}
-                  </View>
-                  <View style={{ flex: 1 }} />
+                  </ScrollView>
                   <View style={s.footer}>
                     <Text style={{ color: colors.text, fontWeight: '700' }} numberOfLines={1}>{profile?.full_name}</Text>
                     <PressableScale haptic={false} onPress={async () => { await signOut(); router.replace('/(auth)/welcome'); }} style={s.footBtn}><Ionicons name="log-out-outline" size={16} color={colors.danger} /><Text style={{ color: colors.danger, fontWeight: '700', fontSize: 13 }}>Keluar</Text></PressableScale>
@@ -104,9 +108,11 @@ export default function AdminLayout() {
               </View>
             )}
             {/* Transisi halaman: fade + geser naik halus setiap pindah rute */}
-            <Animated.View key={pathname} entering={reduce ? undefined : FadeIn.duration(motion.base)} style={{ flex: 1 }}>
-              <Slot />
-            </Animated.View>
+            <AdminUnlockGate>
+              <Animated.View key={pathname} entering={reduce ? undefined : FadeIn.duration(motion.base)} style={{ flex: 1 }}>
+                <Slot />
+              </Animated.View>
+            </AdminUnlockGate>
           </View>
         </SafeAreaView>
       </View>

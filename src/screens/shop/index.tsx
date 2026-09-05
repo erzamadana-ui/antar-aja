@@ -187,12 +187,32 @@ export default function ShopScreen() {
                       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                         <Row gap={6}><Text style={[font.body, { fontWeight: '700', flexShrink: 1 }]} numberOfLines={1}>{st.name}</Text><Badge text={st.is_open_now === false ? 'Tutup' : 'Buka'} color={st.is_open_now === false ? colors.danger : colors.success} /></Row>
                         <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{storeCategoryLabel[st.category] ?? st.category} · {km(st.distance_km)}{st.open_hours ? ` · ${st.open_hours}` : ''}</Text></Row>
-                        {st.product_count != null && <Text style={font.tiny}>{st.product_count} produk</Text>}
+                        <Row gap={6} style={{ flexWrap: 'wrap' }}>
+                          {st.product_count != null && <Text style={font.tiny}>{st.product_count} produk</Text>}
+                          {st.catalog_source === 'crowd' && <Badge text="Data dari pengguna" color={colors.info} />}
+                        </Row>
                       </View>
-                      <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
+                      <View style={{ alignItems: 'center', gap: 6 }}>
+                        <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
+                        <PressableScale haptic={false} hitSlop={6} accessibilityRole="button" accessibilityLabel="Perbarui data toko" onPress={() => router.push({ pathname: '/places/suggest', params: { kind: 'store', target: st.id, name: st.name } } as never)} style={s.updateBtn}>
+                          <Ionicons name="create-outline" size={12} color={colors.textSecondary} /><Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary }}>Perbarui</Text>
+                        </PressableScale>
+                      </View>
                     </PressableScale>
                   </Entrance>
                 ))}
+              {!loadingStores && (
+                <Entrance index={shownStores.length + 1}>
+                  <PressableScale onPress={() => router.push({ pathname: '/places/suggest', params: { kind: 'store' } } as never)} scaleTo={0.985} haptic={false} style={s.suggestCard}>
+                    <View style={s.iconTint}><Ionicons name="add-circle-outline" size={22} color={colors.primary} /></View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={[font.body, { fontWeight: '700' }]}>Toko belum ada di daftar?</Text>
+                      <Text style={font.tiny}>Tambahkan dari lokasi Anda. Aktif otomatis setelah 3 pengguna mengonfirmasi.</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                  </PressableScale>
+                </Entrance>
+              )}
             </View>
           </Entrance>
         )}
@@ -359,6 +379,8 @@ const s = StyleSheet.create({
   iconTint: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
   rowArrow: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
   addrRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  updateBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, height: 24, borderRadius: 12, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  suggestCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 20, backgroundColor: colors.tint, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primaryLight },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   tile: { gap: 8, padding: 8, borderRadius: 22, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
   tileArt: { height: 110, borderRadius: 18, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
