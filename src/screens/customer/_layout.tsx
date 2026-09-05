@@ -9,7 +9,7 @@ const TabBar = makeGlassTabBar({
   orders: { label: 'Pesanan', tk: 'orders', icon: 'receipt-outline', iconActive: 'receipt' },
   pay: { label: 'Pembayaran', tk: 'pay', icon: 'card-outline', iconActive: 'card' },
   account: { label: 'Akun', tk: 'account', icon: 'person-outline', iconActive: 'person' },
-}, colors.primary);
+}, colors.primary, { icon: 'paper-plane', href: '/ride?service=ride_motor', accessibilityLabel: 'Pesan AntarRide' });
 
 export default function CustomerLayout() {
   return (

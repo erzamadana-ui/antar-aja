@@ -9,7 +9,7 @@ const TabBar = makeGlassTabBar({
   history: { label: 'Riwayat', tk: 'history', icon: 'receipt-outline', iconActive: 'receipt' },
   earnings: { label: 'Pendapatan', tk: 'earnings', icon: 'wallet-outline', iconActive: 'wallet' },
   account: { label: 'Akun', tk: 'account', icon: 'person-outline', iconActive: 'person' },
-}, colors.ride);
+}, colors.ride, { icon: 'navigate', href: '/(driver)', accessibilityLabel: 'Peta order' });
 
 export default function DriverLayout() {
   return (

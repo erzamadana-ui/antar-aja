@@ -8,7 +8,7 @@ const TabBar = makeGlassTabBar({
   index: { label: 'Pesanan', tk: 'orders', icon: 'receipt-outline', iconActive: 'receipt' },
   menu: { label: 'Menu', tk: 'menu', icon: 'restaurant-outline', iconActive: 'restaurant' },
   store: { label: 'Toko', tk: 'store', icon: 'storefront-outline', iconActive: 'storefront' },
-}, colors.food);
+}, colors.food, { icon: 'add', href: '/(merchant)/menu', accessibilityLabel: 'Tambah menu' });
 
 export default function MerchantLayout() {
   return (

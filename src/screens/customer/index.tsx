@@ -8,19 +8,17 @@ import { useMyOrders } from '@/hooks/useOrder';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { supabase } from '@/lib/supabase';
 import { HOME_SERVICES } from '@/lib/services';
-import { colors, font, radius, shadow, spacing, glass } from '@/lib/theme';
-import { rupiah } from '@/lib/format';
+import { colors, font, radius, shadow, spacing } from '@/lib/theme';
 import type { Merchant, Promo, FrequentData } from '@/lib/types';
 import { useBooking } from '@/store/booking';
 import { serviceDef } from '@/lib/services';
 import { HalalBadge } from '@/components/MerchantStatus';
-import { PromoCard } from '@/components/PromoCard';
-import { Row, Stars, Avatar } from '@/components/ui';
-import { AmbientBackground, BrandGradient, Glass } from '@/components/glass';
-import { Entrance, PressableScale, AnimatedNumber, Skeleton } from '@/components/motion';
-import { ServiceArt, ServiceIllustration } from '@/components/ServiceArt';
+import { DestinationCard, PromoCard } from '@/components/PromoCard';
+import { Row, Avatar, CircleButton } from '@/components/ui';
+import { AmbientBackground } from '@/components/glass';
+import { Entrance, PressableScale, Skeleton } from '@/components/motion';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { ActiveOrderBubbles } from '@/components/ActiveOrderBubbles';
-import { BrandLogo, Wordmark } from '@/components/Logo';
 import { useT } from '@/lib/i18n';
 import { useNotifications } from '@/hooks/useNotifications';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
@@ -64,53 +62,52 @@ export default function CustomerHome() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <AmbientBackground tint="teal" />
-      <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE + 16 }} showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
-        {/* Band header teal — logo, sapaan, lonceng, saldo ringkas */}
-        <View style={s.band}>
-          <SafeAreaView edges={['top']}>
-            <View style={s.inner}>
-              <Entrance index={0}>
-                <Row between>
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE + 16 }} showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
+          <View style={s.inner}>
+            {/* Header: avatar + sapaan, tombol bulat lonceng & dompet */}
+            <Entrance index={0}>
+              <Row between style={{ marginTop: 10 }}>
+                <PressableScale onPress={() => router.push('/(customer)/account')} scaleTo={0.96} haptic={false}>
                   <Row gap={10}>
-                    <BrandLogo size={40} flat />
+                    <Avatar name={profile?.full_name} url={profile?.avatar_url} size={44} />
                     <View>
-                      <Wordmark size={19} dark />
-                      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' }}>{greet}, {profile?.full_name?.split(' ')[0] ?? 'Kawan'}</Text>
+                      <Text style={[font.h3, { fontSize: 16 }]}>{greet}, {profile?.full_name?.split(' ')[0] ?? 'Kawan'}</Text>
+                      <Text style={font.tiny}>{t('welcome_back_home')}</Text>
                     </View>
                   </Row>
-                  <Row gap={8}>
-                    <PressableScale onPress={() => router.push('/(customer)/pay')} scaleTo={0.94} style={s.balanceChip}>
-                      <Ionicons name="wallet-outline" size={14} color="#fff" />
-                      <AnimatedNumber value={wallet?.balance ?? 0} format={(n) => rupiah(n)} style={{ color: '#fff', fontSize: 12, fontWeight: '800' }} />
-                    </PressableScale>
-                    <PressableScale onPress={() => router.push('/inbox' as never)} scaleTo={0.9} style={s.bell}>
-                      <Ionicons name={unread > 0 ? 'notifications' : 'notifications-outline'} size={20} color="#fff" />
-                      {unread > 0 && <View style={s.bellBadge}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{unread > 9 ? '9+' : unread}</Text></View>}
-                    </PressableScale>
-                  </Row>
+                </PressableScale>
+                <Row gap={8}>
+                  <CircleButton icon={unread > 0 ? 'notifications' : 'notifications-outline'} badge={unread} onPress={() => router.push('/inbox' as never)} />
+                  <CircleButton icon="wallet-outline" onPress={() => router.push('/(customer)/pay')} />
                 </Row>
-              </Entrance>
-              <Entrance index={1}><Text style={s.bandTitle}>{t('home_question')}</Text></Entrance>
-            </View>
-          </SafeAreaView>
-        </View>
+              </Row>
+            </Entrance>
 
-        <View style={[s.inner, { marginTop: -40 }]}>
-          {/* Kartu pencarian + tempat tersimpan (menumpuk di atas band) */}
-          <Entrance index={2}>
-            <View style={s.searchCard}>
-              <PressableScale onPress={() => router.push('/food')} scaleTo={0.985}>
-                <Row gap={10} style={s.searchRow}>
-                  <Ionicons name="search" size={18} color={colors.textMuted} />
-                  <Text style={{ color: colors.textMuted, flex: 1, fontSize: 15 }} numberOfLines={1}>{t('search_placeholder')}</Text>
-                </Row>
-              </PressableScale>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 10 }}>
+            {/* Judul besar + ikon kecil (kit: "Discover ⛰️") */}
+            <Entrance index={1}>
+              <Row gap={8} style={{ marginTop: 22, alignItems: 'flex-end' }}>
+                <Text style={[font.display, { fontSize: 30, lineHeight: 36 }]}>{t('home_question')}</Text>
+                <View style={{ marginBottom: 4 }}><ServiceIllustration kind="rider" size={34} /></View>
+              </Row>
+              <Text style={[font.small, { marginTop: 2 }]}>{t('home_sub')}</Text>
+            </Entrance>
+
+            {/* Pencarian + tombol filter bulat tint */}
+            <Entrance index={2}>
+              <Row gap={10} style={{ marginTop: 16 }}>
+                <PressableScale onPress={() => router.push('/food')} scaleTo={0.985} haptic={false} style={[s.search, { flex: 1 }]}>
+                  <Ionicons name="search-outline" size={20} color={colors.primary} />
+                  <Text style={{ color: colors.textMuted, flex: 1, fontSize: 14, fontWeight: '500' }} numberOfLines={1}>{t('search_placeholder')}</Text>
+                </PressableScale>
+                <PressableScale onPress={() => router.push('/account/places')} scaleTo={0.9} style={s.filterBtn}><Ionicons name="options-outline" size={20} color={colors.primary} /></PressableScale>
+              </Row>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 10, paddingRight: 16 }}>
                 {(freq?.recent ?? []).slice(0, 4).map((r, i) => (
-                  <PressableScale key={i} onPress={() => goRoute(r)} scaleTo={0.95} style={[s.placeChip, i === 0 && s.placeChipOn]}>
-                    <Ionicons name="location" size={13} color={i === 0 ? colors.mint : colors.primary} />
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: i === 0 ? '#fff' : colors.text }} numberOfLines={1}>{r.address.split(',')[0]}</Text>
+                  <PressableScale key={i} onPress={() => goRoute(r)} scaleTo={0.95} style={s.placeChip}>
+                    <View style={s.placeDot}><Ionicons name="location" size={10} color="#fff" /></View>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }} numberOfLines={1}>{r.address.split(',')[0]}</Text>
                   </PressableScale>
                 ))}
                 <PressableScale onPress={() => router.push('/account/places')} scaleTo={0.95} style={s.placeChip}>
@@ -118,134 +115,130 @@ export default function CustomerHome() {
                   <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }}>{t('saved_places')}</Text>
                 </PressableScale>
               </ScrollView>
-            </View>
-          </Entrance>
+            </Entrance>
 
-          {/* Layanan — 8 tile, ikon dalam kotak tint padat */}
-          <View style={s.grid}>
-            {HOME_SERVICES.map((sv, i) => (
-              <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '25%', alignItems: 'stretch' }}>
-                <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
-                  <View style={[s.serviceIcon, { backgroundColor: sv.color + '14' }]}><ServiceIllustration kind={sv.art} size={44} /></View>
-                  <Text style={s.serviceLabel} numberOfLines={1}>{sv.label.replace('Antar', '')}</Text>
-                </PressableScale>
-              </Entrance>
-            ))}
-          </View>
+            {/* Layanan — ikon bulat (kit: Beach / Park / Plane / Train) */}
+            <View style={s.grid}>
+              {HOME_SERVICES.map((sv, i) => (
+                <Entrance key={sv.id} index={3 + i} from="zoom" style={{ width: '25%', alignItems: 'stretch' }}>
+                  <PressableScale onPress={() => router.push(sv.route as never)} scaleTo={0.9} style={s.serviceTile}>
+                    <View style={[s.serviceCircle, i === 0 && { backgroundColor: colors.primary, borderColor: colors.primary }]}><ServiceIllustration kind={sv.art} size={40} /></View>
+                    <Text style={s.serviceLabel} numberOfLines={1}>{sv.label.replace('Antar', '')}</Text>
+                  </PressableScale>
+                </Entrance>
+              ))}
+            </View>
+
+            {/* Banner teal berilustrasi (kit: "Let's Make Our Life so a Life · Find Trip") */}
+            <Entrance index={11}>
+              <PressableScale onPress={() => router.push('/travel' as never)} scaleTo={0.985} style={s.banner}>
+                <View style={{ flex: 1, gap: 6 }}>
+                  <View style={s.bannerTag}><Ionicons name="bus-outline" size={11} color="#fff" /><Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>AntarTravel</Text></View>
+                  <Text style={s.bannerTitle}>{t('banner_title')}</Text>
+                  <Text style={s.bannerSub}>{t('banner_sub')}</Text>
+                  <View style={s.bannerBtn}><Text style={{ color: colors.primaryDark, fontWeight: '800', fontSize: 13 }}>{t('banner_cta')}</Text></View>
+                </View>
+                <View style={s.bannerArt}><ServiceIllustration kind="travel" size={96} /></View>
+              </PressableScale>
+            </Entrance>
 
             {/* Order aktif → bubble */}
             {active.length > 0 && (
-              <Entrance index={8}>
+              <Entrance index={12}>
                 <Row between style={{ marginTop: 22, marginBottom: 8 }}>
-                  <Text style={font.label}>{t('active_orders')}</Text>
+                  <Text style={font.h3}>{t('active_orders')}</Text>
                   <Text style={font.tiny}>{active.length} · {t('tap_detail')}</Text>
                 </Row>
                 <ActiveOrderBubbles orders={active} />
               </Entrance>
             )}
 
-            {/* Promo — thumbnail bergambar */}
+            {/* Promo — kartu destinasi tinggi */}
             {promos.length > 0 && (
-              <Entrance index={9}>
-                <Row between style={{ marginTop: 22, marginBottom: 8 }}>
-                  <Text style={font.label}>{t('promo_for_you')}</Text>
-                  <Text style={font.tiny}>{promos.length} promo</Text>
+              <Entrance index={13}>
+                <Row between style={{ marginTop: 24, marginBottom: 12 }}>
+                  <Text style={font.h3}>{t('promo_for_you')}</Text>
+                  <Pressable onPress={() => router.push('/inbox' as never)}><Text style={s.seeAll}>{t('see_all')}</Text></Pressable>
                 </Row>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4, paddingRight: 16 }}>
-                  {promos.map((p, i) => <PromoCard key={p.code} promo={p} index={i} width={224} onPress={() => router.push((p.service ? serviceDef(p.service).route : '/food') as never)} />)}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 16, paddingBottom: 6 }}>
+                  {promos.map((p, i) => <PromoCard key={p.code} promo={p} index={i} width={240} onPress={() => router.push((p.service ? serviceDef(p.service).route : '/food') as never)} />)}
                 </ScrollView>
               </Entrance>
             )}
 
-            {/* Sering dipesan — pesan ulang sekali ketuk */}
+            {/* Sering dipesan — baris thumbnail (kit: daftar Group Tour) */}
             {freq && (freq.merchants.length > 0 || freq.routes.length > 0) && (
-              <Entrance index={10}>
-                <Row between style={{ marginTop: 18, marginBottom: 8 }}>
-                  <Text style={font.label}>{t('frequent')}</Text>
-                  <Pressable onPress={() => router.push('/(customer)/orders')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>{t('history')}</Text></Pressable>
+              <Entrance index={14}>
+                <Row between style={{ marginTop: 20, marginBottom: 10 }}>
+                  <Text style={font.h3}>{t('frequent')}</Text>
+                  <Pressable onPress={() => router.push('/(customer)/orders')}><Text style={s.seeAll}>{t('history')}</Text></Pressable>
                 </Row>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4, paddingRight: 16 }}>
-                  {freq.merchants.map((m) => (
-                    <PressableScale key={m.merchant_id} onPress={() => router.push(`/food/${m.merchant_id}` as never)} scaleTo={0.96} style={s.freq}>
-                      <Image source={{ uri: m.image_url ?? undefined }} style={s.freqImg} />
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{m.name}</Text>
-                        <Row gap={4}><HalalBadge merchant={m} /><Text style={font.tiny}>{m.count}× dipesan</Text></Row>
+                <View style={{ gap: 10 }}>
+                  {freq.merchants.slice(0, 3).map((m) => (
+                    <PressableScale key={m.merchant_id} onPress={() => router.push(`/food/${m.merchant_id}` as never)} scaleTo={0.98} haptic={false} style={s.rowCard}>
+                      <Image source={{ uri: m.image_url ?? undefined }} style={s.rowImg} />
+                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                        <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{m.name}</Text>
+                        <Row gap={6}><HalalBadge merchant={m} /><Text style={font.tiny}>AntarFood · {m.count}× dipesan</Text></Row>
                       </View>
-                      <View style={[s.reorder, { backgroundColor: colors.food }]}><Ionicons name="refresh" size={14} color="#fff" /></View>
+                      <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
                     </PressableScale>
                   ))}
-                  {freq.routes.map((r, i) => {
+                  {freq.routes.slice(0, 3).map((r, i) => {
                     const def = serviceDef(r.service);
                     return (
-                      <PressableScale key={`${r.service}-${i}`} onPress={() => goRoute(r)} scaleTo={0.96} style={s.freq}>
-                        <View style={[s.freqImg, { alignItems: 'center', justifyContent: 'center', backgroundColor: def.color + '14' }]}><ServiceIllustration kind={def.art} size={36} /></View>
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                          <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{r.service === 'shop' && r.shop_store ? `${r.shop_store} → ` : ''}{r.dropoff_address.split(',')[0]}</Text>
-                          <Text style={font.tiny} numberOfLines={1}>{def.label} · {r.count}× · {r.dropoff_address.split(',').slice(1, 3).join(',').trim() || 'ketuk untuk pesan lagi'}</Text>
+                      <PressableScale key={`${r.service}-${i}`} onPress={() => goRoute(r)} scaleTo={0.98} haptic={false} style={s.rowCard}>
+                        <View style={[s.rowImg, { alignItems: 'center', justifyContent: 'center', backgroundColor: def.color + '14' }]}><ServiceIllustration kind={def.art} size={40} /></View>
+                        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                          <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{r.service === 'shop' && r.shop_store ? `${r.shop_store} → ` : ''}{r.dropoff_address.split(',')[0]}</Text>
+                          <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{def.label} · {r.count}× · {r.dropoff_address.split(',').slice(1, 3).join(',').trim() || 'ketuk untuk pesan lagi'}</Text></Row>
                         </View>
-                        <View style={[s.reorder, { backgroundColor: def.color }]}><Ionicons name="arrow-forward" size={14} color="#fff" /></View>
+                        <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
                       </PressableScale>
                     );
                   })}
-                </ScrollView>
-                {freq.recent.length > 0 && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 8, paddingRight: 16 }}>
-                    <Row gap={4} style={{ paddingRight: 2 }}><Ionicons name="time-outline" size={14} color={colors.textMuted} /><Text style={font.tiny}>{t('recent_dest')}:</Text></Row>
-                    {freq.recent.map((r, i) => (
-                      <PressableScale key={i} onPress={() => goRoute(r)} scaleTo={0.95} style={s.recent}><Ionicons name="location" size={12} color={colors.primary} /><Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }} numberOfLines={1}>{r.address.split(',')[0]}</Text></PressableScale>
-                    ))}
-                  </ScrollView>
-                )}
+                </View>
               </Entrance>
             )}
 
-            {/* Merchant */}
-            <Entrance index={11}>
-              <Row between style={{ marginTop: 18 }}>
-                <Text style={font.label}>{t('trending_food')}</Text>
-                <Pressable onPress={() => router.push('/food')}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>{t('see_all')}</Text></Pressable>
+            {/* Merchant laris — kartu destinasi dengan rating */}
+            <Entrance index={15}>
+              <Row between style={{ marginTop: 24, marginBottom: 12 }}>
+                <Text style={font.h3}>{t('trending_food')}</Text>
+                <Pressable onPress={() => router.push('/food')}><Text style={s.seeAll}>{t('see_all')}</Text></Pressable>
               </Row>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 12, paddingRight: 16 }}>
-                {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={150} height={150} radius={radius.lg} />) : merchants.map((m) => (
-                  <PressableScale key={m.id} onPress={() => router.push(`/food/${m.id}` as never)} scaleTo={0.97}>
-                    <Glass variant="strong" radius={radius.lg} style={{ width: 150 }}>
-                      <Image source={{ uri: m.image_url ?? undefined }} style={s.merchantImg} />
-                      <View style={{ padding: 10, gap: 2 }}>
-                        <Row between><Text style={{ fontWeight: '700', color: colors.text, flex: 1 }} numberOfLines={1}>{m.name}</Text><HalalBadge merchant={m} /></Row>
-                        <Row gap={6}><Stars value={m.rating_avg} size={11} /><Text style={font.tiny}>{Number(m.rating_avg).toFixed(1)} · {m.distance_km} km</Text></Row>
-                      </View>
-                    </Glass>
-                  </PressableScale>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 16, paddingBottom: 6 }}>
+                {merchants === null ? [0, 1, 2].map((i) => <Skeleton key={i} width={170} height={230} radius={24} />) : merchants.map((m) => (
+                  <DestinationCard key={m.id} image={m.image_url} title={m.name} subtitle={`${m.distance_km} km · ${m.is_halal ? 'Halal' : 'Non-halal'}`} rating={m.rating_avg} width={170} height={230} accent={colors.food} onPress={() => router.push(`/food/${m.id}` as never)} />
                 ))}
                 {merchants && merchants.length === 0 && <Text style={font.small}>Belum ada merchant di sekitar lokasi Anda.</Text>}
               </ScrollView>
             </Entrance>
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
   inner: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: spacing.lg },
-  band: { backgroundColor: colors.primary, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl, paddingTop: 8, paddingBottom: 60, ...shadow.glow(colors.primary) },
-  bandTitle: { color: '#fff', fontSize: 24, fontWeight: '800', letterSpacing: -0.4, lineHeight: 30, marginTop: 18 },
-  balanceChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)' },
-  bell: { width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
-  searchCard: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border, ...shadow.card },
-  searchRow: { height: 48, borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14 },
-  placeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, maxWidth: 170 },
-  placeChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  serviceIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  bellBadge: { position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 20, rowGap: 16 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, borderRadius: radius.full, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, ...shadow.soft },
+  filterBtn: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.primaryLight },
+  placeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, maxWidth: 180 },
+  placeDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.food, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 22, rowGap: 14 },
   serviceTile: { alignItems: 'center', gap: 8, width: '100%', paddingHorizontal: 2 },
+  serviceCircle: { width: 66, height: 66, borderRadius: 33, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
   serviceLabel: { fontSize: 12.5, fontWeight: '700', color: colors.text },
-  freq: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 236, padding: 8, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
-  freqImg: { width: 52, height: 52, borderRadius: 12, backgroundColor: 'rgba(11,31,42,0.06)' },
-  reorder: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  recent: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, maxWidth: 180 },
-  merchantImg: { width: '100%', height: 86, backgroundColor: 'rgba(11,31,42,0.06)' },
-  glassBorder: { borderColor: glass.border },
+  banner: { marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: 24, padding: 16, overflow: 'hidden', ...shadow.glow(colors.primary) },
+  bannerTag: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: radius.full, paddingHorizontal: 9, paddingVertical: 4 },
+  bannerTitle: { color: '#fff', fontSize: 18, fontWeight: '800', lineHeight: 23, letterSpacing: -0.3 },
+  bannerSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '500' },
+  bannerBtn: { alignSelf: 'flex-start', marginTop: 4, backgroundColor: '#fff', borderRadius: radius.full, paddingHorizontal: 16, paddingVertical: 9 },
+  bannerArt: { width: 110, alignItems: 'center', justifyContent: 'center' },
+  seeAll: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  rowCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  rowImg: { width: 64, height: 64, borderRadius: 16, backgroundColor: colors.bgSoft },
+  rowArrow: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
 });

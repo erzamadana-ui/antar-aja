@@ -41,11 +41,11 @@ export default function RootLayout() {
       try { const r = new URLSearchParams(window.location.search).get('r'); if (r && r.startsWith('/')) { window.history.replaceState(null, '', window.location.pathname); setTimeout(() => router.replace(r as never), 0); } } catch { /* noop */ }
       const style = document.createElement('style');
       style.textContent = [
-        'html,body,#root{height:100%;background:#F4F7F8;color-scheme:light only}',
+        'html,body,#root{height:100%;background:#FFFFFF;color-scheme:light only}',
         'body{font-family:"PlusJakartaSans-500",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}',
         '*{box-sizing:border-box}',
         '::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:rgba(11,31,42,0.18);border-radius:8px}',
-        'a,button,[role=button]{transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .16s,opacity .16s}',
+        'a,button,[role=button]{transition:transform .1s cubic-bezier(.2,.8,.2,1),box-shadow .12s,opacity .12s}',
         '[role=button]:hover{filter:brightness(1.03)}',
         '@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}',
       ].join('\n');
@@ -63,7 +63,7 @@ export default function RootLayout() {
               headerShown: false,
               contentStyle: { backgroundColor: colors.bg },
               animation: Platform.OS === 'web' ? 'fade' : 'slide_from_right',
-              animationDuration: 180,
+              animationDuration: 130,
               gestureEnabled: true,
               fullScreenGestureEnabled: true,
             }}>

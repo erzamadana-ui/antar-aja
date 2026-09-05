@@ -1,4 +1,4 @@
-// Design system AntarKita 2026 — "Solid Motion" (Arah A, disetujui Erza 4 Sep 2026)
+// Design system AntarKita 2026 — "Solid Motion" gaya kit ToureGo (5 Sep 2026): header putih, tombol bulat, kartu gambar tinggi, tab bar pil + FAB teal
 // Prinsip: permukaan padat (kaca hanya di header band, tab bar, dan panel di atas peta — transparansi terkendali),
 // tipografi Plus Jakarta Sans skala 4-pt (tidak ada teks < 12), warna dari logo C29, gerak singkat & bermakna,
 // tema selalu terang (pengaturan dark mode OS diabaikan).
@@ -6,20 +6,23 @@ import { Easing } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 
 export const colors = {
-  primary: '#0E9488',
-  primaryDark: '#0B6E64',
-  primaryLight: '#E6F6F3',
-  primarySoft: 'rgba(14,148,136,0.10)',
-  mint: '#BFF3EA',
-  ink: '#0F2A28',
+  primary: '#187A85',
+  primaryDark: '#1A5E66',
+  primaryDeep: '#1B474C',
+  primaryLight: '#E7F2F3',
+  primarySoft: 'rgba(24,122,133,0.10)',
+  tint: '#EEF6F7',
+  mint: '#BFE9EA',
+  ink: '#101F21',
   accent: '#F5A524',
   accentLight: '#FFF3DD',
-  bg: '#F4F7F8',
+  bg: '#FFFFFF',
+  bgSoft: '#F5F8F8',
   surface: '#FFFFFF',
-  text: '#0F2A28',
-  textSecondary: '#4F6663',
-  textMuted: '#7A8F8C',
-  border: '#E4EBEC',
+  text: '#101F21',
+  textSecondary: '#5C6B6D',
+  textMuted: '#8A9899',
+  border: '#E6ECEC',
   danger: '#E5484D',
   dangerLight: '#FDECEC',
   success: '#1FA363',
@@ -29,11 +32,11 @@ export const colors = {
   infoLight: '#E8F1FD',
   overlay: 'rgba(15,42,40,0.42)',
   // warna layanan
-  ride: '#0E9488',
+  ride: '#187A85',
   car: '#2F80ED',
   food: '#E5484D',
   send: '#7B61FF',
-  pay: '#0E9488',
+  pay: '#187A85',
   shop: '#0EA5E9',
   market: '#1FA363',
   box: '#D97706',
@@ -42,28 +45,28 @@ export const colors = {
 
 /** Permukaan kaca — transparansi terkendali: kartu ≈ padat, blur hanya untuk bar/panel mengambang. */
 export const glass = {
-  fill: 'rgba(255,255,255,0.94)',
-  fillStrong: 'rgba(255,255,255,0.97)',
+  fill: 'rgba(255,255,255,0.96)',
+  fillStrong: 'rgba(255,255,255,1)',
   fillSoft: 'rgba(255,255,255,0.86)',
   fillDark: 'rgba(15,42,40,0.82)',
-  border: 'rgba(228,235,236,1)',
+  border: 'rgba(230,236,236,1)',
   borderDark: 'rgba(255,255,255,0.14)',
   highlight: 'rgba(255,255,255,0.9)',
-  tintTeal: 'rgba(14,148,136,0.10)',
+  tintTeal: 'rgba(24,122,133,0.10)',
   tintAmber: 'rgba(245,165,36,0.14)',
   blur: 18,
   blurStrong: 28,
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
-export const radius = { sm: 12, md: 16, lg: 20, xl: 28, xxl: 32, full: 999 };
+export const radius = { sm: 12, md: 16, lg: 22, xl: 28, xxl: 36, full: 999 };
 
 export const shadow = {
   card: {
-    shadowColor: '#0F2A28',
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#101F21',
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
     elevation: 3,
   },
   soft: {
@@ -120,15 +123,15 @@ export const font = {
 
 /** Token gerak: singkat & bermakna — aplikasi harus terasa gesit. */
 export const motion = {
-  fast: 100,
-  base: 160,
-  slow: 240,
-  stagger: 30,
+  fast: 80,
+  base: 130,
+  slow: 200,
+  stagger: 24,
   easeOut: Easing.out(Easing.cubic),
   easeInOut: Easing.inOut(Easing.cubic),
-  spring: { damping: 20, stiffness: 320, mass: 0.7 },
-  springSoft: { damping: 24, stiffness: 240, mass: 0.9 },
-  springBouncy: { damping: 15, stiffness: 340, mass: 0.6 },
+  spring: { damping: 20, stiffness: 380, mass: 0.6 },
+  springSoft: { damping: 24, stiffness: 300, mass: 0.8 },
+  springBouncy: { damping: 15, stiffness: 400, mass: 0.55 },
 };
 
 /** Blur hanya tersedia di iOS/web; Android memakai fill padat (lebih ringan). */

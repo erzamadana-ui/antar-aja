@@ -38,16 +38,16 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
       <Text style={{ color: fg, fontWeight: '800', fontSize: size === 'sm' ? 14 : 16, letterSpacing: 0.1 }}>{title}</Text>
     </View>
   );
-  const shape: ViewStyle = { height, borderRadius: size === 'lg' ? radius.lg : radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: size === 'sm' ? 14 : 20, overflow: 'hidden' };
+  const shape: ViewStyle = { height, borderRadius: size === 'sm' ? 12 : 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: size === 'sm' ? 14 : 20, overflow: 'hidden' };
   if (variant === 'primary' || variant === 'danger') {
-    const grad: [string, string] = variant === 'danger' ? ['#E5484D', '#C93A3E'] : [c, lighten(c)];
+    const bgc = variant === 'danger' ? '#E5484D' : c;
     return (
-      <PressableScale onPress={handle} disabled={disabled || isLoading} style={[size !== 'sm' && shadow.glow(c), { borderRadius: shape.borderRadius }, style]}>
-        <BrandGradient colors={grad} style={shape}>{inner}</BrandGradient>
+      <PressableScale onPress={handle} disabled={disabled || isLoading} style={[size !== 'sm' && shadow.soft, { borderRadius: shape.borderRadius }, style]}>
+        <View style={[shape, { backgroundColor: bgc }]}>{inner}</View>
       </PressableScale>
     );
   }
-  const bg = variant === 'secondary' ? c + '1A' : variant === 'glass' ? glass.fill : 'transparent';
+  const bg = variant === 'secondary' ? c + '1A' : variant === 'glass' ? colors.tint : 'transparent';
   return (
     <PressableScale onPress={handle} disabled={disabled || isLoading} style={[shape, { backgroundColor: bg, borderWidth: variant === 'outline' ? 1.5 : variant === 'glass' ? 1 : 0, borderColor: variant === 'glass' ? glass.border : c }, style]}>
       {inner}
@@ -103,7 +103,8 @@ interface ScreenProps {
 }
 export function Screen({ title, children, scroll = true, back, right, padded = true, bg, headerBg, headerFg, footer, contentStyle, keyboard = true, maxWidth = 720, ambient = true, bottomSpace = 40, band, subtitle }: ScreenProps) {
   const router = useRouter();
-  if (band) { headerBg = band; headerFg = '#fff'; }
+  // Gaya kit: header selalu putih, judul di tengah; `band` hanya dipakai sebagai aksen ikon kembali
+  const accent = band ?? colors.primary; band = undefined;
   headerFg = headerFg ?? colors.text;
   const insets = useSafeAreaInsetsSafe();
   const inner = { width: '100%' as const, maxWidth, alignSelf: 'center' as const };
@@ -120,18 +121,17 @@ export function Screen({ title, children, scroll = true, back, right, padded = t
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {(title || back || right) && (
           <View style={[s.header, headerBg ? { backgroundColor: headerBg, borderBottomWidth: 0 } : null, band ? s.band : null]}>
-            {!headerBg && Platform.OS !== 'android' && <BlurView intensity={glass.blur} tint="light" style={StyleSheet.absoluteFill} />}
-            <View style={[s.headerInner, inner, subtitle ? { height: 64 } : null]}>
+            <View style={[s.headerInner, inner, subtitle ? { height: 66 } : null]}>
               {back ? (
                 <PressableScale onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={12} style={[s.backBtn, band ? { backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.25)' } : null]} scaleTo={0.9}>
-                  <Ionicons name="arrow-back" size={20} color={headerFg} />
+                  <Ionicons name="chevron-back" size={20} color={headerBg ? headerFg : accent} />
                 </PressableScale>
-              ) : <View style={{ width: 8 }} />}
-              <View style={{ flex: 1 }}>
-                <Text style={[font.h3, { color: headerFg, fontSize: subtitle ? 18 : 17 }]} numberOfLines={1}>{title}</Text>
-                {subtitle ? <Text style={[font.tiny, { color: band ? 'rgba(255,255,255,0.85)' : colors.textSecondary }]} numberOfLines={1}>{subtitle}</Text> : null}
+              ) : <View style={{ width: 40 }} />}
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={[font.h3, { color: headerFg, fontSize: subtitle ? 18 : 17, textAlign: 'center' }]} numberOfLines={1}>{title}</Text>
+                {subtitle ? <Text style={[font.tiny, { color: band ? 'rgba(255,255,255,0.85)' : colors.textSecondary, textAlign: 'center' }]} numberOfLines={1}>{subtitle}</Text> : null}
               </View>
-              {right}
+              {right ? <View style={{ minWidth: 40, alignItems: 'flex-end' }}>{right}</View> : <View style={{ width: 40 }} />}
             </View>
           </View>
         )}
@@ -166,6 +166,15 @@ export function Avatar({ name, url, size = 44 }: { name?: string | null; url?: s
     <BrandGradient colors={[colors.primaryLight, '#CFE9E7']} style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ color: colors.primaryDark, fontWeight: '800', fontSize: size * 0.38 }}>{initials(name)}</Text>
     </BrandGradient>
+  );
+}
+/** Tombol bulat bergaris (kit): ikon di lingkaran putih 40px dengan border tipis; `filled` → teal penuh. */
+export function CircleButton({ icon, onPress, size = 40, color = colors.text, filled, badge, style }: { icon: IconName; onPress?: () => void; size?: number; color?: string; filled?: boolean; badge?: number; style?: StyleProp<ViewStyle> }) {
+  return (
+    <PressableScale onPress={onPress} scaleTo={0.9} style={[{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: filled ? colors.primary : '#fff', borderWidth: filled ? 0 : 1, borderColor: colors.border }, style]}>
+      <Ionicons name={icon} size={Math.round(size * 0.48)} color={filled ? '#fff' : color} />
+      {badge ? <View style={{ position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{badge > 9 ? '9+' : badge}</Text></View> : null}
+    </PressableScale>
   );
 }
 export function IconCircle({ name, color = colors.primary, size = 44, bg }: { name: IconName; color?: string; size?: number; bg?: string }) {
@@ -218,7 +227,7 @@ export function Stars({ value, size = 14, onChange }: { value: number; size?: nu
 }
 export function Chip({ label, active, onPress, color = colors.primary }: { label: string; active?: boolean; onPress?: () => void; color?: string }) {
   return (
-    <PressableScale onPress={onPress} scaleTo={0.94} style={[s.chip, active && { backgroundColor: color, borderColor: color, ...shadow.glow(color) }]}>
+    <PressableScale onPress={onPress} scaleTo={0.94} style={[s.chip, active && { backgroundColor: color, borderColor: color }]}>
       <Text style={{ color: active ? '#fff' : colors.text, fontWeight: '700', fontSize: 13 }}>{label}</Text>
     </PressableScale>
   );
@@ -299,14 +308,14 @@ const s = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(11,31,42,0.10)', borderRadius: radius.md, backgroundColor: '#FFFFFF', paddingHorizontal: 12, minHeight: 50, shadowColor: colors.primary, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } },
   input: { flex: 1, fontSize: 15, color: colors.text, paddingVertical: 10, ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : {}) },
-  card: { backgroundColor: colors.surface, borderRadius: radius.lg, ...shadow.card },
-  header: { overflow: 'hidden', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(15,42,40,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.84)' },
-  headerInner: { flexDirection: 'row', alignItems: 'center', height: 54, paddingHorizontal: 8, gap: 6 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  header: { overflow: 'hidden', backgroundColor: colors.bg },
+  headerInner: { flexDirection: 'row', alignItems: 'center', height: 60, paddingHorizontal: 16, gap: 8 },
   band: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg, paddingBottom: 6, ...shadow.soft },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 1, borderColor: glass.border },
+  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border },
   footer: { overflow: 'hidden', paddingHorizontal: spacing.lg, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(11,31,42,0.08)', backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.9)' },
   listItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 4 },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FFFFFF' },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FFFFFF', ...shadow.soft },
   stepBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
   toast: { position: 'absolute', left: 20, right: 20, alignItems: 'center', zIndex: 1000 },
   sheet: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.92)', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: spacing.lg, overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border, ...shadow.sheet },

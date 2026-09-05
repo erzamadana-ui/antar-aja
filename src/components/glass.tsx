@@ -46,13 +46,10 @@ function opaque(rgba: string) {
 
 /** Latar ambien "Solid Motion": gradien lembut statis + dua gumpalan warna yang diam (ringan, tanpa animasi). */
 export function AmbientBackground({ tint = 'teal', style }: { tint?: 'teal' | 'amber' | 'mixed'; style?: StyleProp<ViewStyle> }) {
-  const a = tint === 'amber' ? 'rgba(245,165,36,0.16)' : 'rgba(14,148,136,0.14)';
-  const b = tint === 'teal' ? 'rgba(191,243,234,0.35)' : 'rgba(245,165,36,0.12)';
+  const a = tint === 'amber' ? 'rgba(245,165,36,0.10)' : 'rgba(24,122,133,0.08)';
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden', backgroundColor: colors.bg }, style]}>
-      <LinearGradient colors={['#F7FAFA', '#F1F6F6', '#F4F7F8']} style={StyleSheet.absoluteFill} />
-      <View style={[styles.blob, { backgroundColor: a, top: -160, right: -120, width: 380, height: 380 }]} />
-      <View style={[styles.blob, { backgroundColor: b, bottom: -200, left: -100, width: 420, height: 420 }]} />
+      <View style={[styles.blob, { backgroundColor: a, top: -200, right: -140, width: 420, height: 420 }]} />
     </View>
   );
 }
