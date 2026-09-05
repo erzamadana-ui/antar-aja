@@ -35,7 +35,7 @@ export function RouteBlock({ order }: { order: Order }) {
     <View style={{ gap: 8 }}>
       <Row gap={10} style={{ alignItems: 'flex-start' }}>
         <View style={[s.dot, { backgroundColor: colors.primary, marginTop: 4 }]} />
-        <View style={{ flex: 1 }}><Text style={font.tiny}>{order.service === 'food' ? 'Merchant' : order.service === 'send' ? 'Ambil dari' : order.service === 'shop' ? 'Toko' : order.service === 'market' ? 'Pasar' : 'Jemput'}</Text><Text style={s.addr}>{order.merchant?.name ?? order.pickup_address}</Text>{order.merchant?.address && <Text style={font.small}>{order.merchant.address}</Text>}</View>
+        <View style={{ flex: 1 }}><Text style={font.tiny}>{order.service === 'food' ? 'Merchant' : order.service === 'send' ? 'Ambil dari' : order.service === 'shop' ? 'Toko' : order.service === 'market' ? 'Pasar' : 'Jemput'}</Text><Text style={s.addr}>{order.merchant?.name ?? order.pickup_address}</Text>{order.merchant?.address ? <Text style={font.small}>{order.merchant.address}</Text> : null}</View>
       </Row>
       <Row gap={10} style={{ alignItems: 'flex-start' }}>
         <View style={[s.dot, { backgroundColor: colors.danger, borderRadius: 2, marginTop: 4 }]} />
@@ -51,7 +51,7 @@ export function OrderExtras({ order }: { order: Order }) {
     <View style={{ gap: 10 }}>
       {order.service === 'food' && order.order_items && (
         <View style={{ gap: 6 }}>
-          <Row between><Text style={font.h3}>Pesanan</Text>{order.merchant_status && <Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : order.merchant_status === 'rejected' ? colors.danger : colors.warning} />}</Row>
+          <Row between><Text style={font.h3}>Pesanan</Text>{!!order.merchant_status && <Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : order.merchant_status === 'rejected' ? colors.danger : colors.warning} />}</Row>
           {order.order_items.map((it) => (
             <Row key={it.id} between>
               <Text style={font.body}>{it.qty}× {it.name}{it.notes ? <Text style={font.tiny}>  ({it.notes})</Text> : null}</Text>

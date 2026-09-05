@@ -144,8 +144,8 @@ export default function DriverHome() {
               <PressableScale onPress={() => setSelected(null)} scaleTo={0.9} style={s.closeBtn}><Ionicons name="close" size={18} color={colors.textSecondary} /></PressableScale>
             </Row>
             <Row gap={6} style={{ flexWrap: 'wrap', marginTop: 10 }}>
-              {selected.vehicle_class && <Badge text={vehicleClassLabel[selected.vehicle_class] ?? selected.vehicle_class} color={colors.info} />}
-              {selected.scheduled_at && <Badge text={`Jadwal ${formatSchedule(selected.scheduled_at)}`} color={colors.send} />}
+              {!!selected.vehicle_class && <Badge text={vehicleClassLabel[selected.vehicle_class] ?? selected.vehicle_class} color={colors.info} />}
+              {!!selected.scheduled_at && <Badge text={`Jadwal ${formatSchedule(selected.scheduled_at)}`} color={colors.send} />}
               {!!selected.helpers && <Badge text={`+${selected.helpers} pembantu angkat`} color={colors.box} />}
               {selected.send_scope === 'intercity' && <Badge text="Antar kota → gudang" color={colors.send} />}
             </Row>

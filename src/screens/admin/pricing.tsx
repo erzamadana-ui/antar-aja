@@ -73,7 +73,7 @@ export default function AdminPricing() {
             <Row key={p.code} between style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 }}>
               <PressableThumb promo={p} onPress={() => setNp({ code: p.code, title: p.title ?? '', description: p.description ?? '', discount_type: p.discount_type, value: String(p.value), max_discount: p.max_discount ? String(p.max_discount) : '', min_total: String(p.min_total), service: p.service ?? '', quota: p.quota ? String(p.quota) : '', image_url: p.image_url ?? '' })} />
               <View style={{ flex: 1 }}>
-                <Row gap={8}><Text style={{ fontWeight: '800' }}>{p.code}</Text><Badge text={p.discount_type === 'percent' ? `${p.value}%${p.max_discount ? ` maks ${p.max_discount}` : ''}` : `Rp${p.value}`} />{p.service && <Badge text={serviceLabel[p.service]} color={colors.info} />}</Row>
+                <Row gap={8}><Text style={{ fontWeight: '800' }}>{p.code}</Text><Badge text={p.discount_type === 'percent' ? `${p.value}%${p.max_discount ? ` maks ${p.max_discount}` : ''}` : `Rp${p.value}`} />{!!p.service && <Badge text={serviceLabel[p.service]} color={colors.info} />}</Row>
                 <Text style={font.tiny}>{p.description} · min Rp{p.min_total} · dipakai {p.used_count}{p.quota ? `/${p.quota}` : ''}</Text>
               </View>
               <Switch value={p.is_active} onValueChange={() => togglePromo(p)} trackColor={{ true: colors.success, false: colors.border }} thumbColor="#fff" />

@@ -145,7 +145,7 @@ export default function TravelScreen() {
                     <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
                       <Row between>
                         <Text style={[font.body, { fontWeight: '800', flex: 1 }]} numberOfLines={1}>{p.company ?? p.name}</Text>
-                        {p.is_electric && <Badge text="Listrik" color={colors.success} />}
+                        {!!p.is_electric && <Badge text="Listrik" color={colors.success} />}
                       </Row>
                       <Row gap={4}><Ionicons name="location-outline" size={13} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{fromCity?.name} → {toCity?.name} · {time} WIB · {new Date(t.depart_at).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}</Text></Row>
                       <Text style={font.tiny} numberOfLines={1}>{p.model} · {p.plate} · {Number(p.rating).toFixed(1)} ({p.rating_count}) · {tripStatusLabel[t.status]}</Text>
@@ -171,7 +171,7 @@ export default function TravelScreen() {
             <View style={s.group}>
               <Row gap={8}>
                 <Chip label="Bersama (per kursi)" active={!priv} onPress={() => setPriv(false)} />
-                {trip.allow_private && <Chip label={`Private 1 keluarga · ${rupiah(trip.private_price)}`} active={priv} onPress={() => setPriv(true)} color={colors.accent} />}
+                {!!trip.allow_private && <Chip label={`Private 1 keluarga · ${rupiah(trip.private_price)}`} active={priv} onPress={() => setPriv(true)} color={colors.accent} />}
               </Row>
               <Row between>
                 <View><Text style={{ fontWeight: '800', color: colors.text }}>Jumlah penumpang</Text><Text style={font.tiny}>{priv ? `Maks. ${trip.seats_total} orang (sekeluarga)` : `Kursi tersisa ${trip.seats_left}`}</Text></View>
@@ -440,10 +440,10 @@ function PartnerCard({ p, daily, active, onPick }: { p: TravelPartnerCard; daily
         {daily && p.daily_rate ? <View style={{ alignItems: 'flex-end' }}><Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{rupiah(p.daily_rate)}</Text><Text style={font.tiny}>/hari (12 jam)</Text></View> : null}
       </Row>
       <Row gap={6} style={{ flexWrap: 'wrap' }}>
-        {p.is_electric && <Badge text="Listrik" color={colors.success} />}
+        {!!p.is_electric && <Badge text="Listrik" color={colors.success} />}
         {p.accommodation?.includes('customer') && <Badge text="Akomodasi ditanggung pelanggan" color={colors.info} />}
         {p.accommodation?.includes('self') && <Badge text={`Mandiri ${rupiah(p.accommodation_fee || 150000)}/malam`} color={colors.accent} />}
-        {p.fuel_included && <Badge text="BBM termasuk" color={colors.primary} />}
+        {!!p.fuel_included && <Badge text="BBM termasuk" color={colors.primary} />}
         {daily && p.overtime_rate ? <Badge text={`Overtime ${rupiah(p.overtime_rate)}/jam`} color={colors.textMuted} /> : null}
       </Row>
       {p.bio ? <Text style={font.tiny} numberOfLines={2}>{p.bio}</Text> : null}

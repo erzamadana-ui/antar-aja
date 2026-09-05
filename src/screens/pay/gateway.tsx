@@ -152,7 +152,7 @@ export default function Gateway() {
             )}
             {status !== 'pending' && <Button title={status === 'settlement' ? t('done') : 'Coba lagi'} size="lg" style={{ alignSelf: 'stretch' }} onPress={() => (status === 'settlement' ? finish() : (setResp(null), setStatus(null)))} />}
           </View></Card>
-          {resp.simulated && <Text style={[font.tiny, { textAlign: 'center' }]}>Gateway asli aktif setelah admin mengisi Server Key Midtrans di Panel Admin → Payment Gateway (lihat docs/PAYMENT-GATEWAY.md).</Text>}
+          {!!resp.simulated && <Text style={[font.tiny, { textAlign: 'center' }]}>Gateway asli aktif setelah admin mengisi Server Key Midtrans di Panel Admin → Payment Gateway (lihat docs/PAYMENT-GATEWAY.md).</Text>}
         </Animated.View>
       )}
     </Screen>

@@ -76,7 +76,7 @@ export function VehicleClassPicker({ options, value, onChange, accent, loading }
           <PressableScale key={o.code} onPress={() => onChange(o.code)} scaleTo={0.985} style={[s.cls, active && { borderColor: accent, backgroundColor: accent + '10', ...shadow.glow(accent) }]}>
             <View style={[s.clsIcon, { backgroundColor: active ? accent : 'rgba(11,31,42,0.06)' }]}><Ionicons name={(CLASS_ICON[o.code] ?? 'car') as never} size={20} color={active ? '#fff' : colors.textSecondary} /></View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Row gap={6}><Text style={{ fontWeight: '800', color: colors.text, fontSize: 14.5 }} numberOfLines={1}>{o.label}</Text>{o.is_ev && <Badge text="⚡ Listrik" color={colors.success} />}{o.rank === 3 && <Badge text="Premium" color={colors.accent} />}</Row>
+              <Row gap={6}><Text style={{ fontWeight: '800', color: colors.text, fontSize: 14.5 }} numberOfLines={1}>{o.label}</Text>{!!o.is_ev && <Badge text="⚡ Listrik" color={colors.success} />}{o.rank === 3 && <Badge text="Premium" color={colors.accent} />}</Row>
               <Text style={font.tiny} numberOfLines={2}>{o.description}{o.seats && !/penumpang/i.test(o.description ?? '') ? ` · ${o.seats} penumpang` : ''}</Text>
               <Text style={[font.tiny, { color: none ? colors.warning : colors.success, fontWeight: '700' }]}>{none ? 'Belum ada driver online di dekat Anda' : `${o.drivers_nearby} driver di dekat Anda`}</Text>
             </View>

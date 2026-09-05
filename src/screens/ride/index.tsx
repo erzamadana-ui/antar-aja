@@ -60,7 +60,12 @@ export default function RideScreen() {
       const o = await rpc<FareOptions>('fare_options', { p_service: service, p_pickup_lat: pickup.lat, p_pickup_lng: pickup.lng, p_drop_lat: dropoff.lat, p_drop_lng: dropoff.lng, p_route_km: r.distance_km, p_helpers: 0 }).catch(() => null);
       if (cancelled) return;
       setOpts(o);
-      if (o && !o.classes.some((c) => c.code === cls)) setCls((o.classes.find((c) => c.rank === 2 && !c.is_ev) ?? o.classes[0])?.code ?? null);
+      if (o && !o.classes.some((c) => c.code === cls)) {
+        // Default: kelas Standar bila ada driver di sekitar; jika tidak, kelas pertama yang punya driver; terakhir kelas Standar
+        const std = o.classes.find((c) => c.rank === 2 && !c.is_ev);
+        const withDriver = (std && (std.drivers_nearby ?? 0) > 0) ? std : o.classes.find((c) => (c.drivers_nearby ?? 0) > 0 && !c.is_ev);
+        setCls((withDriver ?? std ?? o.classes[0])?.code ?? null);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };

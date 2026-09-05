@@ -65,7 +65,7 @@ export function MerchantStatusCard({ merchant }: { merchant: Merchant }) {
           </Row>
         ))}
       </View>
-      {docs?.submitted_at && <Text style={font.tiny}>Diajukan {formatDate(docs.submitted_at)}</Text>}
+      {!!docs?.submitted_at && <Text style={font.tiny}>Diajukan {formatDate(docs.submitted_at)}</Text>}
     </Card>
   );
 }

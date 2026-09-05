@@ -74,8 +74,8 @@ export default function AdminSupport() {
                 <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12 }}>{timeAgo(a.created_at)}{a.note ? ` · ${a.note}` : ''}{a.lat ? ` · ${a.lat.toFixed(4)},${a.lng?.toFixed(4)}` : ''}</Text>
               </View>
               <Row gap={6}>
-                {a.lat && <Button size="sm" title="Peta" variant="glass" color="#fff" icon="map" onPress={() => Linking.openURL(`https://www.google.com/maps?q=${a.lat},${a.lng}`)} />}
-                {a.ticket_id && <Button size="sm" title="Chat" color="#0B1F2A" icon="chatbubbles" onPress={() => setSelected(a.ticket_id)} />}
+                {!!a.lat && <Button size="sm" title="Peta" variant="glass" color="#fff" icon="map" onPress={() => Linking.openURL(`https://www.google.com/maps?q=${a.lat},${a.lng}`)} />}
+                {!!a.ticket_id && <Button size="sm" title="Chat" color="#0B1F2A" icon="chatbubbles" onPress={() => setSelected(a.ticket_id)} />}
                 <Button size="sm" title="Ditangani" color={colors.success} onPress={() => handleSos(a, 'handled')} />
                 <Button size="sm" title="Palsu" variant="glass" color="#fff" onPress={() => handleSos(a, 'false_alarm')} />
               </Row>
@@ -110,7 +110,7 @@ export default function AdminSupport() {
                 <Row gap={6} style={{ marginTop: 4, flexWrap: 'wrap' }}>
                   <Badge text={ticketStatusLabel[t.status]} color={ticketStatusColor(t.status)} />
                   <Badge text={ticketPriorityLabel[t.priority]} color={ticketPriorityColor(t.priority)} />
-                  {t.assignee && <Text style={font.tiny}>👤 {t.assignee.full_name.split(' ')[0]}</Text>}
+                  {!!t.assignee && <Text style={font.tiny}>👤 {t.assignee.full_name.split(' ')[0]}</Text>}
                   {!t.first_response_at && !['closed'].includes(t.status) && <Text style={[font.tiny, { color: colors.danger, fontWeight: '700' }]}>belum dibalas</Text>}
                 </Row>
               </View>
@@ -156,7 +156,7 @@ function TicketPanel({ id, onClose, onChanged }: { id: string; onClose: () => vo
         <Row gap={10} style={{ marginTop: 8 }}>
           <Avatar name={user?.full_name} url={user?.avatar_url} size={34} />
           <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text, fontSize: 13 }}>{user?.full_name ?? '—'} · {roleLabelId[ticket.role]}</Text><Text style={font.tiny}>{user?.email ?? ''} {user?.phone ? `· ${user.phone}` : ''}</Text></View>
-          {ticket.rating && <Badge text={`Nilai ${ticket.rating}/5`} color={colors.accent} />}
+          {!!ticket.rating && <Badge text={`Nilai ${ticket.rating}/5`} color={colors.accent} />}
         </Row>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 10 }}>
           {ticket.assigned_to !== me && <Chip label="Ambil tiket ini" color={colors.info} onPress={() => update({ assign: true })} />}

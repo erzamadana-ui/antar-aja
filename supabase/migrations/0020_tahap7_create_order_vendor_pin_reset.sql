@@ -29,3 +29,20 @@ begin
   perform log_activity('admin.pin_reset', 'admin_security', p_user::text, 'PIN admin direset oleh admin lain', null);
 end $$;
 revoke execute on function admin_reset_pin(uuid) from public, anon;
+
+-- Perbaikan hasil simulasi (5 Sep 2026): order kelas "Standar" tidak bisa diambil driver kelas Hemat selamanya → fallback setelah N menit
+insert into app_settings (key, value) values ('class_fallback_minutes', '3') on conflict (key) do nothing;
+create or replace function driver_can_take(d drivers, o orders)
+returns boolean language sql stable as $$
+  select case
+    when o.service = 'ride_motor' then d.vehicle_type = 'motor'
+    when o.service = 'ride_car' then d.vehicle_type = 'car'
+    when o.service = 'box' then d.vehicle_type in ('box','pickup')
+    when o.service in ('shop','market') and o.shop_vehicle = 'car' then d.vehicle_type = 'car'
+    else d.vehicle_type in ('motor','car')
+  end
+  and (o.vehicle_class is null or exists (
+    select 1 from vehicle_classes oc join vehicle_classes dc on dc.code = coalesce(d.vehicle_class, derive_vehicle_class(d.vehicle_type, d.vehicle_year, d.vehicle_condition, d.is_electric))
+    where oc.code = o.vehicle_class and (not oc.is_ev or d.is_electric)
+      and (dc.rank >= oc.rank or (o.status = 'searching' and o.created_at < now() - (setting_num('class_fallback_minutes', 3) || ' minutes')::interval))))
+$$;

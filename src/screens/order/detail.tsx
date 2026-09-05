@@ -143,7 +143,7 @@ export default function OrderTracking() {
           <Animated.View entering={FadeInDown.delay(120).duration(motion.slow)} style={s.rateBox}>
             <Text style={font.h3}>Beri penilaian</Text>
             <Row between style={{ marginTop: 8 }}><Text style={font.small}>Driver {driver.profile?.full_name}</Text><Stars value={rated.driver ?? 0} size={24} onChange={(v) => rate('driver', v)} /></Row>
-            {order.merchant && <Row between style={{ marginTop: 8 }}><Text style={font.small}>{order.merchant.name}</Text><Stars value={rated.merchant ?? 0} size={24} onChange={(v) => rate('merchant', v)} /></Row>}
+            {!!order.merchant && <Row between style={{ marginTop: 8 }}><Text style={font.small}>{order.merchant.name}</Text><Stars value={rated.merchant ?? 0} size={24} onChange={(v) => rate('merchant', v)} /></Row>}
             <TextInput placeholder="Tulis ulasan (opsional)" placeholderTextColor={colors.textMuted} value={comment} onChangeText={setComment} style={s.comment} />
           </Animated.View>
         )}

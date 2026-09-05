@@ -123,7 +123,7 @@ function ReviewPanel({ m, onClose, onDone }: { m: Row_; onClose: () => void; onD
           ) : <Text style={font.tiny}>Merchant menyatakan non-halal. Pelanggan melihat label “Non-halal”.</Text>}
           <Text style={[font.label, { marginTop: 8 }]}>Catatan untuk merchant</Text>
           <Input placeholder="Contoh: Foto KTP buram, mohon unggah ulang" value={note} onChangeText={setNote} multiline style={{ minHeight: 70 }} />
-          {d?.reviewed_at && <Text style={font.tiny}>Tinjauan terakhir {formatDate(d.reviewed_at)}</Text>}
+          {!!d?.reviewed_at && <Text style={font.tiny}>Tinjauan terakhir {formatDate(d.reviewed_at)}</Text>}
           <Row gap={8} style={{ flexWrap: 'wrap', marginTop: 4 }}>
             <Button size="sm" title={m.status === 'approved' ? 'Simpan (tetap aktif)' : 'Setujui'} color={colors.success} icon="checkmark" loading={busy} onPress={() => act('approved')} />
             {m.status !== 'rejected' && <Button size="sm" title="Tolak" variant="outline" color={colors.danger} icon="close" onPress={() => act('rejected')} />}

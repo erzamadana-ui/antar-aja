@@ -59,7 +59,7 @@ export function TicketChat({ ticket, messages, onSend, asCs, footer, style }: {
                   style={[s.bubble, mine ? s.mine : s.theirs, m.is_internal && s.internal]}>
                   {mine && !m.is_internal && <BrandGradient colors={asCs ? [colors.info, '#1D4ED8'] : undefined} style={StyleSheet.absoluteFill} />}
                   {!mine && <Text style={[font.tiny, { fontWeight: '800', color: m.sender_role === 'cs' ? colors.info : colors.textSecondary, marginBottom: 2 }]}>{m.sender_role === 'cs' ? 'CS AntarKita' : 'Pengguna'}</Text>}
-                  {m.is_internal && <Text style={[font.tiny, { fontWeight: '800', color: colors.warning, marginBottom: 2 }]}>Catatan internal (tak terlihat pengguna)</Text>}
+                  {!!m.is_internal && <Text style={[font.tiny, { fontWeight: '800', color: colors.warning, marginBottom: 2 }]}>Catatan internal (tak terlihat pengguna)</Text>}
                   <Text style={{ color: mine && !m.is_internal ? '#fff' : colors.text, fontSize: 15, lineHeight: 21 }}>{m.body}</Text>
                   {m.attachment_url && (
                     <Pressable onPress={() => openAttachment(m.attachment_url!)} style={s.attach}><Ionicons name="image-outline" size={14} color={mine && !m.is_internal ? '#fff' : colors.info} /><Text style={{ fontSize: 12, fontWeight: '700', color: mine && !m.is_internal ? '#fff' : colors.info }}>Lihat lampiran</Text></Pressable>

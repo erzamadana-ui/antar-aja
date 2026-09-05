@@ -11,6 +11,7 @@ import { useI18n, applyDirection } from '@/lib/i18n';
 import { IncomingCallOverlay } from '@/components/call/IncomingCall';
 import { ToastHost, Loading } from '@/components/ui';
 import { AmbientBackground } from '@/components/glass';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { colors, FONT_ASSETS } from '@/lib/theme';
 import { useFonts } from 'expo-font';
 import { APP, APP_NAME } from '@/lib/app';
@@ -68,6 +69,7 @@ export default function RootLayout() {
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <StatusBar style="dark" />
           {!ready || !modeLoaded ? (<><AmbientBackground /><Loading /></>) : (
+            <ErrorBoundary onReset={() => { try { router.replace('/' as never); } catch { /* noop */ } }}>
             <Stack screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.bg },
@@ -82,6 +84,7 @@ export default function RootLayout() {
               <Stack.Screen name="call/[id]" options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
               <Stack.Screen name="pay/gateway" options={{ animation: Platform.OS === 'web' ? 'fade' : 'slide_from_bottom' }} />
             </Stack>
+            </ErrorBoundary>
           )}
           {ready && <IncomingCallOverlay />}
           <ToastHost />

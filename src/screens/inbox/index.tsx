@@ -33,7 +33,7 @@ export default function Inbox() {
                 else if (n.merchant_id && APP === 'pelanggan') router.push(`/food/${n.merchant_id}` as never);
                 else if (n.promo_code && APP === 'pelanggan') router.push('/food' as never);
               }} scaleTo={0.985} haptic={false} style={[s.card, !n.read_at && { borderColor: colors.primary }]}>
-                {n.image_url && <Image source={{ uri: n.image_url }} style={s.img} />}
+                {n.image_url ? <Image source={{ uri: n.image_url }} style={s.img} /> : null}
                 <Row gap={12} style={{ padding: 12, alignItems: 'flex-start' }}>
                   <IconCircle name={n.kind === 'promo' ? 'pricetag-outline' : n.kind === 'order' ? 'receipt-outline' : 'information-circle-outline'} size={42} bg={n.kind === 'promo' ? colors.accentLight : colors.tint} color={n.kind === 'promo' ? colors.warning : colors.primary} />
                   <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
@@ -41,10 +41,10 @@ export default function Inbox() {
                     <Text style={{ fontWeight: '800', color: colors.text, fontSize: 15, flex: 1 }} numberOfLines={2}>{n.title}</Text>
                     {!n.read_at && <View style={s.dot} />}
                   </Row>
-                  {n.body && <Text style={font.small}>{n.body}</Text>}
+                  {n.body ? <Text style={font.small}>{n.body}</Text> : null}
                   <Row gap={8} style={{ flexWrap: 'wrap' }}>
-                    {n.promo_code && <Badge text={`Kode: ${n.promo_code}`} color={colors.accent} />}
-                    {n.merchant_id && <Badge text="Lihat merchant" color={colors.primary} />}
+                    {n.promo_code ? <Badge text={`Kode: ${n.promo_code}`} color={colors.accent} /> : null}
+                    {n.merchant_id ? <Badge text="Lihat merchant" color={colors.primary} /> : null}
                     {typeof n.data?.travel_request_id === 'string' && <Badge text="Lihat permintaan travel" color={colors.primary} />}
                     {!!n.data?.payment_id && !n.data?.travel_request_id && <Badge text="Lihat AntarPay" color={colors.primary} />}
                     <Text style={font.tiny}>{timeAgo(n.created_at)}</Text>

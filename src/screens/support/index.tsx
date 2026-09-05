@@ -75,7 +75,7 @@ export default function Support() {
           <Card solid padded={false}>
             <View style={{ paddingHorizontal: 12 }}>
               {mode === 'driver' && <><ListItem icon="shield-checkmark-outline" iconColor={colors.danger} title="Pusat Keamanan" subtitle="SOS, kontak darurat, laporan insiden" onPress={() => router.push('/safety' as never)} /><Divider style={{ marginVertical: 0 }} /></>}
-              {phone && <><ListItem icon="logo-whatsapp" iconColor="#25D366" title={`WhatsApp CS ${phone}`} subtitle="Untuk kendala mendesak di luar aplikasi" onPress={() => Linking.openURL(`https://wa.me/${phone.replace(/\D/g, '')}`)} /><Divider style={{ marginVertical: 0 }} /></>}
+              {!!phone && <><ListItem icon="logo-whatsapp" iconColor="#25D366" title={`WhatsApp CS ${phone}`} subtitle="Untuk kendala mendesak di luar aplikasi" onPress={() => Linking.openURL(`https://wa.me/${phone.replace(/\D/g, '')}`)} /><Divider style={{ marginVertical: 0 }} /></>}
               {FAQ.map(([q, a], i) => (
                 <View key={q}>{i > 0 && <Divider style={{ marginVertical: 0 }} />}<ListItem icon="help-circle-outline" title={q} subtitle={a} /></View>
               ))}

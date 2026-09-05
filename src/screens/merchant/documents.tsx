@@ -50,7 +50,7 @@ export default function MerchantDocuments() {
           <Input label="No. HP pemilik" keyboardType="phone-pad" value={f.owner_phone} onChangeText={set('owner_phone')} />
         </Card></Entrance>
         <Entrance index={2}><Card style={{ gap: 12 }}>
-          <Row between><Text style={font.label}>Status halal</Text>{merchant.halal_verified && <Badge text="Terverifikasi admin ✓" color={colors.success} />}</Row>
+          <Row between><Text style={font.label}>Status halal</Text>{!!merchant.halal_verified && <Badge text="Terverifikasi admin ✓" color={colors.success} />}</Row>
           <Row gap={8}>
             <Chip label="🕌 Halal" active={f.is_halal} onPress={() => set('is_halal')(true)} color={colors.success} />
             <Chip label="Non-halal" active={!f.is_halal} onPress={() => set('is_halal')(false)} color={colors.textSecondary} />

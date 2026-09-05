@@ -137,7 +137,7 @@ export function ReasonPrompt({ visible, title, subtitle, onCancel, onSubmit, con
         <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
           <View style={s.dialog}>
             <Text style={font.h2}>{title}</Text>
-            {subtitle && <Text style={font.small}>{subtitle}</Text>}
+            {!!subtitle && <Text style={font.small}>{subtitle}</Text>}
             <Row gap={6} style={{ flexWrap: 'wrap' }}>{QUICK.map((q) => <Chip key={q} label={q} active={reason === q} onPress={() => setReason(q)} color={color} />)}</Row>
             <Input placeholder={optional ? 'Alasan (opsional)' : 'Tulis alasan (min. 5 huruf) — tersimpan di log & terlihat oleh mitra'} value={reason} onChangeText={setReason} multiline style={{ minHeight: 70 }} />
             <Row gap={8}>

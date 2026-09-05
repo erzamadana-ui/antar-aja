@@ -41,6 +41,13 @@ jobs:
           CI: 1
         run: npx expo prebuild --platform android --no-install
       - name: Build APK release (ditandatangani keystore debug — cukup untuk distribusi langsung/uji)
+        env:
+          APP: ${{ matrix.app }}
+          EXPO_PUBLIC_APP: ${{ matrix.app }}
+          EXPO_PUBLIC_SITE_ROOT: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          EXPO_PUBLIC_APK_URL: https://github.com/${{ github.repository }}/releases/latest
+          EXPO_NO_TELEMETRY: 1
+          CI: 1
         run: |
           cd android
           chmod +x gradlew

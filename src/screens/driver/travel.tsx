@@ -120,7 +120,7 @@ export default function TravelPartnerHome() {
                   <Row gap={4}><Ionicons name="time-outline" size={12} color={colors.textMuted} /><Text style={font.tiny}>{formatSchedule(t.depart_at)}</Text></Row>
                   <Row gap={6} style={{ marginTop: 6, flexWrap: 'wrap' }}>
                     <Badge text={tripStatusLabel[t.status]} color={t.status === 'confirmed' || t.status === 'full' ? colors.success : t.status === 'departed' ? colors.info : colors.warning} />
-                    {t.is_private && <Badge text="Private" color={colors.accent} />}
+                    {!!t.is_private && <Badge text="Private" color={colors.accent} />}
                   </Row>
                 </View>
                 <View style={s.rowArrow}><Ionicons name={open === t.id ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} /></View>
@@ -143,11 +143,11 @@ export default function TravelPartnerHome() {
                         <Row between><Text style={{ fontWeight: '800', color: colors.text, flex: 1 }} numberOfLines={1}>{b.customer.name} · {b.pax} pax{b.is_private ? ' (private)' : ''}</Text><Badge text={travelStatusLabel[b.status]} /></Row>
                         <Text style={font.tiny}>{b.code} · {b.payment_method === 'cash' ? `Tunai ${rupiah(b.price)} (tagih saat jemput)` : 'Dibayar AntarPay'}{b.passengers?.length ? ` · ${b.passengers.map((x) => x.name).join(', ')}` : ''}</Text>
                         <Row gap={4} style={{ marginTop: 2 }}><Ionicons name="location-outline" size={12} color={colors.primary} /><Text style={[font.small, { flex: 1 }]}>{b.pickup_address}</Text></Row>
-                        {b.dropoff_address && <Row gap={4}><Ionicons name="flag-outline" size={12} color={colors.textMuted} /><Text style={[font.tiny, { flex: 1 }]}>{b.dropoff_address}</Text></Row>}
+                        {!!b.dropoff_address && <Row gap={4}><Ionicons name="flag-outline" size={12} color={colors.textMuted} /><Text style={[font.tiny, { flex: 1 }]}>{b.dropoff_address}</Text></Row>}
                       </View>
                     </Row>
                     <Row gap={6} style={{ marginTop: 8 }}>
-                      {b.pickup_lat && <Button size="sm" variant="outline" icon="navigate" title="Navigasi" onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${b.pickup_lat},${b.pickup_lng}`)} />}
+                      {!!b.pickup_lat && <Button size="sm" variant="outline" icon="navigate" title="Navigasi" onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${b.pickup_lat},${b.pickup_lng}`)} />}
                       <CallButton peer={{ id: b.customer.id, name: b.customer.name, role: 'customer' }} size={36} color={colors.primary} label="Telepon" />
                     </Row>
                   </View>
@@ -268,7 +268,7 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
           <Badge text={r.fuel === 'partner' ? 'BBM termasuk harga' : 'BBM ditanggung pelanggan'} color={colors.textSecondary} />
           {r.budget ? <Badge text={`Anggaran ${rupiah(r.budget)}`} color={colors.textMuted} /> : null}
           <Badge text={`${r.offers_count} penawaran`} />
-          {r.my_offer && <Badge text={`Tawaran Anda ${rupiah(r.my_offer.price)}`} color={r.my_offer.status === 'accepted' ? colors.success : r.my_offer.status === 'rejected' ? colors.danger : colors.accent} />}
+          {!!r.my_offer && <Badge text={`Tawaran Anda ${rupiah(r.my_offer.price)}`} color={r.my_offer.status === 'accepted' ? colors.success : r.my_offer.status === 'rejected' ? colors.danger : colors.accent} />}
         </Row>
       </PressableScale>
       {open && (
@@ -280,7 +280,7 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
             <Row gap={8} style={{ flexWrap: 'wrap' }}>
               {r.status !== 'ongoing' && <Button size="sm" title="Mulai perjalanan" icon="play" onPress={() => setSt('ongoing')} />}
               {r.status === 'ongoing' && <Button size="sm" title="Selesai" icon="flag" onPress={() => setSt('completed')} />}
-              {r.my_offer && <Text style={[font.tiny, { flex: 1 }]}>Harga disepakati {rupiah(r.my_offer.price)}{r.status === 'accepted' ? ' · tagih tunai saat berangkat' : ' · dibayar AntarPay'}</Text>}
+              {!!r.my_offer && <Text style={[font.tiny, { flex: 1 }]}>Harga disepakati {rupiah(r.my_offer.price)}{r.status === 'accepted' ? ' · tagih tunai saat berangkat' : ' · dibayar AntarPay'}</Text>}
             </Row>
           )}
 

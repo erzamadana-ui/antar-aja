@@ -66,7 +66,7 @@ export default function MerchantOrders() {
                   <Row gap={4} style={{ flex: 1 }}><Ionicons name="bicycle-outline" size={14} color={colors.textMuted} /><Text style={font.tiny}>Driver: {o.status === 'searching' ? 'belum ada' : o.status === 'accepted' ? 'menuju toko' : o.status === 'arrived' ? 'sudah di toko' : o.status}</Text></Row>
                   {isActive(o) && (
                     <Row gap={8}>
-                      {o.driver_id && <CallButton peer={{ id: o.driver_id, name: 'Driver', role: 'driver' }} orderId={o.id} size={34} color={colors.primary} />}
+                      {!!o.driver_id && <CallButton peer={{ id: o.driver_id, name: 'Driver', role: 'driver' }} orderId={o.id} size={34} color={colors.primary} />}
                       <CallButton peer={{ id: o.customer_id, name: 'Pelanggan', role: 'customer' }} orderId={o.id} size={34} color={colors.info} />
                     </Row>
                   )}

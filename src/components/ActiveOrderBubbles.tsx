@@ -55,7 +55,7 @@ export function ActiveOrderBubbles({ orders, hrefFor = (o) => `/order/${o.id}`, 
                 <Row gap={8}><View style={[s.pt, { backgroundColor: colors.danger, borderRadius: 2 }]} /><Text style={font.small} numberOfLines={1}>{sel.dropoff_address}</Text></Row>
               </View>
               <Row gap={8}>
-                {sel.driver?.profile?.full_name && <Badge text={`${role === 'customer' ? t('driver') : t('customer')}: ${sel.driver.profile.full_name}`} color={colors.info} />}
+                {!!sel.driver?.profile?.full_name && <Badge text={`${role === 'customer' ? t('driver') : t('customer')}: ${sel.driver.profile.full_name}`} color={colors.info} />}
                 <Badge text={sel.payment_method === 'wallet' ? 'AntarPay' : t('cash')} color={colors.textSecondary} />
               </Row>
               <Row gap={8}>

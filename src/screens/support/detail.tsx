@@ -47,7 +47,7 @@ export default function TicketDetail() {
     <Screen title={`${ticket.subject} · ${ticket.code}`} back scroll={false} padded={false} keyboard={false} right={header}>
       <Text style={[font.tiny, { textAlign: 'center', paddingTop: 6 }]}>{ticketCategoryLabel[ticket.category]} · CS online 07.00–22.00 WIB</Text>
       <TicketChat ticket={ticket} messages={messages} onSend={(b, a) => reply(b, a)} footer={footer} />
-      {ticket.order_id && <Button title="Lihat pesanan terkait" variant="ghost" size="sm" onPress={() => router.push(`/order/${ticket.order_id}` as never)} />}
+      {!!ticket.order_id && <Button title="Lihat pesanan terkait" variant="ghost" size="sm" onPress={() => router.push(`/order/${ticket.order_id}` as never)} />}
     </Screen>
   );
 }
