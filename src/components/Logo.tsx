@@ -41,7 +41,7 @@ export function LogoLockup({ size = 40, dark, sub }: { size?: number; dark?: boo
       <BrandLogo size={size} />
       <View>
         <Wordmark size={size * 0.52} dark={dark} />
-        <Text style={{ fontSize: Math.max(11, size * 0.26), color: dark ? 'rgba(255,255,255,0.8)' : colors.textSecondary, fontWeight: '600', letterSpacing: 0.6 }}>{sub ?? (APP === 'mitra' ? 'APLIKASI MITRA' : APP === 'admin' ? 'PANEL ADMIN' : 'ANTAR APA SAJA, BERSAMA')}</Text>
+        <Text style={{ fontSize: Math.max(11, size * 0.26), color: dark ? 'rgba(255,255,255,0.8)' : colors.textSecondary, fontWeight: '600', letterSpacing: 0.6 }}>{sub ?? (APP === 'mitra' ? 'APLIKASI MITRA' : APP === 'admin' ? 'PANEL ADMIN' : 'ANTAR APA SAJA, BERSAMA KITA')}</Text>
       </View>
     </View>
   );

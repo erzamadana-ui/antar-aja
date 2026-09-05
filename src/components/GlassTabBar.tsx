@@ -48,7 +48,7 @@ export function makeGlassTabBar(spec: TabSpec, accent = colors.primary, fab?: Ta
                   onPress={() => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true }); if (!focused && !e.defaultPrevented) navigation.navigate(r.name); }}
                   style={[s.tab, { width: tabW }]}>
                   <Ionicons name={focused ? sp.iconActive : sp.icon} size={22} color={focused ? accent : colors.textMuted} />
-                  <Text style={[s.label, { color: focused ? accent : colors.textMuted }]} numberOfLines={1}>{sp.tk ? translate(locale, sp.tk) : sp.label}</Text>
+                  <Text style={[s.label, tabW < 76 && { fontSize: 11 }, { color: focused ? accent : colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{sp.tk ? translate(locale, sp.tk) : sp.label}</Text>
                 </Pressable>
               );
             })}
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   bar: { flexDirection: 'row', padding: 6, height: 64, borderRadius: radius.full, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadow.card },
   pill: { position: 'absolute', top: 6, bottom: 6, left: 6, alignItems: 'center', justifyContent: 'center' },
   pillCircle: { width: 52, height: 52, borderRadius: 26 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 1 },
-  label: { fontSize: 12, fontWeight: '700', maxWidth: 88 },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 1, paddingHorizontal: 3, overflow: 'hidden' },
+  label: { fontSize: 12, fontWeight: '700', maxWidth: '100%' },
   fab: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
 });

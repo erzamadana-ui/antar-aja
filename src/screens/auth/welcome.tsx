@@ -1,6 +1,6 @@
 // Onboarding gaya kit: latar putih, ilustrasi besar dalam lingkaran tint, judul besar, indikator 01/03, tombol teal + tombol putih border
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -33,8 +33,9 @@ const SLIDES: Record<typeof APP, Slide[]> = {
 
 export default function Welcome() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const wide = width >= 900;
+  const short = !wide && height < 780;
   const t = useT();
   const slides = SLIDES[APP];
   const [i, setI] = useState(0);
@@ -45,6 +46,7 @@ export default function Welcome() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} bounces={false}>
         <View style={[s.wrap, wide && { flexDirection: 'row', alignItems: 'center', gap: 56, paddingHorizontal: 64 }]}>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Entrance index={0}>
@@ -54,11 +56,11 @@ export default function Welcome() {
               </Row>
             </Entrance>
 
-            <Animated.View key={i} entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={{ alignItems: 'center', marginTop: wide ? 40 : 28 }}>
-              <View style={s.artRing}>
-                <View style={s.artInner}><ServiceIllustration kind={slide.art} size={wide ? 180 : 150} /></View>
+            <Animated.View key={i} entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={{ alignItems: 'center', marginTop: wide ? 40 : short ? 16 : 28 }}>
+              <View style={[s.artRing, short && { width: 200, height: 200, borderRadius: 100 }]}>
+                <View style={[s.artInner, short && { width: 160, height: 160, borderRadius: 80 }]}><ServiceIllustration kind={slide.art} size={wide ? 180 : short ? 112 : 150} /></View>
               </View>
-              <Text style={[font.display, { fontSize: wide ? 40 : 30, lineHeight: wide ? 46 : 36, textAlign: 'center', marginTop: 28 }]}>{slide.title}</Text>
+              <Text style={[font.display, { fontSize: wide ? 40 : short ? 26 : 30, lineHeight: wide ? 46 : short ? 32 : 36, textAlign: 'center', marginTop: short ? 18 : 28 }]}>{slide.title}</Text>
               <Text style={[font.small, { textAlign: 'center', marginTop: 10, fontSize: 14, lineHeight: 21, maxWidth: 360 }]}>{slide.sub}</Text>
               <Row gap={6} style={{ flexWrap: 'wrap', justifyContent: 'center', marginTop: 14 }}>
                 {slide.chips.map((c) => <View key={c} style={s.chip}><Text style={s.chipText}>{c}</Text></View>)}
@@ -88,6 +90,7 @@ export default function Welcome() {
             </View>
           </Entrance>
         </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
