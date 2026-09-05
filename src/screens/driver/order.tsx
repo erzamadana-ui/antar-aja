@@ -8,8 +8,7 @@ import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
 import { Button, Row, Badge, Loading, toast, Empty } from '@/components/ui';
 import { MapScreen } from '@/components/MapScreen';
-import { PressableScale, ProgressBar, AnimatedNumber } from '@/components/motion';
-import { AmbientBackground, BrandGradient } from '@/components/glass';
+import { PressableScale, AnimatedNumber } from '@/components/motion';
 import { PersonCard, RouteBlock, OrderExtras, PriceBlock, Timeline, customerSubtitle } from '@/components/OrderDetails';
 import { ExtraRequest } from '@/components/TipExtras';
 import { ShopTotalCard } from '@/components/ShopTotal';
@@ -19,11 +18,14 @@ import { useOrder } from '@/hooks/useOrder';
 import { useAuth } from '@/store/auth';
 import { useCurrentLocation, useWatchLocation } from '@/hooks/useLocation';
 import { rpc } from '@/lib/supabase';
-import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
+import { colors, font, radius, shadow, motion } from '@/lib/theme';
 import { statusLabel, statusColor, rupiah, serviceLabel, merchantStatusLabel } from '@/lib/format';
 import type { OrderStatus } from '@/lib/types';
 
-const PROGRESS: Record<string, number> = { accepted: 0.33, arrived: 0.66, in_progress: 0.9, completed: 1, cancelled: 1, searching: 0 };
+const STEPS: { key: OrderStatus; label: string }[] = [
+  { key: 'accepted', label: 'Diterima' }, { key: 'arrived', label: 'Tiba' }, { key: 'in_progress', label: 'Mengantar' }, { key: 'completed', label: 'Selesai' },
+];
+const STEP_INDEX: Record<string, number> = { searching: -1, accepted: 0, arrived: 1, in_progress: 2, completed: 3, cancelled: -1 };
 
 export default function DriverOrder() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,14 +70,15 @@ export default function DriverOrder() {
   };
   const navigate = (lat: number, lng: number) => Linking.openURL(Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
 
-  if (loading) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView></View>;
-  if (!order) return <View style={{ flex: 1 }}><AmbientBackground /><SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Order tidak ditemukan" subtitle="Order sudah dilepas atau tidak tersedia." action={<Button title="Kembali" onPress={() => router.replace('/(driver)')} />} /></SafeAreaView></View>;
+  if (loading) return <View style={{ flex: 1, backgroundColor: colors.bg }}><SafeAreaView style={{ flex: 1 }}><Loading /></SafeAreaView></View>;
+  if (!order) return <View style={{ flex: 1, backgroundColor: colors.bg }}><SafeAreaView style={{ flex: 1 }}><Empty icon="alert-circle-outline" title="Order tidak ditemukan" subtitle="Order sudah dilepas atau tidak tersedia." action={<Button title="Kembali" onPress={() => router.replace('/(driver)')} />} /></SafeAreaView></View>;
   const active = ['accepted', 'arrived', 'in_progress'].includes(order.status);
   const navTarget = order.status === 'in_progress' ? { lat: order.dropoff_lat, lng: order.dropoff_lng } : { lat: order.pickup_lat, lng: order.pickup_lng };
   const foodNotReady = order.service === 'food' && order.merchant_status !== 'ready';
   const isShopping = ['shop', 'market'].includes(order.service);
   const shopNotTotaled = isShopping && !order.receipt_url && order.items_subtotal === (order.est_budget ?? 0) && !(events ?? []).some((e) => e.status === 'shop_total');
   const sc = statusColor(order.status);
+  const stepIdx = STEP_INDEX[order.status] ?? -1;
 
   const header = (
     <View style={{ gap: 10 }}>
@@ -84,15 +87,27 @@ export default function DriverOrder() {
           <Animated.Text key={order.status} entering={FadeIn.duration(motion.base)} style={font.h3} numberOfLines={1}>{statusLabel(order.status, order.service)}</Animated.Text>
           <Text style={font.tiny}>{serviceLabel[order.service]} · {order.code}</Text>
         </View>
-        <Badge text={order.status.replace('_', ' ').toUpperCase()} color={sc} />
+        <Badge text={statusLabel(order.status, order.service)} color={sc} />
       </Row>
-      {order.status !== 'cancelled' && <ProgressBar progress={PROGRESS[order.status] ?? 0} color={sc} height={5} />}
+      {/* Langkah status sebagai pil */}
+      {order.status !== 'cancelled' && (
+        <Row gap={6}>
+          {STEPS.map((st, i) => {
+            const done = i <= stepIdx;
+            return (
+              <View key={st.key} style={[s.stepPill, done && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                {done && i < stepIdx && <Ionicons name="checkmark" size={12} color="#fff" />}
+                <Text style={{ fontSize: 12, fontWeight: '700', color: done ? '#fff' : colors.textMuted }} numberOfLines={1}>{st.label}</Text>
+              </View>
+            );
+          })}
+        </Row>
+      )}
     </View>
   );
 
   const navButton = active ? (
-    <PressableScale onPress={() => navigate(navTarget.lat, navTarget.lng)} scaleTo={0.92} style={[s.navBtn, shadow.glow(colors.info)]}>
-      <BrandGradient colors={[colors.info, '#1D4ED8']} style={StyleSheet.absoluteFill} />
+    <PressableScale onPress={() => navigate(navTarget.lat, navTarget.lng)} scaleTo={0.92} style={s.navBtn}>
       <Ionicons name="navigate" size={18} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800' }}>Navigasi</Text>
     </PressableScale>
   ) : null;
@@ -107,17 +122,23 @@ export default function DriverOrder() {
       maxRatio={0.66}
     >
       <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 14 }}>
-        <Animated.View entering={ZoomIn.duration(motion.base)} style={[s.earnCard, shadow.glow(colors.success)]}>
-          <BrandGradient colors={[colors.success, '#047857']} angle="horizontal" style={StyleSheet.absoluteFill} />
+        {/* Kartu pendapatan (putih, angka teal) */}
+        <Animated.View entering={ZoomIn.duration(motion.base)} style={s.earnCard}>
           <Row between>
-            <View><Text style={s.earnLabel}>Pendapatan Anda</Text><AnimatedNumber value={order.driver_earning} format={rupiah} style={{ color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }} duration={600} /></View>
-            <View style={{ alignItems: 'flex-end' }}><Text style={s.earnLabel}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 17 }}>{order.payment_method === 'cash' ? rupiah(order.total) : '✓ Lunas'}</Text></View>
+            <Row gap={12} style={{ flex: 1, minWidth: 0 }}>
+              <View style={s.earnIcon}><Ionicons name="cash-outline" size={22} color={colors.primary} /></View>
+              <View style={{ flex: 1, minWidth: 0 }}><Text style={font.tiny}>Pendapatan Anda</Text><AnimatedNumber value={order.driver_earning} format={rupiah} style={{ color: colors.primary, fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }} duration={600} /></View>
+            </Row>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={font.tiny}>{order.payment_method === 'cash' ? 'Tagih tunai' : 'Dibayar AntarPay'}</Text>
+              {order.payment_method === 'cash' ? <Text style={{ color: colors.text, fontWeight: '800', fontSize: 17 }}>{rupiah(order.total)}</Text> : <Row gap={4}><Ionicons name="checkmark-circle" size={16} color={colors.success} /><Text style={{ color: colors.success, fontWeight: '800', fontSize: 15 }}>Lunas</Text></Row>}
+            </View>
           </Row>
-          {order.service === 'food' && order.payment_method === 'cash' && <Text style={[s.earnLabel, { marginTop: 6 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
+          {order.service === 'food' && order.payment_method === 'cash' && <Text style={[font.tiny, { marginTop: 8 }]}>Bayar ke merchant {rupiah(order.items_subtotal)} tunai, tagih total ke pelanggan.</Text>}
           {isShopping && (
             <Row gap={8} style={{ marginTop: 8, flexWrap: 'wrap' }}>
-              {order.shop_vehicle === 'car' && <Badge text="Mobil" color="#FFFFFF" bg="rgba(255,255,255,0.22)" />}
-              {(order.driver_service_share ?? 0) > 0 && <Text style={s.earnLabel}>Jasa belanja Anda {rupiah(order.driver_service_share ?? 0)} + penggantian belanja setelah selesai</Text>}
+              {order.shop_vehicle === 'car' && <Badge text="Mobil" color={colors.info} />}
+              {(order.driver_service_share ?? 0) > 0 && <Text style={[font.tiny, { flex: 1 }]}>Jasa belanja Anda {rupiah(order.driver_service_share ?? 0)} + penggantian belanja setelah selesai</Text>}
             </Row>
           )}
         </Animated.View>
@@ -126,7 +147,12 @@ export default function DriverOrder() {
         <SafetyRow order={order} forDriver />
         {customer && <Animated.View entering={FadeInDown.delay(80).duration(motion.slow)}><PersonCard name={customer.full_name} subtitle={customerSubtitle(customer)} avatar={customer.avatar_url} onChat={active ? () => router.push(`/order/${id}/chat` as never) : undefined} badge="Pelanggan" callPeer={active ? { id: customer.id, name: customer.full_name, avatar: customer.avatar_url, role: 'customer' } : null} orderId={order.id} /></Animated.View>}
         {order.service === 'food' && order.merchant_status && (
-          <Row gap={8} style={s.block}><Ionicons name="restaurant" size={18} color={colors.food} /><Text style={[font.small, { flex: 1 }]}>Merchant: <Text style={{ fontWeight: '700' }}>{order.merchant?.name}</Text></Text><Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} />{active && order.merchant?.owner_id && <CallButton peer={{ id: order.merchant.owner_id, name: order.merchant.name, role: 'merchant' }} orderId={order.id} size={36} color={colors.food} />}</Row>
+          <Row gap={10} style={s.block}>
+            <View style={s.blockIcon}><Ionicons name="restaurant-outline" size={18} color={colors.primary} /></View>
+            <Text style={[font.small, { flex: 1 }]}>Merchant: <Text style={{ fontWeight: '700', color: colors.text }}>{order.merchant?.name}</Text></Text>
+            <Badge text={merchantStatusLabel[order.merchant_status]} color={order.merchant_status === 'ready' ? colors.success : colors.warning} />
+            {active && order.merchant?.owner_id && <CallButton peer={{ id: order.merchant.owner_id, name: order.merchant.name, role: 'merchant' }} orderId={order.id} size={36} color={colors.primary} />}
+          </Row>
         )}
         {isShopping && (order.status === 'arrived' || order.status === 'in_progress') && <ShopTotalCard order={order} onDone={reload} />}
         {active && <ExtraRequest order={order} onDone={reload} />}
@@ -136,10 +162,11 @@ export default function DriverOrder() {
         </View>
         {order.service === 'send' && active && order.recipient_phone && <Button title={`Hubungi penerima (${order.recipient_name})`} variant="secondary" icon="call-outline" onPress={() => Linking.openURL(`tel:${order.recipient_phone}`)} />}
 
+        {/* Tombol aksi teal */}
         <Animated.View key={`act-${order.status}-${order.merchant_status ?? ''}`} entering={FadeInDown.duration(motion.base)} style={{ gap: 8 }}>
-          {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : order.service === 'shop' ? 'Sudah tiba di toko' : order.service === 'market' ? 'Sudah tiba di pasar' : 'Sudah tiba di titik jemput'} size="lg" color={colors.ride} onPress={() => update('arrived')} />}
-          {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : isShopping ? (shopNotTotaled ? 'Masukkan total belanja dulu' : 'Belanja selesai, antar sekarang') : 'Penumpang naik, mulai perjalanan'} size="lg" color={colors.ride} disabled={foodNotReady || shopNotTotaled} onPress={() => update('in_progress')} />}
-          {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" color={colors.success} onPress={complete} />}
+          {order.status === 'accepted' && <Button title={order.service === 'food' ? 'Sudah tiba di merchant' : order.service === 'shop' ? 'Sudah tiba di toko' : order.service === 'market' ? 'Sudah tiba di pasar' : 'Sudah tiba di titik jemput'} size="lg" onPress={() => update('arrived')} />}
+          {order.status === 'arrived' && <Button title={order.service === 'food' ? (foodNotReady ? 'Menunggu pesanan siap…' : 'Pesanan diambil, antar sekarang') : order.service === 'send' ? 'Paket diterima, antar sekarang' : isShopping ? (shopNotTotaled ? 'Masukkan total belanja dulu' : 'Belanja selesai, antar sekarang') : 'Penumpang naik, mulai perjalanan'} size="lg" disabled={foodNotReady || shopNotTotaled} onPress={() => update('in_progress')} />}
+          {order.status === 'in_progress' && <Button title={order.service === 'ride_motor' || order.service === 'ride_car' ? 'Penumpang sampai, selesaikan' : 'Sudah diterima, selesaikan'} size="lg" onPress={complete} />}
           {(order.status === 'accepted' || order.status === 'arrived') && <Button title="Lepas order" variant="ghost" color={colors.danger} onPress={cancel} />}
           {active && <Button title="Laporkan masalah / insiden" variant="ghost" color={colors.textSecondary} icon="flag-outline" onPress={() => router.push({ pathname: '/support/new', params: { order_id: order.id, category: 'order' } } as never)} />}
         </Animated.View>
@@ -151,8 +178,10 @@ export default function DriverOrder() {
 }
 
 const s = StyleSheet.create({
-  navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 44, borderRadius: 22, overflow: 'hidden' },
-  earnCard: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
-  earnLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' },
-  block: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: glass.border, gap: 12 },
+  navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 44, borderRadius: 22, backgroundColor: colors.primary, ...shadow.glow(colors.primary) },
+  stepPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, height: 30, paddingHorizontal: 6, borderRadius: radius.full, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border },
+  earnCard: { borderRadius: radius.lg, padding: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  earnIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  block: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border, gap: 12, ...shadow.soft },
+  blockIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
 });

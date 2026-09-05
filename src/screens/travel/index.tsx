@@ -4,11 +4,11 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
-import { Screen, Button, Row, Badge, Input, Chip, Stepper, Avatar, Empty, Card, toast } from '@/components/ui';
-import { PressableScale, Skeleton, Entrance } from '@/components/motion';
+import { Screen, Button, Row, Badge, Input, Chip, Stepper, Avatar, Empty, Card, IconCircle, toast } from '@/components/ui';
+import { PressableScale, Skeleton, Entrance, ProgressBar } from '@/components/motion';
 import { LocationFields } from '@/components/LocationField';
 import { PaymentSection, PriceSummary, paidViaOf, handleShortfall, type PayChoice } from '@/components/BookingSheet';
-import { ServiceArt } from '@/components/ServiceArt';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { useCities, useTravelSearch, useMyTravelBookings, useTravelRequests } from '@/hooks/useTravel';
 import { usePayPrefs } from '@/store/payprefs';
 import { useBooking } from '@/store/booking';
@@ -16,7 +16,7 @@ import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { reverseGeocode } from '@/lib/geo';
 import { rpc, supabase } from '@/lib/supabase';
-import { colors, font, radius, motion, glass, shadow } from '@/lib/theme';
+import { colors, font, radius, motion, shadow } from '@/lib/theme';
 import { rupiah, formatSchedule, formatDate, travelStatusLabel, tripStatusLabel, cityName, travelRequestStatusLabel, travelKindLabel } from '@/lib/format';
 import type { TravelBooking, TravelSearchTrip, TravelPartnerCard, TravelRequest, TravelRequestKind, TravelAccommodation } from '@/lib/types';
 
@@ -83,46 +83,49 @@ export default function TravelScreen() {
     finally { setBusy(false); }
   };
 
-  const sharedFooter = mode === 'shared' && trip ? <Button title={`${priv ? 'Carter private' : `Pesan ${pax} kursi`} · ${rupiah(total)}`} size="lg" color={colors.travel} loading={busy} onPress={book} /> : undefined;
+  const sharedFooter = mode === 'shared' && trip ? <Button title={`${priv ? 'Carter private' : `Pesan ${pax} kursi`} · ${rupiah(total)}`} size="lg" loading={busy} onPress={book} /> : undefined;
 
   return (
     <Screen title="AntarTravel" subtitle="Antar kota · jemput di rumah" band={colors.travel} back maxWidth={640} footer={sharedFooter}>
       <View style={{ gap: 14 }}>
-        <View style={s.segment}>
-          {MODES.map((m) => {
-            const active = mode === m.key;
-            return (
-              <PressableScale key={m.key} onPress={() => setMode(m.key)} scaleTo={0.96} style={[s.segItem, active && { backgroundColor: colors.travel, ...shadow.glow(colors.travel) }]}>
-                <Text style={{ fontSize: 12.5, fontWeight: '800', color: active ? '#fff' : colors.textSecondary, textAlign: 'center' }} numberOfLines={1}>{m.label}</Text>
-              </PressableScale>
-            );
-          })}
-        </View>
+        <Entrance index={0}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
+            {MODES.map((m) => {
+              const active = mode === m.key;
+              return (
+                <PressableScale key={m.key} onPress={() => setMode(m.key)} scaleTo={0.94} style={[s.modeChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                  <Ionicons name={m.icon} size={16} color={active ? '#fff' : colors.primary} />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#fff' : colors.text }} numberOfLines={1}>{m.label}</Text>
+                </PressableScale>
+              );
+            })}
+          </ScrollView>
+        </Entrance>
 
         {mode !== 'shared' ? (
           <RequestMode key={mode} kind={mode} uid={session?.user.id} />
         ) : (
           <>
-        <Row gap={12} style={s.hero}>
-          <ServiceArt kind="travel" color={colors.travel} size={54} glow={false} />
+        <Entrance index={1}><Row gap={12} style={s.hero}>
+          <View style={s.heroArt}><ServiceIllustration kind="travel" size={44} /></View>
           <View style={{ flex: 1 }}><Text style={font.h3}>Travel antar kota</Text><Text style={font.tiny}>Innova / Hi-Ace mitra resmi · jemput di rumah · bisa private 1 keluarga · booking tanggal</Text></View>
-        </Row>
+        </Row></Entrance>
 
         <View style={s.group}>
           <Text style={font.label}>Dari kota</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{cities.map((c) => <Chip key={c.id} label={c.name} active={from === c.id} onPress={() => setFrom(c.id)} color={colors.travel} />)}</ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{cities.map((c) => <Chip key={c.id} label={c.name} active={from === c.id} onPress={() => setFrom(c.id)} />)}</ScrollView>
           <Text style={font.label}>Ke kota</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{cities.filter((c) => c.id !== from).map((c) => <Chip key={c.id} label={c.name} active={to === c.id} onPress={() => setTo(c.id)} color={colors.travel} />)}</ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>{cities.filter((c) => c.id !== from).map((c) => <Chip key={c.id} label={c.name} active={to === c.id} onPress={() => setTo(c.id)} />)}</ScrollView>
           <Text style={font.label}>Tanggal berangkat</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <Pressable onPress={() => setDay(null)} style={[s.day, !day && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 12, fontWeight: '700', color: !day ? '#fff' : colors.textMuted }}>Semua</Text><Text style={{ fontSize: 16, fontWeight: '800', color: !day ? '#fff' : colors.text }}>10 hr</Text></Pressable>
+            <Pressable onPress={() => setDay(null)} style={[s.day, !day && { backgroundColor: colors.primary, borderColor: colors.primary }]}><Text style={{ fontSize: 12, fontWeight: '700', color: !day ? '#fff' : colors.textMuted }}>Semua</Text><Text style={{ fontSize: 16, fontWeight: '800', color: !day ? '#fff' : colors.text }}>10 hr</Text></Pressable>
             {days.map((d, i) => { const active = day && d.getTime() === day.getTime(); return (
-              <Pressable key={i} onPress={() => setDay(d)} style={[s.day, active && { backgroundColor: colors.travel, borderColor: colors.travel }]}>
+              <Pressable key={i} onPress={() => setDay(d)} style={[s.day, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
               </Pressable>); })}
           </ScrollView>
-          {route && <Row gap={6} style={{ flexWrap: 'wrap' }}><Badge text={`${route.distance_km} km · ±${route.duration_h} jam`} color={colors.info} /><Badge text={`Kursi ${rupiah(route.seat_price)}/orang`} color={colors.travel} /><Badge text={`Private mulai ${rupiah(route.private_price)}`} color={colors.accent} /><Badge text={`Min. ${route.min_pax} penumpang berangkat`} color={colors.textMuted} /></Row>}
+          {route && <Row gap={6} style={{ flexWrap: 'wrap' }}><Badge text={`${route.distance_km} km · ±${route.duration_h} jam`} color={colors.info} /><Badge text={`Kursi ${rupiah(route.seat_price)}/orang`} /><Badge text={`Private mulai ${rupiah(route.private_price)}`} color={colors.accent} /><Badge text={`Min. ${route.min_pax} penumpang berangkat`} color={colors.textMuted} /></Row>}
         </View>
 
         {from && to && (loading ? <Skeleton height={90} radius={radius.lg} /> : !result?.route ? <Empty icon="bus-outline" title="Rute belum tersedia" subtitle="Belum ada mitra travel untuk rute ini. Coba rute lain atau ajukan carter privat." /> : result.trips.length === 0 ? (
@@ -132,20 +135,28 @@ export default function TravelScreen() {
             <Text style={font.label}>Jadwal keberangkatan {fromCity?.name} → {toCity?.name}</Text>
             {result.trips.map((t) => {
               const active = trip?.id === t.id; const p = t.partner;
+              const filled = t.seats_total > 0 ? Math.min(1, t.seats_booked / t.seats_total) : 0;
+              const time = new Date(t.depart_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
               return (
-                <PressableScale key={t.id} onPress={() => { setTrip(t); if (t.seats_left < pax) setPax(Math.max(1, t.seats_left)); }} scaleTo={0.985} style={[s.trip, active && { borderColor: colors.travel, backgroundColor: colors.travel + '0D', ...shadow.glow(colors.travel) }]}>
-                  <Row gap={10}>
-                    <Avatar name={p.company ?? p.name} url={p.photo_url ?? p.avatar_url} size={44} />
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Row between><Text style={{ fontWeight: '800', color: colors.text, fontSize: 16 }}>{new Date(t.depart_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</Text><Text style={{ fontWeight: '800', color: colors.travel }}>{rupiah(t.seat_price)}<Text style={font.tiny}>/kursi</Text></Text></Row>
-                      <Text style={font.tiny}>{new Date(t.depart_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })} · {p.company ?? p.name}</Text>
-                      <Row gap={6} style={{ flexWrap: 'wrap', marginTop: 4 }}>
-                        <Badge text={`${p.model} · ${p.plate}`} color={colors.textSecondary} />
+                <PressableScale key={t.id} onPress={() => { setTrip(t); if (t.seats_left < pax) setPax(Math.max(1, t.seats_left)); }} scaleTo={0.985} haptic={false} style={[s.trip, active && { borderColor: colors.primary, backgroundColor: colors.tint }]}>
+                  <Row gap={12} style={{ alignItems: 'flex-start' }}>
+                    {p.photo_url ? <Avatar name={p.company ?? p.name} url={p.photo_url} size={64} /> : <View style={s.thumb}><ServiceIllustration kind="travel" size={40} /></View>}
+                    <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+                      <Row between>
+                        <Text style={[font.body, { fontWeight: '800', flex: 1 }]} numberOfLines={1}>{p.company ?? p.name}</Text>
                         {p.is_electric && <Badge text="Listrik" color={colors.success} />}
-                        <Badge text={`${t.seats_left} kursi tersisa`} color={t.seats_left <= 2 ? colors.warning : colors.info} />
-                        <Badge text={tripStatusLabel[t.status]} color={t.status === 'confirmed' ? colors.success : colors.textMuted} />
                       </Row>
-                      <Text style={font.tiny}>Rating {Number(p.rating).toFixed(1)} ({p.rating_count}) · {p.total_trips} trip{t.allow_private ? ` · private ${rupiah(t.private_price)}` : ''}</Text>
+                      <Row gap={4}><Ionicons name="location-outline" size={13} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{fromCity?.name} → {toCity?.name} · {time} WIB · {new Date(t.depart_at).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}</Text></Row>
+                      <Text style={font.tiny} numberOfLines={1}>{p.model} · {p.plate} · {Number(p.rating).toFixed(1)} ({p.rating_count}) · {tripStatusLabel[t.status]}</Text>
+                      <Row gap={8} style={{ marginTop: 2 }}>
+                        <View style={{ flex: 1 }}><ProgressBar progress={filled} color={t.seats_left <= 2 ? colors.warning : colors.primary} /></View>
+                        <Text style={[font.tiny, { fontWeight: '700', color: colors.text }]}>{Math.round(filled * 100)}% · {t.seats_left} sisa</Text>
+                      </Row>
+                      <Row between style={{ marginTop: 2 }}>
+                        <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 16 }}>{rupiah(t.seat_price)}<Text style={font.tiny}> /kursi</Text></Text>
+                        <View style={[s.rowArrow, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}><Ionicons name={active ? 'checkmark' : 'arrow-forward'} size={16} color={active ? '#fff' : colors.primary} /></View>
+                      </Row>
+                      {t.allow_private ? <Text style={font.tiny}>Private 1 keluarga {rupiah(t.private_price)}</Text> : null}
                     </View>
                   </Row>
                 </PressableScale>
@@ -158,7 +169,7 @@ export default function TravelScreen() {
           <Animated.View entering={FadeInDown.duration(motion.base)} layout={LinearTransition.springify().stiffness(300).damping(22)} style={{ gap: 14 }}>
             <View style={s.group}>
               <Row gap={8}>
-                <Chip label="Bersama (per kursi)" active={!priv} onPress={() => setPriv(false)} color={colors.travel} />
+                <Chip label="Bersama (per kursi)" active={!priv} onPress={() => setPriv(false)} />
                 {trip.allow_private && <Chip label={`Private 1 keluarga · ${rupiah(trip.private_price)}`} active={priv} onPress={() => setPriv(true)} color={colors.accent} />}
               </Row>
               <Row between>
@@ -179,13 +190,15 @@ export default function TravelScreen() {
           <View style={{ gap: 8 }}>
             <Text style={font.label}>Booking travel saya</Text>
             {bookings.slice(0, 5).map((b) => (
-              <PressableScale key={b.id} onPress={() => router.push(`/travel/${b.id}` as never)} scaleTo={0.985} style={s.trip}>
-                <Row between>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '800', color: colors.text }}>{cityName(cities, b.trip.route.from_city)} → {cityName(cities, b.trip.route.to_city)}</Text>
-                    <Text style={font.tiny}>{formatSchedule(b.trip.depart_at)} · {b.pax} pax{b.is_private ? ' · private' : ''} · {b.code}</Text>
+              <PressableScale key={b.id} onPress={() => router.push(`/travel/${b.id}` as never)} scaleTo={0.985} haptic={false} style={s.trip}>
+                <Row gap={12}>
+                  <IconCircle name="bus-outline" size={44} bg={colors.tint} />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontWeight: '800', color: colors.text }} numberOfLines={1}>{cityName(cities, b.trip.route.from_city)} → {cityName(cities, b.trip.route.to_city)}</Text>
+                    <Text style={font.tiny} numberOfLines={1}>{formatSchedule(b.trip.depart_at)} · {b.pax} pax{b.is_private ? ' · private' : ''} · {b.code}</Text>
+                    <Badge text={travelStatusLabel[b.status]} color={b.status === 'completed' ? colors.success : b.status === 'cancelled' ? colors.danger : colors.primary} style={{ marginTop: 4 }} />
                   </View>
-                  <Badge text={travelStatusLabel[b.status]} color={b.status === 'completed' ? colors.success : b.status === 'cancelled' ? colors.danger : colors.travel} />
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                 </Row>
               </PressableScale>
             ))}
@@ -281,7 +294,7 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
   return (
     <View style={{ gap: 14 }}>
       <Entrance index={0}><Row gap={12} style={s.hero}>
-        <ServiceArt kind="car" color={colors.travel} size={54} glow={false} />
+        <View style={s.heroArt}><ServiceIllustration kind="car" size={44} /></View>
         <View style={{ flex: 1 }}>
           <Text style={font.h3}>{daily ? 'Mobil + sopir per hari' : 'Carter privat sekali jalan'}</Text>
           <Text style={font.tiny}>{daily ? 'Keliling kota atau luar kota, 12 jam/hari. Mitra mengirim penawaran, Anda pilih yang cocok.' : 'Satu mobil untuk keluarga/rombongan Anda, jemput di rumah, antar sampai alamat tujuan. Mitra mengirim penawaran harga.'}</Text>
@@ -289,7 +302,7 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
       </Row></Entrance>
 
       {partner && (
-        <Row gap={8} style={[s.group, { borderColor: colors.travel, backgroundColor: colors.travel + '0D' }]}>
+        <Row gap={8} style={[s.group, { borderColor: colors.primary, backgroundColor: colors.tint }]}>
           <Avatar name={partner.company_name ?? partner.name} url={partner.photo_url ?? partner.avatar_url} size={36} />
           <View style={{ flex: 1 }}><Text style={{ fontWeight: '800', color: colors.text }}>Diajukan ke {partner.company_name ?? partner.name}</Text><Text style={font.tiny}>Hanya mitra ini yang menerima permintaan Anda.</Text></View>
           <Button size="sm" variant="ghost" title="Lepas" onPress={() => setPartner(null)} />
@@ -302,17 +315,17 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
         <Text style={font.label}>Tanggal & jam berangkat</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {dayOptions.map((d, i) => { const active = d.getTime() === departDay.getTime(); return (
-            <Pressable key={i} onPress={() => pickDay(d)} style={[s.day, active && { backgroundColor: colors.travel, borderColor: colors.travel }]}>
+            <Pressable key={i} onPress={() => pickDay(d)} style={[s.day, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
               <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text>
               <Text style={{ fontSize: 18, fontWeight: '800', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
             </Pressable>); })}
         </ScrollView>
         {timeOptions.length === 0 ? <Text style={font.tiny}>Tidak ada jam tersisa hari ini (minimal 2 jam ke depan). Pilih tanggal lain.</Text> : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-            {timeOptions.map((t) => <Chip key={t.getTime()} label={t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} active={Math.abs(t.getTime() - departAt.getTime()) < 60000} onPress={() => setDepartAt(t)} color={colors.travel} />)}
+            {timeOptions.map((t) => <Chip key={t.getTime()} label={t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} active={Math.abs(t.getTime() - departAt.getTime()) < 60000} onPress={() => setDepartAt(t)} />)}
           </ScrollView>
         )}
-        <Badge text={`Berangkat ${formatSchedule(departAt.toISOString())}`} color={colors.travel} />
+        <Badge text={`Berangkat ${formatSchedule(departAt.toISOString())}`} />
         {daily && (
           <>
             <Row between>
@@ -321,9 +334,9 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
             </Row>
             <Text style={font.label}>Tanggal kembali (opsional)</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Pressable onPress={() => setReturnDay(null)} style={[s.day, !returnDay && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 12, fontWeight: '700', color: !returnDay ? '#fff' : colors.textMuted }}>Belum</Text><Text style={{ fontSize: 16, fontWeight: '800', color: !returnDay ? '#fff' : colors.text }}>pasti</Text></Pressable>
+              <Pressable onPress={() => setReturnDay(null)} style={[s.day, !returnDay && { backgroundColor: colors.primary, borderColor: colors.primary }]}><Text style={{ fontSize: 12, fontWeight: '700', color: !returnDay ? '#fff' : colors.textMuted }}>Belum</Text><Text style={{ fontSize: 16, fontWeight: '800', color: !returnDay ? '#fff' : colors.text }}>pasti</Text></Pressable>
               {returnOptions.map((d) => { const active = returnDay?.getTime() === d.getTime(); return (
-                <Pressable key={d.getTime()} onPress={() => setReturnDay(d)} style={[s.day, active && { backgroundColor: colors.travel, borderColor: colors.travel }]}>
+                <Pressable key={d.getTime()} onPress={() => setReturnDay(d)} style={[s.day, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                   <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.textMuted }}>{DAY_NAMES[d.getDay()]}</Text>
                   <Text style={{ fontSize: 18, fontWeight: '800', color: active ? '#fff' : colors.text }}>{d.getDate()}</Text>
                 </Pressable>); })}
@@ -338,9 +351,9 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
           <Stepper value={pax} onChange={setPax} min={1} max={16} />
         </Row>
         <Text style={font.label}>Bagasi</Text>
-        <Row gap={8} style={{ flexWrap: 'wrap' }}>{LUGGAGE.map(([k, l]) => <Chip key={k} label={l} active={luggage === k} onPress={() => setLuggage(k)} color={colors.travel} />)}</Row>
+        <Row gap={8} style={{ flexWrap: 'wrap' }}>{LUGGAGE.map(([k, l]) => <Chip key={k} label={l} active={luggage === k} onPress={() => setLuggage(k)} />)}</Row>
         <Text style={font.label}>Preferensi mobil</Text>
-        <Row gap={8} style={{ flexWrap: 'wrap' }}>{VEHICLE_PREF.map(([k, l]) => <Chip key={l} label={l} active={vehiclePref === k} onPress={() => setVehiclePref(k)} color={colors.travel} />)}</Row>
+        <Row gap={8} style={{ flexWrap: 'wrap' }}>{VEHICLE_PREF.map(([k, l]) => <Chip key={l} label={l} active={vehiclePref === k} onPress={() => setVehiclePref(k)} />)}</Row>
       </View></Entrance>
 
       <Entrance index={4}><View style={s.group}>
@@ -352,19 +365,19 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
         ] as [TravelAccommodation, string, string, React.ComponentProps<typeof Ionicons>['name']][]).map(([k, title, sub, icon]) => {
           const active = accommodation === k;
           return (
-            <PressableScale key={k} onPress={() => setAccommodation(k)} scaleTo={0.985} style={[s.option, active && { borderColor: colors.travel, backgroundColor: colors.travel + '0D' }]}>
+            <PressableScale key={k} onPress={() => setAccommodation(k)} scaleTo={0.985} style={[s.option, active && { borderColor: colors.primary, backgroundColor: colors.tint }]}>
               <Row gap={10}>
-                <Ionicons name={icon} size={20} color={active ? colors.travel : colors.textMuted} />
+                <Ionicons name={icon} size={20} color={active ? colors.primary : colors.textMuted} />
                 <View style={{ flex: 1 }}><Text style={{ fontWeight: '800', color: colors.text }}>{title}</Text><Text style={font.tiny}>{sub}</Text></View>
-                <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={18} color={active ? colors.travel : colors.textMuted} />
+                <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={18} color={active ? colors.primary : colors.textMuted} />
               </Row>
             </PressableScale>
           );
         })}
         <Text style={font.label}>BBM, tol & parkir</Text>
         <Row gap={8} style={{ flexWrap: 'wrap' }}>
-          <Chip label="Ditanggung pelanggan (umum)" active={fuel === 'customer'} onPress={() => setFuel('customer')} color={colors.travel} />
-          <Chip label="Termasuk harga" active={fuel === 'partner'} onPress={() => setFuel('partner')} color={colors.travel} />
+          <Chip label="Ditanggung pelanggan (umum)" active={fuel === 'customer'} onPress={() => setFuel('customer')} />
+          <Chip label="Termasuk harga" active={fuel === 'partner'} onPress={() => setFuel('partner')} />
         </Row>
         <Text style={font.tiny}>{fuel === 'customer' ? 'Anda membayar BBM/tol/parkir langsung selama perjalanan (praktik umum rental sopir).' : 'Mitra memasukkan estimasi BBM/tol/parkir ke harga penawaran (paket all-in).'}</Text>
       </View></Entrance>
@@ -374,11 +387,11 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
         <Input label="Anggaran (opsional)" placeholder="Contoh 1500000" keyboardType="number-pad" icon="cash-outline" value={budget} onChangeText={(v) => setBudget(v.replace(/\D/g, ''))} right={budget ? <Text style={font.tiny}>{rupiah(Number(budget))}</Text> : undefined} />
         <Text style={font.label}>Pembayaran</Text>
         <Row gap={8}>
-          <Chip label={`AntarPay · ${rupiah(wallet?.balance ?? 0)}`} active={method === 'wallet'} onPress={() => setMethod('wallet')} color={colors.travel} />
-          <Chip label="Tunai ke sopir" active={method === 'cash'} onPress={() => setMethod('cash')} color={colors.travel} />
+          <Chip label={`AntarPay · ${rupiah(wallet?.balance ?? 0)}`} active={method === 'wallet'} onPress={() => setMethod('wallet')} />
+          <Chip label="Tunai ke sopir" active={method === 'cash'} onPress={() => setMethod('cash')} />
         </Row>
         <Text style={font.tiny}>{method === 'wallet' ? 'Saldo dipotong saat Anda menerima penawaran; dana diteruskan ke mitra setelah perjalanan selesai.' : 'Bayar langsung ke sopir saat berangkat. Mitra dapat menolak permintaan tunai untuk perjalanan panjang.'}</Text>
-        <Button title="Kirim permintaan" size="lg" color={colors.travel} icon="paper-plane-outline" loading={busy} onPress={submit} />
+        <Button title="Kirim permintaan" size="lg" icon="paper-plane-outline" loading={busy} onPress={submit} />
         <Text style={font.tiny}>Permintaan berlaku hingga jadwal berangkat, maksimal 3 permintaan aktif. Anda bebas memilih penawaran atau membatalkan sebelum menerima.</Text>
       </View></Entrance>
 
@@ -393,13 +406,15 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
         <View style={{ gap: 8 }}>
           <Text style={font.label}>Permintaan saya</Text>
           {requests.slice(0, 8).map((r) => (
-            <PressableScale key={r.id} onPress={() => router.push(`/travel/request/${r.id}` as never)} scaleTo={0.985} style={s.trip}>
-              <Row between>
+            <PressableScale key={r.id} onPress={() => router.push(`/travel/request/${r.id}` as never)} scaleTo={0.985} haptic={false} style={s.trip}>
+              <Row gap={12}>
+                <IconCircle name={r.kind === 'daily' ? 'calendar-outline' : 'car-outline'} size={44} bg={colors.tint} />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ fontWeight: '800', color: colors.text }} numberOfLines={1}>{travelKindLabel[r.kind]} · {r.dropoff_address ?? r.pickup_address}</Text>
-                  <Text style={font.tiny}>{formatSchedule(r.depart_at)} · {r.days} hari · {r.pax} pax · {r.code}{r.price > 0 ? ` · ${rupiah(r.price)}` : ''}</Text>
+                  <Text style={font.tiny} numberOfLines={1}>{formatSchedule(r.depart_at)} · {r.days} hari · {r.pax} pax · {r.code}{r.price > 0 ? ` · ${rupiah(r.price)}` : ''}</Text>
+                  <Badge text={travelRequestStatusLabel[r.status]} color={requestStatusColor(r.status)} style={{ marginTop: 4 }} />
                 </View>
-                <Badge text={travelRequestStatusLabel[r.status]} color={requestStatusColor(r.status)} />
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Row>
             </PressableScale>
           ))}
@@ -410,36 +425,40 @@ function RequestMode({ kind, uid }: { kind: TravelRequestKind; uid?: string }) {
 }
 
 function PartnerCard({ p, daily, active, onPick }: { p: TravelPartnerCard; daily: boolean; active: boolean; onPick: () => void }) {
+  const photo = p.photo_url ?? p.avatar_url;
   return (
-    <Card style={[{ gap: 8 }, active && { borderColor: colors.travel, borderWidth: 1.5 }]}>
-      <Row gap={10}>
-        <Avatar name={p.company_name ?? p.name} url={p.photo_url ?? p.avatar_url} size={44} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontWeight: '800', color: colors.text }} numberOfLines={1}>{p.company_name ?? p.name}</Text>
-          <Text style={font.tiny}>{p.partner_type === 'agency' ? 'Agen travel' : 'Mobil pribadi'} · {p.vehicle_model}{p.vehicle_year ? ` ${p.vehicle_year}` : ''} · {p.seats} kursi{p.base_city ? ` · ${p.base_city}` : ''}</Text>
-          <Text style={font.tiny}>Rating {Number(p.rating_avg).toFixed(1)} ({p.rating_count}) · {p.total_trips} trip</Text>
+    <Card solid style={[{ gap: 10, padding: 12 }, active && { borderColor: colors.primary, borderWidth: 1.5 }]}>
+      <Row gap={12} style={{ alignItems: 'flex-start' }}>
+        {photo ? <Avatar name={p.company_name ?? p.name} url={photo} size={64} /> : <View style={s.thumb}><ServiceIllustration kind="car" size={40} /></View>}
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <Text style={[font.body, { fontWeight: '800' }]} numberOfLines={1}>{p.company_name ?? p.name}</Text>
+          <Row gap={4}><Ionicons name="car-outline" size={13} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{p.partner_type === 'agency' ? 'Agen travel' : 'Mobil pribadi'} · {p.vehicle_model}{p.vehicle_year ? ` ${p.vehicle_year}` : ''} · {p.seats} kursi</Text></Row>
+          <Row gap={4}><Ionicons name="location-outline" size={13} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{p.base_city ?? 'Kota mana saja'}</Text></Row>
+          <Row gap={4}><Ionicons name="star" size={13} color={colors.accent} /><Text style={font.tiny}>{Number(p.rating_avg).toFixed(1)} ({p.rating_count}) · {p.total_trips} trip</Text></Row>
         </View>
-        {daily && p.daily_rate ? <View style={{ alignItems: 'flex-end' }}><Text style={{ fontWeight: '800', color: colors.travel }}>{rupiah(p.daily_rate)}</Text><Text style={font.tiny}>/hari (12 jam)</Text></View> : null}
+        {daily && p.daily_rate ? <View style={{ alignItems: 'flex-end' }}><Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{rupiah(p.daily_rate)}</Text><Text style={font.tiny}>/hari (12 jam)</Text></View> : null}
       </Row>
       <Row gap={6} style={{ flexWrap: 'wrap' }}>
         {p.is_electric && <Badge text="Listrik" color={colors.success} />}
         {p.accommodation?.includes('customer') && <Badge text="Akomodasi ditanggung pelanggan" color={colors.info} />}
         {p.accommodation?.includes('self') && <Badge text={`Mandiri ${rupiah(p.accommodation_fee || 150000)}/malam`} color={colors.accent} />}
-        {p.fuel_included && <Badge text="BBM termasuk" color={colors.travel} />}
+        {p.fuel_included && <Badge text="BBM termasuk" color={colors.primary} />}
         {daily && p.overtime_rate ? <Badge text={`Overtime ${rupiah(p.overtime_rate)}/jam`} color={colors.textMuted} /> : null}
       </Row>
       {p.bio ? <Text style={font.tiny} numberOfLines={2}>{p.bio}</Text> : null}
-      <Button size="sm" variant={active ? 'primary' : 'outline'} color={colors.travel} icon={active ? 'checkmark' : 'send-outline'} title={active ? 'Dipilih — isi form di atas' : 'Ajukan ke mitra ini'} onPress={onPick} />
+      <Button size="sm" variant={active ? 'primary' : 'secondary'} icon={active ? 'checkmark' : 'send-outline'} title={active ? 'Dipilih — isi form di atas' : 'Ajukan ke mitra ini'} onPress={onPick} />
     </Card>
   );
 }
 
 const s = StyleSheet.create({
-  segment: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
-  segItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 4, borderRadius: radius.sm },
-  hero: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  group: { gap: 10, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: colors.surface },
-  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: glass.border, backgroundColor: colors.surface },
-  option: { padding: 12, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: colors.surface },
+  modeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', ...shadow.soft },
+  hero: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  heroArt: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  group: { gap: 10, backgroundColor: '#fff', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff' },
+  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', ...shadow.soft },
+  thumb: { width: 64, height: 64, borderRadius: 16, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  rowArrow: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
+  option: { padding: 12, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border, backgroundColor: '#fff' },
 });

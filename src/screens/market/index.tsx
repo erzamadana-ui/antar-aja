@@ -12,7 +12,8 @@ import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { getRoute, reverseGeocode, type RouteResult } from '@/lib/geo';
 import { rpc } from '@/lib/supabase';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { rupiah, km, minutes, marketCategoryLabel } from '@/lib/format';
 import type { Market, MarketItem, Order, ShoppingEstimate } from '@/lib/types';
 
@@ -37,6 +38,7 @@ export default function MarketScreen() {
   const [loadingItems, setLoadingItems] = useState(false);
   const [cat, setCat] = useState('all');
   const [q, setQ] = useState('');
+  const [gridW, setGridW] = useState(0);
   const [lines, setLines] = useState<Record<string, Line>>({});
   const [noteOpen, setNoteOpen] = useState<string | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle>('motor');
@@ -127,16 +129,17 @@ export default function MarketScreen() {
     setOrdering(false);
   };
 
+  const colW = gridW ? Math.floor((gridW - 12) / 2) : 160;
   const footer = (
     <View style={{ gap: 8 }}>
       <Row between>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={font.tiny}>Perkiraan total · disesuaikan nota</Text>
-          <Text style={[font.h2, { color: colors.market }]}>{ready && !estimating ? rupiah(total) : chosen.length ? 'Menghitung…' : '—'}</Text>
+          <Text style={[font.h1, { color: colors.primary }]}>{ready && !estimating ? rupiah(total) : chosen.length ? 'Menghitung…' : '—'}</Text>
         </View>
-        <Badge text="Dana ditahan · sisa dikembalikan" color={colors.market} />
+        <Badge text="Dana ditahan · sisa dikembalikan" color={colors.primary} />
       </Row>
-      <Button title={chosen.length === 0 ? 'Pilih bahan belanja dulu' : 'Pesan ke pasar'} size="lg" color={colors.market} disabled={!ready || ordering} loading={ordering} onPress={order} />
+      <Button title={chosen.length === 0 ? 'Pilih bahan belanja dulu' : 'Pesan ke pasar'} size="lg" disabled={!ready || ordering} loading={ordering} onPress={order} />
     </View>
   );
 
@@ -145,19 +148,31 @@ export default function MarketScreen() {
       <View style={{ gap: 14 }}>
         <Entrance index={0}>
           <View style={{ gap: 8 }}>
-            <Text style={font.label}>Pasar terdekat</Text>
-            {loadingMarkets ? <Row gap={8}><Skeleton width={140} height={36} radius={18} /><Skeleton width={120} height={36} radius={18} /></Row>
+            <Row between><Text style={font.h3}>{market ? 'Pasar dipilih' : 'Pasar terdekat'}</Text>{!loadingMarkets && !market && <Text style={font.tiny}>{markets.length} pasar</Text>}</Row>
+            {loadingMarkets ? [0, 1].map((i) => <View key={i} style={s.marketRow}><Skeleton width={64} height={64} radius={16} /><View style={{ flex: 1, gap: 6 }}><Skeleton width="60%" height={14} /><Skeleton width="40%" height={12} /></View></View>)
               : markets.length === 0 ? <Text style={font.small}>Belum ada pasar mitra di sekitar lokasi Anda.</Text>
-              : <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  {markets.map((m) => <Chip key={m.id} label={`${m.name} · ${km(m.distance_km)}${m.is_open_now === false ? ' · Tutup' : ' · Buka'}`} active={market?.id === m.id} onPress={() => { setMarket(m); setLines({}); setCat('all'); }} color={colors.market} />)}
-                </ScrollView>}
-            {market && <Text style={font.tiny} numberOfLines={2}>{market.address ?? ''}{market.open_hours ? ` · ${market.open_hours}` : ''}{route ? ` · ${minutes(route.duration_min)} ke alamat` : ''}</Text>}
+              : (market ? [market] : markets).map((m, i) => {
+                const active = market?.id === m.id;
+                return (
+                  <Entrance key={m.id} index={i}>
+                    <PressableScale onPress={() => { if (active) { setMarket(null); setLines({}); setCat('all'); } else { setMarket(m); setLines({}); setCat('all'); } }} scaleTo={0.985} haptic={false} style={[s.marketRow, active && { borderColor: colors.primary }]}>
+                      {m.image_url ? <Image source={{ uri: m.image_url }} style={s.marketImg} /> : <View style={[s.marketImg, { alignItems: 'center', justifyContent: 'center' }]}><ServiceIllustration kind="market" size={40} /></View>}
+                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                        <Row gap={6}><Text style={[font.body, { fontWeight: '700', flexShrink: 1 }]} numberOfLines={1}>{m.name}</Text><Badge text={m.is_open_now === false ? 'Tutup' : 'Buka'} color={m.is_open_now === false ? colors.danger : colors.success} /></Row>
+                        <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{km(m.distance_km)}{m.address ? ` · ${m.address}` : ''}</Text></Row>
+                        {active ? <Text style={font.tiny} numberOfLines={1}>{m.open_hours ? `${m.open_hours}` : 'Jam buka menyesuaikan pasar'}{route ? ` · ${minutes(route.duration_min)} ke alamat` : ''}</Text> : null}
+                      </View>
+                      {active ? <Button title="Ganti" size="sm" variant="secondary" onPress={() => { setMarket(null); setLines({}); setCat('all'); }} /> : <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>}
+                    </PressableScale>
+                  </Entrance>
+                );
+              })}
           </View>
         </Entrance>
 
         <Entrance index={1}>
           <View style={s.info}>
-            <Ionicons name="information-circle" size={18} color={colors.market} />
+            <View style={s.infoIcon}><Ionicons name="information-circle-outline" size={20} color={colors.primary} /></View>
             <Text style={[font.small, { flex: 1, color: colors.text }]}>Harga di bawah adalah acuan hari ini. Driver mengirim foto nota & harga riil; kamu hanya bayar harga riil + jasa belanja.</Text>
           </View>
         </Entrance>
@@ -166,64 +181,68 @@ export default function MarketScreen() {
         {categories.length > 1 && (
           <Entrance index={3}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Chip label="Semua" active={cat === 'all'} onPress={() => setCat('all')} color={colors.market} />
-              {categories.map((c) => <Chip key={c} label={marketCategoryLabel[c] ?? c} active={cat === c} onPress={() => setCat(c)} color={colors.market} />)}
+              <Chip label="Semua" active={cat === 'all'} onPress={() => setCat('all')} />
+              {categories.map((c) => <Chip key={c} label={marketCategoryLabel[c] ?? c} active={cat === c} onPress={() => setCat(c)} />)}
             </ScrollView>
           </Entrance>
         )}
 
-        {/* Daftar bahan */}
-        <Card solid style={{ gap: 4 }}>
-          <Row between style={{ marginBottom: 4 }}><Text style={font.h3}>Bahan belanja</Text>{chosen.length > 0 && <Badge text={`${chosen.length} dipilih`} color={colors.market} />}</Row>
-          {loadingItems ? [0, 1, 2, 3].map((i) => <View key={i} style={s.itemRow}><Skeleton width={40} height={40} radius={10} /><View style={{ flex: 1, gap: 6 }}><Skeleton width="50%" height={14} /><Skeleton width="70%" height={12} /></View></View>)
-            : !market ? <Empty icon="basket-outline" title="Pilih pasar dulu" subtitle="Katalog bahan mengikuti pasar yang dipilih." />
-            : shown.length === 0 ? <Empty icon="leaf-outline" title="Bahan tidak ditemukan" subtitle={ql ? `Tidak ada "${q}" di katalog pasar ini.` : 'Katalog pasar ini masih kosong.'} />
-            : shown.map((it) => {
-              const line = lines[it.id];
-              const qty = line?.qty ?? 0;
-              const isKg = it.unit.toLowerCase() === 'kg';
-              return (
-                <View key={it.id} style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                  <View style={s.itemRow}>
-                    <View style={s.itemArt}>{it.image_url ? <Image source={{ uri: it.image_url }} style={{ width: 40, height: 40, borderRadius: 10 }} /> : <Ionicons name="leaf-outline" size={18} color={colors.market} />}</View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={[font.body, { fontWeight: '600' }]} numberOfLines={1}>{it.name}</Text>
-                      <Text style={font.tiny} numberOfLines={1}>{it.unit} · acuan ±{rupiah(it.price)}</Text>
-                      <Text style={[font.tiny, { color: colors.market }]} numberOfLines={1}>{priceSourceLabel(it.price_source, it.samples)}</Text>
+        {/* Daftar bahan — grid 2 kolom */}
+        <View style={{ gap: 10 }}>
+          <Row between><Text style={font.h3}>Bahan belanja</Text>{chosen.length > 0 && <Badge text={`${chosen.length} dipilih`} color={colors.primary} />}</Row>
+          <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={s.grid}>
+            {loadingItems ? [0, 1, 2, 3].map((i) => <View key={i} style={[s.tile, { width: colW }]}><Skeleton width="100%" height={100} radius={18} /><Skeleton width="70%" height={14} /><Skeleton width="50%" height={12} /></View>)
+              : !market ? <View style={{ width: '100%' }}><Empty icon="basket-outline" title="Pilih pasar dulu" subtitle="Katalog bahan mengikuti pasar yang dipilih." /></View>
+              : shown.length === 0 ? <View style={{ width: '100%' }}><Empty icon="leaf-outline" title="Bahan tidak ditemukan" subtitle={ql ? `Tidak ada "${q}" di katalog pasar ini.` : 'Katalog pasar ini masih kosong.'} /></View>
+              : shown.map((it) => {
+                const line = lines[it.id];
+                const qty = line?.qty ?? 0;
+                const isKg = it.unit.toLowerCase() === 'kg';
+                return (
+                  <View key={it.id} style={[s.tile, { width: colW }, qty > 0 && { borderColor: colors.primary }]}>
+                    <View style={s.tileArt}>
+                      {it.image_url ? <Image source={{ uri: it.image_url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <ServiceIllustration kind="market" size={52} />}
+                      {qty > 0 && <View style={s.qtyPill}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{fmtQty(qty)} {it.unit}</Text></View>}
                     </View>
-                    <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                      <Row gap={6}>
-                        {qty > 0 && <PressableScale haptic={false} onPress={() => setQty(it.id, qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.market} /></PressableScale>}
-                        {qty > 0 && <Text style={{ fontWeight: '800', color: colors.text, minWidth: 24, textAlign: 'center', fontSize: 13 }}>{fmtQty(qty)}</Text>}
-                        <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} style={[s.miniBtn, qty === 0 && { backgroundColor: colors.market, borderColor: colors.market }]}><Ionicons name="add" size={14} color={qty === 0 ? '#fff' : colors.market} /></PressableScale>
-                        {isKg && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 0.5)} style={s.halfBtn}><Text style={{ fontWeight: '800', color: colors.market, fontSize: 12 }}>+½</Text></PressableScale>}
+                    <View style={{ paddingHorizontal: 4, gap: 2 }}>
+                      <Text style={[font.small, { color: colors.text, fontWeight: '700', minHeight: 36 }]} numberOfLines={2}>{it.name}</Text>
+                      <Text style={font.tiny} numberOfLines={1}>per {it.unit} · {priceSourceLabel(it.price_source, it.samples)}</Text>
+                      <Row between style={{ marginTop: 4 }}>
+                        <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15, flexShrink: 1 }} numberOfLines={1}>±{rupiah(it.price)}</Text>
+                        {qty === 0 && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} scaleTo={0.88} style={s.addBtn}><Ionicons name="add" size={20} color="#fff" /></PressableScale>}
                       </Row>
                       {qty > 0 && (
-                        <Row gap={8}>
-                          <Text style={[font.tiny, { color: colors.text, fontWeight: '700' }]}>±{rupiah(it.price * qty)}</Text>
-                          <PressableScale haptic={false} hitSlop={6} onPress={() => setNoteOpen((n) => (n === it.id ? null : it.id))}><Ionicons name={line?.note ? 'chatbox-ellipses' : 'chatbox-ellipses-outline'} size={16} color={line?.note ? colors.market : colors.textMuted} /></PressableScale>
+                        <Row between style={{ marginTop: 6 }}>
+                          <Row gap={6}>
+                            <PressableScale haptic={false} onPress={() => setQty(it.id, qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.primary} /></PressableScale>
+                            <Text style={{ fontWeight: '800', color: colors.text, minWidth: 24, textAlign: 'center', fontSize: 13 }}>{fmtQty(qty)}</Text>
+                            <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}><Ionicons name="add" size={14} color="#fff" /></PressableScale>
+                            {isKg && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 0.5)} style={s.halfBtn}><Text style={{ fontWeight: '800', color: colors.primary, fontSize: 12 }}>+½</Text></PressableScale>}
+                          </Row>
+                          <PressableScale haptic={false} hitSlop={6} onPress={() => setNoteOpen((n) => (n === it.id ? null : it.id))}><Ionicons name={line?.note ? 'chatbox-ellipses' : 'chatbox-ellipses-outline'} size={18} color={line?.note ? colors.primary : colors.textMuted} /></PressableScale>
                         </Row>
+                      )}
+                      {qty > 0 && <Text style={[font.tiny, { color: colors.text, fontWeight: '700' }]}>Subtotal ±{rupiah(it.price * qty)}</Text>}
+                      {qty > 0 && noteOpen === it.id && (
+                        <TextInput placeholder="Catatan (mis. yang merah)" placeholderTextColor={colors.textMuted} value={line?.note ?? ''} onChangeText={(v) => setNote(it.id, v)} style={s.noteInput} />
                       )}
                     </View>
                   </View>
-                  {qty > 0 && noteOpen === it.id && (
-                    <TextInput placeholder="Catatan (mis. yang merah, jangan terlalu matang)" placeholderTextColor={colors.textMuted} value={line?.note ?? ''} onChangeText={(v) => setNote(it.id, v)} style={s.noteInput} />
-                  )}
-                </View>
-              );
-            })}
-        </Card>
+                );
+              })}
+          </View>
+        </View>
 
         {/* Alamat antar */}
         <Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Antar ke</Text>
           <Row gap={10}>
-            <View style={[s.itemArt, { backgroundColor: colors.danger + '1A' }]}><Ionicons name="location" size={18} color={colors.danger} /></View>
+            <View style={[s.infoIcon, { backgroundColor: colors.dangerLight }]}><Ionicons name="location-outline" size={20} color={colors.danger} /></View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={{ fontWeight: '700', color: colors.text }} numberOfLines={1}>{dropoff?.name ?? 'Alamat pengantaran'}</Text>
               <Text style={font.tiny} numberOfLines={2}>{dropoff?.address ?? 'Menentukan lokasi Anda…'}</Text>
             </View>
-            <Button title="Ganti" size="sm" variant="outline" color={colors.market} onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} />
+            <Button title="Ganti" size="sm" variant="secondary" onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} />
           </Row>
           {route && <Row gap={8}><Badge text={`${km(route.distance_km)} · ${minutes(route.duration_min)}`} color={colors.info} /></Row>}
         </Card>
@@ -232,8 +251,8 @@ export default function MarketScreen() {
         <Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Kendaraan driver</Text>
           <Row gap={8}>
-            <Chip label={`Motor${est ? ` · ${rupiah(est.fare_motor)}` : ' · ≤10 kg'}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} color={colors.market} />
-            <Chip label={`Mobil${est ? ` · ${rupiah(est.fare_car)}` : ' · belanja besar'}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} color={colors.car} />
+            <Chip label={`Motor${est ? ` · ${rupiah(est.fare_motor)}` : ' · ≤10 kg'}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} />
+            <Chip label={`Mobil${est ? ` · ${rupiah(est.fare_car)}` : ' · belanja besar'}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} />
           </Row>
           {est && subtotal >= est.car_min_budget && <Text style={[font.tiny, { color: vehicle === 'car' ? colors.textMuted : colors.warning }]}>Belanja di atas {rupiah(est.car_min_budget)} disarankan memakai mobil agar muat dan aman.</Text>}
         </Card>
@@ -255,10 +274,17 @@ export default function MarketScreen() {
 }
 
 const s = StyleSheet.create({
-  info: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: colors.successLight, borderWidth: 1, borderColor: colors.market + '33' },
-  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
-  itemArt: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.market + '14', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  miniBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: colors.market, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  halfBtn: { height: 28, paddingHorizontal: 8, borderRadius: 14, borderWidth: 1.5, borderColor: colors.market + '66', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  noteInput: { height: 40, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bg, paddingHorizontal: 12, color: colors.text, fontSize: 13, marginBottom: 10 },
+  marketRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  marketImg: { width: 64, height: 64, borderRadius: 16, backgroundColor: colors.tint },
+  rowArrow: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
+  info: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.lg, backgroundColor: colors.tint, borderWidth: 1, borderColor: colors.primaryLight },
+  infoIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tile: { gap: 8, padding: 8, borderRadius: 22, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  tileArt: { height: 100, borderRadius: 18, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  qtyPill: { position: 'absolute', left: 8, top: 8, backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
+  addBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  miniBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  halfBtn: { height: 28, paddingHorizontal: 8, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  noteInput: { height: 40, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgSoft, paddingHorizontal: 12, color: colors.text, fontSize: 13, marginTop: 6 },
 });

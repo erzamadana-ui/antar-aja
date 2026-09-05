@@ -5,13 +5,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Input, Button, Row, Chip, Badge, toast } from '@/components/ui';
 import { Entrance, PressableScale } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { DocUpload } from '@/components/DocUpload';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { rpc, supabase } from '@/lib/supabase';
-import { colors, font, radius, shadow, glass } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { TravelPartner, TravelPartnerType, TravelAccommodation } from '@/lib/types';
 
@@ -74,41 +74,49 @@ export default function BecomeTravel() {
   const st = me ? ({ pending: ['Menunggu verifikasi admin', colors.warning], approved: ['Mitra travel aktif', colors.success], suspended: ['Ditangguhkan', colors.danger], rejected: ['Ditolak', colors.danger] } as Record<string, [string, string]>)[me.status] : null;
   const dailyRate = Number(f.daily_rate) || 0;
   return (
-    <Screen title="Mitra AntarTravel" subtitle="Agen travel atau mobil pribadi" band={colors.travel} back footer={me?.status === 'approved' ? <Button title="Buka Dasbor Mitra Travel" size="lg" color={colors.travel} onPress={async () => { await setMode('driver'); router.replace('/driver/travel' as never); }} /> : <Button title={me ? 'Kirim ulang data' : 'Daftar Mitra Travel'} size="lg" color={colors.travel} loading={busy} onPress={submit} />}>
+    <Screen title="Mitra AntarTravel" band={colors.travel} back footer={me?.status === 'approved' ? <Button title="Buka Dasbor Mitra Travel" size="lg" icon="bus-outline" onPress={async () => { await setMode('driver'); router.replace('/driver/travel' as never); }} /> : <Button title={me ? 'Kirim ulang data' : 'Daftar Mitra Travel'} size="lg" icon="paper-plane-outline" loading={busy} onPress={submit} />}>
       <View style={{ gap: 16 }}>
-        {st && <Badge text={st[0]} color={st[1]} />}
-        {me?.status_reason && me.status !== 'approved' && <Text style={[font.small, { color: colors.danger }]}>Alasan admin: {me.status_reason}</Text>}
-        <Entrance index={0}><Card solid style={{ backgroundColor: colors.travel, ...shadow.glow(colors.travel), overflow: 'hidden' }}><BrandGradient colors={[colors.travel, '#1E3A8A']} style={StyleSheet.absoluteFill} />
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>Hasilkan dari mobil Anda</Text>
-          <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>Agen travel mengisi kursi antar kota; pemilik mobil pribadi menerima carter privat & sopir harian saat mobil menganggur. Komisi 10% + biaya layanan; pencairan ke AntarPay setelah perjalanan selesai.</Text>
-        </Card></Entrance>
+        {/* Ilustrasi dalam lingkaran tint + judul besar */}
+        <Entrance index={0} from="zoom">
+          <View style={{ alignItems: 'center', marginTop: 4 }}>
+            <View style={s.artCircle}><ServiceIllustration kind="travel" size={80} /></View>
+            <Text style={[font.h1, { textAlign: 'center', marginTop: 14 }]}>Hasilkan dari{'\n'}mobil Anda</Text>
+            <Text style={[font.small, { textAlign: 'center', marginTop: 6 }]}>Agen travel mengisi kursi antar kota; pemilik mobil pribadi menerima carter privat & sopir harian saat mobil menganggur. Komisi 10% + biaya layanan; pencairan ke AntarPay setelah perjalanan selesai.</Text>
+            {st && <Badge text={st[0]} color={st[1]} style={{ marginTop: 10 }} />}
+            {me?.status_reason && me.status !== 'approved' && <Text style={[font.small, { color: colors.danger, textAlign: 'center', marginTop: 6 }]}>Alasan admin: {me.status_reason}</Text>}
+          </View>
+        </Entrance>
 
-        <Entrance index={1}><Card style={{ gap: 12 }}>
-          <Text style={font.label}>Jenis mitra</Text>
-          {TYPES.map((t) => {
-            const active = f.partner_type === t.key;
-            return (
-              <PressableScale key={t.key} onPress={() => setType(t.key)} scaleTo={0.985} style={[s.option, active && { borderColor: colors.travel, backgroundColor: colors.travel + '0D' }]}>
-                <Row gap={10}>
-                  <Ionicons name={t.icon} size={22} color={active ? colors.travel : colors.textMuted} />
-                  <View style={{ flex: 1 }}><Text style={{ fontWeight: '800', color: colors.text }}>{t.title}</Text><Text style={font.tiny}>{t.sub}</Text></View>
-                  <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={18} color={active ? colors.travel : colors.textMuted} />
-                </Row>
-              </PressableScale>
-            );
-          })}
+        {/* Kartu pilihan jenis mitra (radio bulat) */}
+        <Entrance index={1}>
+          <Text style={[font.label, { marginBottom: 8 }]}>Jenis mitra</Text>
+          <View style={{ gap: 10 }}>
+            {TYPES.map((t) => {
+              const active = f.partner_type === t.key;
+              return (
+                <PressableScale key={t.key} onPress={() => setType(t.key)} scaleTo={0.985} haptic={false} style={[s.option, active && s.optionActive]}>
+                  <View style={s.optionIcon}><Ionicons name={t.icon} size={22} color={colors.primary} /></View>
+                  <View style={{ flex: 1, minWidth: 0 }}><Text style={[font.body, { fontWeight: '700' }]}>{t.title}</Text><Text style={font.tiny}>{t.sub}</Text></View>
+                  <View style={[s.radio, active && { borderColor: colors.primary }]}>{active && <View style={s.radioDot} />}</View>
+                </PressableScale>
+              );
+            })}
+          </View>
+        </Entrance>
+
+        <Entrance index={2}><Card style={{ gap: 12 }}>
           <Text style={font.label}>Layanan yang ditawarkan</Text>
           <Row gap={8} style={{ flexWrap: 'wrap' }}>
-            {agency && <Chip label="Kursi bersama" active={f.offers_shared} onPress={() => set('offers_shared')(!f.offers_shared)} color={colors.travel} />}
-            <Chip label="Carter privat" active={f.offers_charter} onPress={() => set('offers_charter')(!f.offers_charter)} color={colors.travel} />
-            <Chip label="Sopir harian" active={f.offers_daily} onPress={() => set('offers_daily')(!f.offers_daily)} color={colors.travel} />
+            {agency && <Chip label="Kursi bersama" active={f.offers_shared} onPress={() => set('offers_shared')(!f.offers_shared)} />}
+            <Chip label="Carter privat" active={f.offers_charter} onPress={() => set('offers_charter')(!f.offers_charter)} />
+            <Chip label="Sopir harian" active={f.offers_daily} onPress={() => set('offers_daily')(!f.offers_daily)} />
           </Row>
           <Text style={font.tiny}>{agency ? 'Kursi bersama: Anda membuat jadwal keberangkatan, penumpang membeli per kursi. Carter & harian: pelanggan mengirim permintaan, Anda menawar harga.' : 'Pelanggan mengirim permintaan carter/harian, Anda mengirim penawaran harga. Kursi bersama hanya untuk agen travel.'}</Text>
         </Card></Entrance>
 
-        <Entrance index={2}><Card style={{ gap: 12 }}>
+        <Entrance index={3}><Card style={{ gap: 12 }}>
           <Text style={font.label}>Armada</Text>
-          <Row gap={8} style={{ flexWrap: 'wrap' }}>{MODELS.map(([m, seats]) => <Chip key={m} label={m} active={f.vehicle_model === m} onPress={() => setF({ ...f, vehicle_model: m, seats: String(seats), is_electric: m.includes('EV') || f.is_electric })} color={colors.travel} />)}</Row>
+          <Row gap={8} style={{ flexWrap: 'wrap' }}>{MODELS.map(([m, seats]) => <Chip key={m} label={m} active={f.vehicle_model === m} onPress={() => setF({ ...f, vehicle_model: m, seats: String(seats), is_electric: m.includes('EV') || f.is_electric })} />)}</Row>
           {f.vehicle_model === 'Lainnya' && <Input label="Tipe mobil" placeholder="Merek & tipe" value="" onChangeText={(v) => set('vehicle_model')(v || 'Lainnya')} />}
           <Input label={agency ? 'Nama usaha travel' : 'Nama usaha (opsional)'} placeholder={agency ? 'Minang Jaya Travel' : 'Kosongkan bila perorangan'} value={f.company_name} onChangeText={set('company_name')} />
           <Input label="Nama sopir" placeholder="Nama yang tampil ke pelanggan" icon="person-outline" value={f.driver_name} onChangeText={set('driver_name')} />
@@ -117,16 +125,16 @@ export default function BecomeTravel() {
             <Input label="Tahun" placeholder="2023" keyboardType="number-pad" value={f.vehicle_year} onChangeText={(v) => set('vehicle_year')(digits(v).slice(0, 4))} containerStyle={{ width: 100 }} />
             <Input label="Kursi" keyboardType="number-pad" value={f.seats} onChangeText={(v) => set('seats')(digits(v).slice(0, 2))} containerStyle={{ width: 80 }} error={Number(f.seats) < minSeats ? `min. ${minSeats}` : undefined} />
           </Row>
-          <Row gap={8}>
-            <Chip label="Bensin / diesel" active={!f.is_electric} onPress={() => set('is_electric')(false)} color={colors.textSecondary} />
-            <Chip label="Listrik (EV)" active={f.is_electric} onPress={() => set('is_electric')(true)} color={colors.success} />
+          <Row gap={8} style={{ flexWrap: 'wrap' }}>
+            <Chip label="Bensin / diesel" active={!f.is_electric} onPress={() => set('is_electric')(false)} />
+            <Chip label="Listrik (EV)" active={f.is_electric} onPress={() => set('is_electric')(true)} />
           </Row>
           <Input label="Bio singkat" placeholder="Contoh: berpengalaman rute Padang–Bukittinggi, mobil bersih, sopir ramah" value={f.bio} onChangeText={set('bio')} multiline />
-          <Row gap={6}><Ionicons name={hasFix ? 'location' : 'location-outline'} size={14} color={hasFix ? colors.travel : colors.textMuted} /><Text style={[font.tiny, { flex: 1 }]}>{hasFix ? 'Kota basis diambil dari lokasi Anda saat ini; permintaan di sekitar kota ini akan tampil di dasbor.' : 'Aktifkan lokasi agar kota basis terisi otomatis.'}</Text></Row>
+          <Row gap={8} style={s.note}><Ionicons name={hasFix ? 'location' : 'location-outline'} size={16} color={colors.primary} /><Text style={[font.tiny, { flex: 1 }]}>{hasFix ? 'Kota basis diambil dari lokasi Anda saat ini; permintaan di sekitar kota ini akan tampil di dasbor.' : 'Aktifkan lokasi agar kota basis terisi otomatis.'}</Text></Row>
         </Card></Entrance>
 
         {(f.offers_daily || f.offers_charter) && (
-          <Entrance index={3}><Card style={{ gap: 12 }}>
+          <Entrance index={4}><Card style={{ gap: 12 }}>
             <Text style={font.label}>Tarif & ketentuan sopir</Text>
             {f.offers_daily && (
               <Row gap={10}>
@@ -137,29 +145,35 @@ export default function BecomeTravel() {
             {f.offers_daily && dailyRate > 0 && <Text style={font.tiny}>Tampil ke pelanggan: {rupiah(dailyRate)}/hari, overtime {rupiah(Number(f.overtime_rate) || Math.round(dailyRate * 0.1))}/jam (umumnya 10% dari tarif harian).</Text>}
             <Text style={font.label}>Akomodasi sopir saat menginap</Text>
             <Row gap={8} style={{ flexWrap: 'wrap' }}>
-              <Chip label="Ditanggung pelanggan" active={f.accommodation.includes('customer')} onPress={() => toggleAcc('customer')} color={colors.info} />
-              <Chip label="Mandiri + kompensasi/malam" active={f.accommodation.includes('self')} onPress={() => toggleAcc('self')} color={colors.accent} />
+              <Chip label="Ditanggung pelanggan" active={f.accommodation.includes('customer')} onPress={() => toggleAcc('customer')} />
+              <Chip label="Mandiri + kompensasi/malam" active={f.accommodation.includes('self')} onPress={() => toggleAcc('self')} />
             </Row>
             {f.accommodation.includes('self') && <Input label="Kompensasi akomodasi mandiri per malam" placeholder="150000" keyboardType="number-pad" value={f.accommodation_fee} onChangeText={(v) => set('accommodation_fee')(digits(v))} />}
             <Text style={font.tiny}>Pilih yang Anda terima. Pelanggan memilih salah satu saat mengirim permintaan; kompensasi mandiri dihitung otomatis di kalkulator penawaran.</Text>
             <Text style={font.label}>BBM, tol & parkir</Text>
-            <Row gap={8}>
-              <Chip label="Ditanggung pelanggan (umum)" active={!f.fuel_included} onPress={() => set('fuel_included')(false)} color={colors.travel} />
-              <Chip label="Termasuk harga (all-in)" active={f.fuel_included} onPress={() => set('fuel_included')(true)} color={colors.travel} />
+            <Row gap={8} style={{ flexWrap: 'wrap' }}>
+              <Chip label="Ditanggung pelanggan (umum)" active={!f.fuel_included} onPress={() => set('fuel_included')(false)} />
+              <Chip label="Termasuk harga (all-in)" active={f.fuel_included} onPress={() => set('fuel_included')(true)} />
             </Row>
           </Card></Entrance>
         )}
 
-        <Entrance index={4}><Card style={{ gap: 12 }}>
+        <Entrance index={5}><Card style={{ gap: 12 }}>
           <Text style={font.label}>Dokumen</Text>
-          <DocUpload label="Foto mobil (tampak samping)" value={f.photo_url} onChange={set('photo_url')} color={colors.travel} bucket="merchant-images" />
-          <DocUpload label="SIM A / B1 pengemudi" required value={f.license_url} onChange={set('license_url')} color={colors.travel} />
-          <DocUpload label={agency ? 'Izin angkutan / KIR (opsional)' : 'STNK (opsional)'} value={f.permit_url} onChange={set('permit_url')} color={colors.travel} />
+          <DocUpload label="Foto mobil (tampak samping)" value={f.photo_url} onChange={set('photo_url')} bucket="merchant-images" />
+          <DocUpload label="SIM A / B1 pengemudi" required value={f.license_url} onChange={set('license_url')} />
+          <DocUpload label={agency ? 'Izin angkutan / KIR (opsional)' : 'STNK (opsional)'} value={f.permit_url} onChange={set('permit_url')} />
         </Card></Entrance>
       </View>
     </Screen>
   );
 }
 const s = StyleSheet.create({
-  option: { padding: 12, borderRadius: radius.md, borderWidth: 1.5, borderColor: glass.border, backgroundColor: colors.surface },
+  artCircle: { width: 124, height: 124, borderRadius: 62, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.primaryLight },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1.5, borderColor: colors.border, ...shadow.soft },
+  optionActive: { borderColor: colors.primary, backgroundColor: colors.tint },
+  optionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary },
+  note: { padding: 10, borderRadius: radius.md, backgroundColor: colors.tint, alignItems: 'flex-start' },
 });

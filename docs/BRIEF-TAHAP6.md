@@ -38,3 +38,17 @@ Pelanggan daftar permintaan: `supabase.from('travel_requests').select('*').eq('c
 Notifikasi (tabel `notifications`) untuk travel memuat `data.travel_request_id` → buka `/travel/request/<id>`.
 **Payment gateway**: `gateway_public_config()` (anon) → GatewayPublicConfig; admin: `admin_gateway_status()` → GatewayStatus; `admin_set_gateway({p:{server_key?, client_key?, is_production?, merchant_id?, methods?:string[], topup_min?, topup_max?, clear_server_key?:true}})` → GatewayStatus; edge `midtrans-create` body `{action:'status'}` (admin) → {configured, source, reachable, http, message}; webhook URL: `https://qwltshvzrsykxdvhbxcv.supabase.co/functions/v1/midtrans-webhook`.
 Referensi praktik (riset): travel per kursi Pekanbaru–Padang Rp120–160rb (eksekutif Rp450rb), door-to-door; rental sopir: 12 jam/hari, overtime 10%/jam, akomodasi sopir menginap ditanggung penyewa ATAU kompensasi ±Rp150.000/malam (mandiri); BBM/tol/parkir di luar harga sopir kecuali paket all-in.
+
+## Gaya visual kit "ToureGo" (5 Sep 2026) — WAJIB untuk semua layar
+- Latar layar PUTIH (`colors.bg` = #FFFFFF); permukaan sekunder `colors.bgSoft` (#F5F8F8) / `colors.tint` (#EEF6F7). Primer teal `colors.primary` #187A85, gelap `primaryDark`, `primaryDeep`.
+- Header: `Screen` kini otomatis putih, judul di tengah, tombol kembali bulat (border). Prop `band` hanya mewarnai ikon kembali — jangan andalkan header berwarna. Tombol bulat: `CircleButton` dari `@/components/ui` (icon, onPress, filled, badge).
+- Kartu: putih, radius 20–24, border 1px `colors.border`, bayangan lembut (`shadow.card`/`shadow.soft`). JANGAN beri `flexDirection:'row'` pada `Card` (pakai `Row` di dalamnya).
+- Kartu gambar tinggi: `DestinationCard` dari `@/components/PromoCard` (image, title, subtitle, rating, badge, width, height, accent, art, onPress) — untuk merchant, destinasi travel, hotel-like grid. Grid 2 kolom untuk produk/merchant (kartu gambar atas, judul, harga teal `$`-style: `rupiah` tebal).
+- Daftar baris ala "Group Tour": thumbnail 64 radius 16 + judul + baris lokasi (ikon `location-outline`) + progress bar (`ProgressBar` dari motion) + persen / tombol panah bulat.
+- Detail ala "Tour Details": hero gambar penuh (tinggi ~46% layar) dengan tombol bulat kembali/hati di atasnya, kartu putih radius 28 menumpuk (marginTop -28) berisi judul, lokasi, rating; tab pil (Ringkasan / Fasilitas / Foto / Ulasan); bar bawah putih: harga besar kiri ("Rp120.000 /orang") + tombol teal "Pesan".
+- Chip kategori: pil putih border; aktif = teal terisi teks putih. Ikon kategori bulat 64 (aktif teal terisi, ikon putih) + label 12.
+- Ikon di kartu: lingkaran tint teal (`colors.tint`) 40–44 dengan ikon teal.
+- Tombol: teal terisi radius 14 tinggi 48–54, teks putih 800; sekunder tint; tombol sosial putih border.
+- Tab bar: sudah diganti (pil + FAB). Ruang bawah: `TAB_BAR_SPACE` (96).
+- Motion: durasi `motion.fast/base/slow` = 80/130/200 — tetap pakai `Entrance` stagger, `PressableScale`, `FadeInDown`; jangan tambah animasi berat.
+- Tidak ada emoji di teks UI (ilustrasi pakai `ServiceIllustration`).

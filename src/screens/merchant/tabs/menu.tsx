@@ -1,16 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, Switch, ScrollView, Modal, StyleSheet, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { Entrance, PressableScale } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
-import { Screen, Card, Row, Input, Button, Empty, toast } from '@/components/ui';
+import { Screen, Row, Input, Button, Empty, CircleButton, toast } from '@/components/ui';
 import { useAuth } from '@/store/auth';
 import { supabase } from '@/lib/supabase';
 import { pickAndUpload } from '@/lib/upload';
-import { colors, font, radius, glass, shadow, motion } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
 import { rupiah } from '@/lib/format';
 import type { MenuItem } from '@/lib/types';
 
@@ -37,40 +35,52 @@ export default function MerchantMenu() {
   const toggle = async (it: MenuItem) => { await supabase.from('menu_items').update({ is_available: !it.is_available }).eq('id', it.id); load(); };
   const remove = async (it: MenuItem) => { const { error } = await supabase.from('menu_items').delete().eq('id', it.id); if (error) toast.error('Menu pernah dipesan, nonaktifkan saja'); else load(); };
   const upload = async () => { if (!session) return; try { const r = await pickAndUpload('merchant-images', session.user.id); if (r && editing) setEditing({ ...editing, image_url: r.url }); } catch (e) { toast.error((e as Error).message); } };
+  const available = items.filter((it) => it.is_available).length;
 
   return (
-    <Screen title="Kelola Menu" ambient="amber" bottomSpace={TAB_BAR_SPACE + 16} right={<PressableScale onPress={() => setEditing({ ...empty })} scaleTo={0.88} style={[s.addBtn, shadow.glow(colors.food)]}><BrandGradient colors={[colors.food, '#EA580C']} style={StyleSheet.absoluteFill} /><Ionicons name="add" size={22} color="#fff" /></PressableScale>}>
-      {items.length === 0 ? <Empty icon="restaurant-outline" title="Belum ada menu" subtitle="Tambahkan menu andalan Anda." action={<Button title="Tambah menu" color={colors.food} onPress={() => setEditing({ ...empty })} />} /> : (
-        <View style={{ gap: 10 }}>
-          {items.map((it, i) => (
-            <Entrance key={it.id} index={Math.min(i, 8)} from="up"><Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)}><Card style={!it.is_available && { opacity: 0.6 }}>
-              <Row gap={12}>
-                {it.image_url ? <Image source={{ uri: it.image_url }} style={s.thumb} /> : <View style={[s.thumb, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="fast-food-outline" size={22} color={colors.textMuted} /></View>}
-                <View style={{ flex: 1 }}>
-                  <Text style={font.h3}>{it.name}</Text>
-                  <Text style={font.tiny}>{it.category}</Text>
-                  <Text style={{ fontWeight: '800', color: colors.food }}>{rupiah(it.price)}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  <Switch value={it.is_available} onValueChange={() => toggle(it)} trackColor={{ true: colors.success, false: colors.border }} thumbColor="#fff" />
-                  <Row gap={12}>
-                    <Pressable onPress={() => setEditing({ id: it.id, name: it.name, description: it.description ?? '', price: String(it.price), category: it.category ?? 'Menu', image_url: it.image_url ?? '' })}><Ionicons name="create-outline" size={20} color={colors.primary} /></Pressable>
-                    <Pressable onPress={() => remove(it)}><Ionicons name="trash-outline" size={20} color={colors.danger} /></Pressable>
+    <Screen title="Kelola Menu" bottomSpace={TAB_BAR_SPACE + 16} right={<CircleButton icon="add" filled onPress={() => setEditing({ ...empty })} />}>
+      {items.length === 0 ? <Empty icon="restaurant-outline" title="Belum ada menu" subtitle="Tambahkan menu andalan Anda." action={<Button title="Tambah menu" icon="add-circle-outline" onPress={() => setEditing({ ...empty })} />} /> : (
+        <>
+          <Entrance index={0}>
+            <Row between style={{ marginBottom: 12 }}>
+              <Text style={font.h3}>{items.length} menu</Text>
+              <Text style={font.tiny}>{available} tersedia · {items.length - available} nonaktif</Text>
+            </Row>
+          </Entrance>
+          {/* Grid 2 kolom ala "Hotel": gambar atas radius 18, nama, harga teal, toggle tersedia */}
+          <View style={s.grid}>
+            {items.map((it, i) => (
+              <Entrance key={it.id} index={Math.min(i + 1, 8)} from="up" style={s.cell}>
+                <Animated.View layout={LinearTransition.springify().stiffness(280).damping(20)} style={[s.tile, !it.is_available && { opacity: 0.6 }]}>
+                  <PressableScale onPress={() => setEditing({ id: it.id, name: it.name, description: it.description ?? '', price: String(it.price), category: it.category ?? 'Menu', image_url: it.image_url ?? '' })} scaleTo={0.98} haptic={false}>
+                    {it.image_url ? <Image source={{ uri: it.image_url }} style={s.img} /> : <View style={[s.img, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="fast-food-outline" size={30} color={colors.textMuted} /></View>}
+                    <View style={{ padding: 10, gap: 2 }}>
+                      <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{it.name}</Text>
+                      <Text style={font.tiny} numberOfLines={1}>{it.category ?? 'Menu'}</Text>
+                      <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{rupiah(it.price)}</Text>
+                    </View>
+                  </PressableScale>
+                  <Row between style={s.tileFoot}>
+                    <Row gap={6}>
+                      <Switch value={it.is_available} onValueChange={() => toggle(it)} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" style={Platform.OS === 'ios' ? { transform: [{ scale: 0.75 }] } : undefined} />
+                      <Text style={[font.tiny, { fontWeight: '700', color: it.is_available ? colors.primary : colors.textMuted }]}>{it.is_available ? 'Tersedia' : 'Habis'}</Text>
+                    </Row>
+                    <Pressable onPress={() => remove(it)} hitSlop={8} style={s.trash}><Ionicons name="trash-outline" size={16} color={colors.danger} /></Pressable>
                   </Row>
-                </View>
-              </Row>
-            </Card></Animated.View></Entrance>
-          ))}
-        </View>
+                </Animated.View>
+              </Entrance>
+            ))}
+          </View>
+        </>
       )}
       <Modal visible={!!editing} animationType="fade" transparent onRequestClose={() => setEditing(null)}>
         <View style={s.modalBg}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditing(null)} />
           <Animated.View entering={FadeInDown.springify().stiffness(280).damping(18)} style={s.modal}>
-            {Platform.OS !== 'android' && <BlurView intensity={glass.blurStrong} tint="light" style={StyleSheet.absoluteFill} />}
             <View style={s.handle} />
-            <ScrollView contentContainerStyle={{ gap: 12 }}>
-              <Row between><Text style={font.h2}>{editing?.id ? 'Edit menu' : 'Tambah menu'}</Text><Pressable onPress={() => setEditing(null)}><Ionicons name="close" size={24} color={colors.text} /></Pressable></Row>
+            <ScrollView contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled">
+              <Row between><Text style={font.h2}>{editing?.id ? 'Edit menu' : 'Tambah menu'}</Text><CircleButton icon="close" onPress={() => setEditing(null)} /></Row>
+              {editing?.image_url ? <Image source={{ uri: editing.image_url }} style={s.preview} /> : null}
               <Input label="Nama menu" value={editing?.name ?? ''} onChangeText={(v) => setEditing((e) => e && { ...e, name: v })} />
               <Input label="Deskripsi" value={editing?.description ?? ''} onChangeText={(v) => setEditing((e) => e && { ...e, description: v })} />
               <Row gap={10}>
@@ -78,7 +88,7 @@ export default function MerchantMenu() {
                 <Input label="Kategori" value={editing?.category ?? ''} onChangeText={(v) => setEditing((e) => e && { ...e, category: v })} containerStyle={{ flex: 1 }} placeholder="Nasi / Minuman" />
               </Row>
               <Button title={editing?.image_url ? 'Ganti foto menu' : 'Unggah foto menu'} variant="secondary" icon="image-outline" onPress={upload} />
-              <Button title="Simpan" color={colors.food} onPress={save} />
+              <Button title="Simpan" size="lg" onPress={save} />
             </ScrollView>
           </Animated.View>
         </View>
@@ -88,9 +98,14 @@ export default function MerchantMenu() {
 }
 
 const s = StyleSheet.create({
-  addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 8, overflow: 'hidden' },
-  thumb: { width: 60, height: 60, borderRadius: radius.md, backgroundColor: 'rgba(11,31,42,0.06)' },
-  modalBg: { flex: 1, backgroundColor: 'rgba(11,31,42,0.35)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.8)', borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, paddingBottom: 32, maxHeight: '90%', width: '100%', maxWidth: 640, alignSelf: 'center', overflow: 'hidden', borderTopWidth: 1, borderColor: glass.border },
-  handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(11,31,42,0.18)', alignSelf: 'center', marginBottom: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
+  cell: { width: '50%', paddingHorizontal: 6, marginBottom: 12 },
+  tile: { backgroundColor: '#fff', borderRadius: 18, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadow.soft },
+  img: { width: '100%', height: 120, backgroundColor: colors.bgSoft },
+  tileFoot: { paddingHorizontal: 10, paddingBottom: 8, paddingTop: 2 },
+  trash: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.dangerLight, alignItems: 'center', justifyContent: 'center' },
+  preview: { width: '100%', height: 140, borderRadius: 18, backgroundColor: colors.bgSoft },
+  modalBg: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+  modal: { backgroundColor: '#fff', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: 20, paddingBottom: 32, maxHeight: '90%', width: '100%', maxWidth: 640, alignSelf: 'center', overflow: 'hidden', ...shadow.sheet },
+  handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 12 },
 });

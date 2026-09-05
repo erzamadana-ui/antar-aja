@@ -2,10 +2,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Screen, Card, Row, Badge, Button, ListItem, Divider } from '@/components/ui';
+import { Screen, Card, Row, Badge, Button, ListItem, Divider, IconCircle } from '@/components/ui';
 import { Entrance } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
 import { SosButton, EmergencyContactCard } from '@/components/Safety';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
@@ -40,21 +38,22 @@ export default function SafetyCenter() {
     <Screen title="Pusat Keamanan" back>
       <View style={{ gap: 16 }}>
         <Entrance index={0}>
-          <BrandGradient colors={['#0B1F2A', '#1F3A4A']} style={[s.hero, shadow.card]}>
+          <View style={s.hero}>
             <Row gap={12}>
+              <IconCircle name="shield-checkmark-outline" size={52} bg={colors.tint} />
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>Anda dilindungi</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 2 }}>Panggilan tersamar, PIN penjemputan, bagikan perjalanan, SOS 24 jam, dan asuransi perjalanan mitra.</Text>
+                <Text style={font.h2}>Anda dilindungi</Text>
+                <Text style={[font.small, { marginTop: 2 }]}>Panggilan tersamar, PIN penjemputan, bagikan perjalanan, SOS 24 jam, dan asuransi perjalanan mitra.</Text>
               </View>
               <SosButton />
             </Row>
-          </BrandGradient>
+          </View>
         </Entrance>
 
         {isDriver && driver && (
-          <Entrance index={1}><Card style={{ gap: 8 }}>
+          <Entrance index={1}><Card solid style={{ gap: 8 }}>
             <Row between>
-              <Row gap={10}><Ionicons name="person-circle" size={28} color={selfieOk ? colors.success : colors.warning} /><View><Text style={font.h3}>Verifikasi wajah</Text><Text style={font.tiny}>{driver.last_selfie_at ? `Terakhir ${formatDate(driver.last_selfie_at)}` : 'Belum pernah verifikasi'}</Text></View></Row>
+              <Row gap={10}><IconCircle name="person-circle-outline" size={40} bg={selfieOk ? colors.successLight : colors.accentLight} color={selfieOk ? colors.success : colors.warning} /><View><Text style={font.h3}>Verifikasi wajah</Text><Text style={font.tiny}>{driver.last_selfie_at ? `Terakhir ${formatDate(driver.last_selfie_at)}` : 'Belum pernah verifikasi'}</Text></View></Row>
               <Badge text={selfieOk ? 'Aktif' : 'Perlu verifikasi'} color={selfieOk ? colors.success : colors.warning} />
             </Row>
             <Text style={font.tiny}>Wajib setiap 20 jam sebelum online — akan diminta otomatis saat Anda menyalakan saklar online.</Text>
@@ -63,7 +62,7 @@ export default function SafetyCenter() {
 
         <Entrance index={2}><EmergencyContactCard /></Entrance>
 
-        <Entrance index={3}><Card padded={false}>
+        <Entrance index={3}><Card solid padded={false}>
           <View style={{ paddingHorizontal: 12 }}>
             <ListItem icon="warning-outline" iconColor={colors.danger} title="Laporkan insiden / kecelakaan" subtitle="Prioritas darurat, CS menghubungi Anda" onPress={() => router.push({ pathname: '/support/new', params: { category: 'safety' } } as never)} />
             <Divider style={{ marginVertical: 0 }} />
@@ -73,11 +72,11 @@ export default function SafetyCenter() {
           </View>
         </Card></Entrance>
 
-        <Entrance index={4}><Card style={{ gap: 10 }}>
+        <Entrance index={4}><Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Standar keselamatan {isDriver ? 'mitra' : 'pelanggan'}</Text>
           {tips.map(([t, d]) => (
             <Row key={t} gap={10} style={{ alignItems: 'flex-start' }}>
-              <Ionicons name="checkmark-circle" size={18} color={colors.success} style={{ marginTop: 1 }} />
+              <IconCircle name="checkmark" size={28} bg={colors.successLight} color={colors.success} />
               <View style={{ flex: 1 }}><Text style={{ fontWeight: '700', color: colors.text, fontSize: 14 }}>{t}</Text><Text style={font.tiny}>{d}</Text></View>
             </Row>
           ))}
@@ -87,4 +86,4 @@ export default function SafetyCenter() {
     </Screen>
   );
 }
-const s = StyleSheet.create({ hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' } });
+const s = StyleSheet.create({ hero: { borderRadius: radius.lg, padding: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.card } });

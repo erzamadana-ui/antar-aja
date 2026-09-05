@@ -1,17 +1,17 @@
 // Dasbor Mitra AntarTravel — buat jadwal, lihat manifest penumpang & alamat jemput, berangkat/tiba, pendapatan
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { Screen, Card, Row, Badge, Button, Chip, Input, Avatar, Empty, toast } from '@/components/ui';
-import { Entrance, PressableScale } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
+import { Entrance, PressableScale, ProgressBar } from '@/components/motion';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { CallButton } from '@/components/call/IncomingCall';
 import { useCities, usePartnerTrips } from '@/hooks/useTravel';
 import { useAuth } from '@/store/auth';
 import { supabase, rpc } from '@/lib/supabase';
-import { colors, font, radius, glass, shadow, motion } from '@/lib/theme';
+import { colors, font, radius, shadow, motion } from '@/lib/theme';
 import { rupiah, formatSchedule, cityName, tripStatusLabel, travelStatusLabel, travelKindLabel, travelRequestStatusLabel, accommodationLabel } from '@/lib/format';
 import type { TravelPartner, TravelRoute, TravelManifestRow, TravelTrip, TravelOpenRequest } from '@/lib/types';
 
@@ -56,7 +56,7 @@ export default function TravelPartnerHome() {
   };
 
   if (me === undefined) return <Screen title="Mitra Travel" back><Text style={font.small}>Memuat…</Text></Screen>;
-  if (!me) return <Screen title="Mitra Travel" back><Empty icon="bus-outline" title="Belum terdaftar" subtitle="Daftar sebagai mitra AntarTravel dengan mobil kapasitas besar." action={<Button title="Daftar Mitra Travel" color={colors.travel} onPress={() => router.push('/account/become-travel' as never)} />} /></Screen>;
+  if (!me) return <Screen title="Mitra Travel" back><Empty icon="bus-outline" title="Belum terdaftar" subtitle="Daftar sebagai mitra AntarTravel dengan mobil kapasitas besar." action={<Button title="Daftar Mitra Travel" onPress={() => router.push('/account/become-travel' as never)} />} /></Screen>;
   if (me.status !== 'approved') return <Screen title="Mitra Travel" back><Empty icon="hourglass-outline" title={me.status === 'pending' ? 'Menunggu verifikasi admin' : 'Akun mitra ' + me.status} subtitle={me.status_reason ?? 'Data Anda sedang diperiksa.'} action={<Button title="Lihat / ubah data" variant="secondary" onPress={() => router.push('/account/become-travel' as never)} />} /></Screen>;
 
   const upcoming = trips.filter((t) => ['open', 'confirmed', 'full', 'departed'].includes(t.status));
@@ -66,38 +66,46 @@ export default function TravelPartnerHome() {
   return (
     <Screen title="Mitra AntarTravel" subtitle="Kursi bersama · carter · sopir harian" band={colors.travel} back maxWidth={720}>
       <View style={{ gap: 14 }}>
-        <Entrance index={0}><BrandGradient colors={[colors.travel, '#1E3A8A']} style={[s.hero, shadow.glow(colors.travel)]}>
-          <Row between>
-            <View><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' }}>{me.company_name ?? 'MITRA TRAVEL'}</Text><Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{me.vehicle_model} · {me.vehicle_plate}</Text><Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12 }}>{me.seats} kursi{me.is_electric ? ' · ⚡ listrik' : ''} · ⭐ {Number(me.rating_avg).toFixed(1)} · {me.total_trips} trip selesai</Text></View>
-            <View style={{ alignItems: 'flex-end' }}><Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>Saldo AntarPay</Text><Text style={{ color: '#fff', fontWeight: '800', fontSize: 18 }}>{rupiah(wallet?.balance ?? 0)}</Text></View>
+        {/* Kartu profil armada (putih) */}
+        <Entrance index={0}><Card>
+          <Row gap={12}>
+            <View style={s.heroArt}><ServiceIllustration kind="travel" size={44} /></View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={font.label}>{me.company_name ?? 'Mitra travel'}</Text>
+              <Text style={[font.h3, { fontSize: 16 }]} numberOfLines={1}>{me.vehicle_model} · {me.vehicle_plate}</Text>
+              <Row gap={4}>
+                <Text style={font.tiny}>{me.seats} kursi{me.is_electric ? ' · listrik' : ''} · </Text>
+                <Ionicons name="star" size={11} color={colors.accent} />
+                <Text style={font.tiny}>{Number(me.rating_avg).toFixed(1)} · {me.total_trips} trip selesai</Text>
+              </Row>
+            </View>
           </Row>
-        </BrandGradient></Entrance>
+          <Row between style={s.balance}>
+            <Row gap={8}><Ionicons name="wallet-outline" size={18} color={colors.primary} /><Text style={font.small}>Saldo AntarPay</Text></Row>
+            <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 17 }}>{rupiah(wallet?.balance ?? 0)}</Text>
+          </Row>
+        </Card></Entrance>
 
-        <View style={s.segment}>
-          {([['shared', 'Kursi bersama', 'people-outline'], ['requests', 'Carter & sopir harian', 'car-outline']] as const).map(([k, l]) => {
-            const active = tab === k;
-            return (
-              <PressableScale key={k} onPress={() => setTab(k)} scaleTo={0.96} style={[s.segItem, active && { backgroundColor: colors.travel, ...shadow.glow(colors.travel) }]}>
-                <Text style={{ fontSize: 12.5, fontWeight: '800', color: active ? '#fff' : colors.textSecondary, textAlign: 'center' }} numberOfLines={1}>{l}</Text>
-              </PressableScale>
-            );
-          })}
-        </View>
+        {/* Chip pil mode */}
+        <Row gap={8}>
+          <Chip label="Kursi bersama" active={tab === 'shared'} onPress={() => setTab('shared')} />
+          <Chip label="Carter & sopir harian" active={tab === 'requests'} onPress={() => setTab('requests')} />
+        </Row>
 
         {tab === 'requests' ? <RequestsTab me={travelPartner ?? me} /> : (
           <>
         <Entrance index={1}><Card style={{ gap: 10 }}>
           <Text style={font.label}>Buat jadwal keberangkatan</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {routes.map((r) => <Chip key={r.id} label={`${cityName(cities, r.from_city)} → ${cityName(cities, r.to_city)} · ${rupiah(r.seat_price)}`} active={routeId === r.id} onPress={() => setRouteId(r.id)} color={colors.travel} />)}
+            {routes.map((r) => <Chip key={r.id} label={`${cityName(cities, r.from_city)} → ${cityName(cities, r.to_city)} · ${rupiah(r.seat_price)}`} active={routeId === r.id} onPress={() => setRouteId(r.id)} />)}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {days.map((d, i) => <Pressable key={i} onPress={() => setDay(i)} style={[s.day, day === i && { backgroundColor: colors.travel, borderColor: colors.travel }]}><Text style={{ fontSize: 12, fontWeight: '700', color: day === i ? '#fff' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text><Text style={{ fontSize: 18, fontWeight: '800', color: day === i ? '#fff' : colors.text }}>{d.getDate()}</Text></Pressable>)}
+            {days.map((d, i) => <PressableScale key={i} onPress={() => setDay(i)} scaleTo={0.94} style={[s.day, day === i && { backgroundColor: colors.primary, borderColor: colors.primary }]}><Text style={{ fontSize: 12, fontWeight: '700', color: day === i ? 'rgba(255,255,255,0.85)' : colors.textMuted }}>{i === 0 ? 'Hari ini' : i === 1 ? 'Besok' : DAY_NAMES[d.getDay()]}</Text><Text style={{ fontSize: 18, fontWeight: '800', color: day === i ? '#fff' : colors.text }}>{d.getDate()}</Text></PressableScale>)}
           </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>{TIMES.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} color={colors.travel} />)}</ScrollView>
-          <Row gap={8}><Chip label={allowPrivate ? '✓ Terima carter private' : 'Tanpa carter private'} active={allowPrivate} onPress={() => setAllowPrivate(!allowPrivate)} color={colors.accent} /></Row>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>{TIMES.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} />)}</ScrollView>
+          <Row gap={8}><Chip label={allowPrivate ? 'Terima carter private' : 'Tanpa carter private'} active={allowPrivate} onPress={() => setAllowPrivate(!allowPrivate)} /></Row>
           <Input placeholder="Catatan (mis. berangkat dari pool, bagasi maks. 1 koper)" value={notes} onChangeText={setNotes} />
-          <Button title="Buat jadwal" color={colors.travel} icon="add-circle-outline" loading={creating} onPress={create} />
+          <Button title="Buat jadwal" icon="add-circle-outline" loading={creating} onPress={create} />
         </Card></Entrance>
 
         <Text style={font.label}>Jadwal aktif ({upcoming.length})</Text>
@@ -105,19 +113,23 @@ export default function TravelPartnerHome() {
         {upcoming.map((t) => (
           <Animated.View key={t.id} layout={LinearTransition.springify().stiffness(300).damping(22)} style={s.trip}>
             <PressableScale onPress={() => setOpen(open === t.id ? null : t.id)} scaleTo={0.99} haptic={false}>
-              <Row between>
-                <View style={{ flex: 1 }}>
-                  <Text style={font.h3}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)}</Text>
-                  <Text style={font.small}>{formatSchedule(t.depart_at)}</Text>
-                  <Row gap={6} style={{ marginTop: 4, flexWrap: 'wrap' }}>
+              <Row gap={12}>
+                <View style={s.thumb}><Ionicons name="bus-outline" size={26} color={colors.primary} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[font.h3, { fontSize: 16 }]} numberOfLines={1}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)}</Text>
+                  <Row gap={4}><Ionicons name="time-outline" size={12} color={colors.textMuted} /><Text style={font.tiny}>{formatSchedule(t.depart_at)}</Text></Row>
+                  <Row gap={6} style={{ marginTop: 6, flexWrap: 'wrap' }}>
                     <Badge text={tripStatusLabel[t.status]} color={t.status === 'confirmed' || t.status === 'full' ? colors.success : t.status === 'departed' ? colors.info : colors.warning} />
-                    <Badge text={`${t.seats_booked}/${t.seats_total} kursi`} color={colors.travel} />
                     {t.is_private && <Badge text="Private" color={colors.accent} />}
-                    {t.status === 'open' && t.seats_booked < t.min_pax && <Text style={font.tiny}>butuh {t.min_pax - t.seats_booked} lagi agar pasti berangkat</Text>}
                   </Row>
                 </View>
-                <Ionicons name={open === t.id ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+                <View style={s.rowArrow}><Ionicons name={open === t.id ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} /></View>
               </Row>
+              <Row gap={10} style={{ marginTop: 10 }}>
+                <View style={{ flex: 1 }}><ProgressBar progress={t.seats_total ? t.seats_booked / t.seats_total : 0} color={colors.primary} height={6} /></View>
+                <Text style={[font.tiny, { fontWeight: '700', color: colors.primary }]}>{t.seats_booked}/{t.seats_total} kursi</Text>
+              </Row>
+              {t.status === 'open' && t.seats_booked < t.min_pax && <Text style={[font.tiny, { marginTop: 4 }]}>Butuh {t.min_pax - t.seats_booked} penumpang lagi agar pasti berangkat</Text>}
             </PressableScale>
             {open === t.id && (
               <Animated.View entering={FadeInDown.duration(motion.base)} style={{ gap: 8, marginTop: 10 }}>
@@ -125,24 +137,24 @@ export default function TravelPartnerHome() {
                 {(manifest[t.id] ?? []).length === 0 && <Text style={font.tiny}>Belum ada penumpang.</Text>}
                 {(manifest[t.id] ?? []).map((b) => (
                   <View key={b.id} style={s.pax}>
-                    <Row gap={10}>
+                    <Row gap={10} style={{ alignItems: 'flex-start' }}>
                       <Avatar name={b.customer.name} url={b.customer.avatar_url} size={36} />
-                      <View style={{ flex: 1 }}>
-                        <Row between><Text style={{ fontWeight: '800', color: colors.text }}>{b.customer.name} · {b.pax} pax{b.is_private ? ' (private)' : ''}</Text><Badge text={travelStatusLabel[b.status]} color={colors.travel} /></Row>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Row between><Text style={{ fontWeight: '800', color: colors.text, flex: 1 }} numberOfLines={1}>{b.customer.name} · {b.pax} pax{b.is_private ? ' (private)' : ''}</Text><Badge text={travelStatusLabel[b.status]} /></Row>
                         <Text style={font.tiny}>{b.code} · {b.payment_method === 'cash' ? `Tunai ${rupiah(b.price)} (tagih saat jemput)` : 'Dibayar AntarPay'}{b.passengers?.length ? ` · ${b.passengers.map((x) => x.name).join(', ')}` : ''}</Text>
-                        <Text style={font.small}>📍 {b.pickup_address}</Text>
-                        {b.dropoff_address && <Text style={font.tiny}>🏁 {b.dropoff_address}</Text>}
+                        <Row gap={4} style={{ marginTop: 2 }}><Ionicons name="location-outline" size={12} color={colors.primary} /><Text style={[font.small, { flex: 1 }]}>{b.pickup_address}</Text></Row>
+                        {b.dropoff_address && <Row gap={4}><Ionicons name="flag-outline" size={12} color={colors.textMuted} /><Text style={[font.tiny, { flex: 1 }]}>{b.dropoff_address}</Text></Row>}
                       </View>
                     </Row>
-                    <Row gap={6} style={{ marginTop: 6 }}>
-                      {b.pickup_lat && <Button size="sm" variant="outline" color={colors.info} icon="navigate" title="Navigasi" onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${b.pickup_lat},${b.pickup_lng}`)} />}
-                      <CallButton peer={{ id: b.customer.id, name: b.customer.name, role: 'customer' }} size={36} color={colors.travel} label="Telepon" />
+                    <Row gap={6} style={{ marginTop: 8 }}>
+                      {b.pickup_lat && <Button size="sm" variant="outline" icon="navigate" title="Navigasi" onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${b.pickup_lat},${b.pickup_lng}`)} />}
+                      <CallButton peer={{ id: b.customer.id, name: b.customer.name, role: 'customer' }} size={36} color={colors.primary} label="Telepon" />
                     </Row>
                   </View>
                 ))}
                 <Row gap={8} style={{ flexWrap: 'wrap' }}>
-                  {t.status !== 'departed' && <Button size="sm" title="Berangkat" color={colors.success} icon="play" onPress={() => setStatus(t, 'departed')} />}
-                  {t.status === 'departed' && <Button size="sm" title="Tiba di tujuan" color={colors.success} icon="flag" onPress={() => setStatus(t, 'arrived')} />}
+                  {t.status !== 'departed' && <Button size="sm" title="Berangkat" icon="play" onPress={() => setStatus(t, 'departed')} />}
+                  {t.status === 'departed' && <Button size="sm" title="Tiba di tujuan" icon="flag" onPress={() => setStatus(t, 'arrived')} />}
                   {t.status !== 'departed' && <Button size="sm" title="Batalkan jadwal" variant="outline" color={colors.danger} onPress={() => setStatus(t, 'cancelled')} />}
                 </Row>
               </Animated.View>
@@ -151,8 +163,8 @@ export default function TravelPartnerHome() {
         ))}
         {past.length > 0 && <Text style={font.label}>Riwayat ({past.length}) · {earnings} trip selesai</Text>}
         {past.slice(0, 10).map((t) => (
-          <View key={t.id} style={[s.trip, { opacity: 0.8 }]}>
-            <Row between><Text style={font.small}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)} · {formatSchedule(t.depart_at)}</Text><Badge text={tripStatusLabel[t.status]} color={t.status === 'arrived' ? colors.success : colors.textMuted} /></Row>
+          <View key={t.id} style={[s.trip, { opacity: 0.85 }]}>
+            <Row between><Text style={[font.small, { flex: 1 }]} numberOfLines={1}>{cityName(cities, t.route.from_city)} → {cityName(cities, t.route.to_city)} · {formatSchedule(t.depart_at)}</Text><Badge text={tripStatusLabel[t.status]} color={t.status === 'arrived' ? colors.success : colors.textMuted} /></Row>
           </View>
         ))}
           </>
@@ -163,7 +175,8 @@ export default function TravelPartnerHome() {
 }
 
 // ---------- Permintaan carter privat & sopir harian (penawaran mitra) ----------
-const reqStatusColor = (st: TravelOpenRequest['status']) => st === 'completed' ? colors.success : st === 'cancelled' || st === 'expired' ? colors.danger : st === 'ongoing' ? colors.info : st === 'offered' ? colors.accent : colors.travel;
+const reqStatusColor = (st: TravelOpenRequest['status']) => st === 'completed' ? colors.success : st === 'cancelled' || st === 'expired' ? colors.danger : st === 'ongoing' ? colors.info : st === 'offered' ? colors.accent : colors.primary;
+const REQ_PROGRESS: Partial<Record<TravelOpenRequest['status'], number>> = { open: 0.15, offered: 0.35, accepted: 0.55, paid: 0.7, ongoing: 0.85, completed: 1 };
 const num = (v: string) => Number(v.replace(/\D/g, '')) || 0;
 
 function RequestsTab({ me }: { me: TravelPartner | null }) {
@@ -212,6 +225,7 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
   const total = manual ? num(price) : calc;
   const active = ['accepted', 'paid', 'ongoing'].includes(r.status);
   const canOffer = ['open', 'offered'].includes(r.status) && !r.my_offer;
+  const progress = REQ_PROGRESS[r.status];
 
   const send = async () => {
     if (total <= 0) return toast.error('Isi harga penawaran');
@@ -230,23 +244,31 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
   };
 
   return (
-    <Animated.View layout={LinearTransition.springify().stiffness(300).damping(22)} style={[s.trip, active && { borderColor: colors.travel }]}>
+    <Animated.View layout={LinearTransition.springify().stiffness(300).damping(22)} style={[s.trip, active && { borderColor: colors.primary }]}>
       <PressableScale onPress={onToggle} scaleTo={0.99} haptic={false}>
-        <Row between>
+        {/* Baris ala "Group Tour": thumbnail + judul + lokasi + progres */}
+        <Row gap={12} style={{ alignItems: 'flex-start' }}>
+          <View style={s.thumb}><Ionicons name={r.kind === 'daily' ? 'person-outline' : 'car-outline'} size={26} color={colors.primary} /></View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={font.h3} numberOfLines={1}>{travelKindLabel[r.kind]} · {r.customer_name}</Text>
-            <Text style={font.small} numberOfLines={1}>{r.pickup_address} → {r.dropoff_address ?? (r.kind === 'daily' ? 'keliling / rute bebas' : '—')}</Text>
+            <Text style={[font.h3, { fontSize: 16 }]} numberOfLines={1}>{travelKindLabel[r.kind]} · {r.customer_name}</Text>
+            <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={[font.tiny, { flex: 1 }]} numberOfLines={1}>{r.pickup_address} → {r.dropoff_address ?? (r.kind === 'daily' ? 'keliling / rute bebas' : '—')}</Text></Row>
             <Text style={font.tiny}>{formatSchedule(r.depart_at)}{r.return_at ? ` · kembali ${formatSchedule(r.return_at)}` : ''} · {r.days} hari · {r.pax} pax</Text>
-            <Row gap={6} style={{ marginTop: 4, flexWrap: 'wrap' }}>
-              <Badge text={travelRequestStatusLabel[r.status]} color={reqStatusColor(r.status)} />
-              <Badge text={selfAcc ? 'Akomodasi mandiri' : 'Akomodasi ditanggung pelanggan'} color={selfAcc ? colors.accent : colors.info} />
-              <Badge text={r.fuel === 'partner' ? 'BBM termasuk harga' : 'BBM ditanggung pelanggan'} color={colors.textSecondary} />
-              {r.budget ? <Badge text={`Anggaran ${rupiah(r.budget)}`} color={colors.textMuted} /> : null}
-              <Badge text={`${r.offers_count} penawaran`} color={colors.travel} />
-              {r.my_offer && <Badge text={`Tawaran Anda ${rupiah(r.my_offer.price)}`} color={r.my_offer.status === 'accepted' ? colors.success : r.my_offer.status === 'rejected' ? colors.danger : colors.accent} />}
-            </Row>
           </View>
-          <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+          <View style={s.rowArrow}><Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} /></View>
+        </Row>
+        {progress !== undefined && (
+          <Row gap={10} style={{ marginTop: 10 }}>
+            <View style={{ flex: 1 }}><ProgressBar progress={progress} color={reqStatusColor(r.status)} height={6} /></View>
+            <Text style={[font.tiny, { fontWeight: '700', color: reqStatusColor(r.status) }]}>{travelRequestStatusLabel[r.status]}</Text>
+          </Row>
+        )}
+        <Row gap={6} style={{ marginTop: 8, flexWrap: 'wrap' }}>
+          {progress === undefined && <Badge text={travelRequestStatusLabel[r.status]} color={reqStatusColor(r.status)} />}
+          <Badge text={selfAcc ? 'Akomodasi mandiri' : 'Akomodasi ditanggung pelanggan'} color={selfAcc ? colors.accent : colors.info} />
+          <Badge text={r.fuel === 'partner' ? 'BBM termasuk harga' : 'BBM ditanggung pelanggan'} color={colors.textSecondary} />
+          {r.budget ? <Badge text={`Anggaran ${rupiah(r.budget)}`} color={colors.textMuted} /> : null}
+          <Badge text={`${r.offers_count} penawaran`} />
+          {r.my_offer && <Badge text={`Tawaran Anda ${rupiah(r.my_offer.price)}`} color={r.my_offer.status === 'accepted' ? colors.success : r.my_offer.status === 'rejected' ? colors.danger : colors.accent} />}
         </Row>
       </PressableScale>
       {open && (
@@ -256,9 +278,9 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
 
           {active && (
             <Row gap={8} style={{ flexWrap: 'wrap' }}>
-              {r.status !== 'ongoing' && <Button size="sm" title="Mulai perjalanan" color={colors.success} icon="play" onPress={() => setSt('ongoing')} />}
-              {r.status === 'ongoing' && <Button size="sm" title="Selesai" color={colors.success} icon="flag" onPress={() => setSt('completed')} />}
-              {r.my_offer && <Text style={font.tiny}>Harga disepakati {rupiah(r.my_offer.price)}{r.status === 'accepted' ? ' · tagih tunai saat berangkat' : ' · dibayar AntarPay'}</Text>}
+              {r.status !== 'ongoing' && <Button size="sm" title="Mulai perjalanan" icon="play" onPress={() => setSt('ongoing')} />}
+              {r.status === 'ongoing' && <Button size="sm" title="Selesai" icon="flag" onPress={() => setSt('completed')} />}
+              {r.my_offer && <Text style={[font.tiny, { flex: 1 }]}>Harga disepakati {rupiah(r.my_offer.price)}{r.status === 'accepted' ? ' · tagih tunai saat berangkat' : ' · dibayar AntarPay'}</Text>}
             </Row>
           )}
 
@@ -275,12 +297,12 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
                 <Row between><Text style={font.tiny}>{rupiah(num(rate))} × {r.days} hari</Text><Text style={font.tiny}>{rupiah(num(rate) * r.days)}</Text></Row>
                 {selfAcc && nights > 0 && <Row between><Text style={font.tiny}>Akomodasi {rupiah(num(accFee))} × {nights} malam</Text><Text style={font.tiny}>{rupiah(num(accFee) * nights)}</Text></Row>}
                 {r.fuel === 'partner' && <Row between><Text style={font.tiny}>Estimasi BBM/tol/parkir</Text><Text style={font.tiny}>{rupiah(num(fuelEst))}</Text></Row>}
-                <Row between><Text style={{ fontWeight: '800', color: colors.text }}>Total penawaran</Text><Text style={{ fontWeight: '800', color: colors.travel, fontSize: 16 }}>{rupiah(total)}</Text></Row>
+                <Row between><Text style={{ fontWeight: '800', color: colors.text }}>Total penawaran</Text><Text style={{ fontWeight: '800', color: colors.primary, fontSize: 16 }}>{rupiah(total)}</Text></Row>
               </View>
-              <Row gap={8}><Chip label="Pakai kalkulator" active={!manual} onPress={() => setManual(false)} color={colors.travel} /><Chip label="Harga total manual" active={manual} onPress={() => setManual(true)} color={colors.travel} /></Row>
+              <Row gap={8}><Chip label="Pakai kalkulator" active={!manual} onPress={() => setManual(false)} /><Chip label="Harga total manual" active={manual} onPress={() => setManual(true)} /></Row>
               {manual && <Input label="Harga total" keyboardType="number-pad" value={price} onChangeText={(v) => setPrice(v.replace(/\D/g, ''))} />}
               <Input placeholder="Pesan untuk pelanggan (mobil, sopir, syarat)" value={message} onChangeText={setMessage} />
-              <Button title={`Kirim penawaran ${rupiah(total)}`} color={colors.travel} icon="paper-plane-outline" loading={busy} onPress={send} />
+              <Button title={`Kirim penawaran ${rupiah(total)}`} icon="paper-plane-outline" loading={busy} onPress={send} />
               <Text style={font.tiny}>Komisi platform dipotong dari harga setelah perjalanan selesai. Pelanggan bebas memilih penawaran.</Text>
             </View>
           )}
@@ -291,11 +313,12 @@ function RequestCard({ r, me, open, onToggle, onDone }: { r: TravelOpenRequest; 
   );
 }
 const s = StyleSheet.create({
-  hero: { borderRadius: radius.xl, padding: 16, overflow: 'hidden' },
-  day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.8)' },
-  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: glass.border, backgroundColor: 'rgba(255,255,255,0.92)' },
-  pax: { padding: 10, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
-  segment: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: glass.border, ...shadow.soft },
-  segItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 4, borderRadius: radius.sm },
-  calc: { gap: 4, padding: 10, borderRadius: radius.md, backgroundColor: colors.bg },
+  heroArt: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  balance: { marginTop: 12, padding: 12, borderRadius: radius.md, backgroundColor: colors.tint },
+  day: { width: 58, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff' },
+  trip: { padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', ...shadow.soft },
+  thumb: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  rowArrow: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
+  pax: { padding: 10, borderRadius: radius.md, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  calc: { gap: 4, padding: 10, borderRadius: radius.md, backgroundColor: colors.bgSoft },
 });

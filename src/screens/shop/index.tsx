@@ -12,7 +12,8 @@ import { useAuth } from '@/store/auth';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { getRoute, reverseGeocode, type RouteResult } from '@/lib/geo';
 import { rpc } from '@/lib/supabase';
-import { colors, font, radius } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { rupiah, km, minutes, storeCategoryLabel, productCategoryLabel } from '@/lib/format';
 import type { CartLine, Order, Place, ShopProduct, ShopStore, ShoppingEstimate } from '@/lib/types';
 
@@ -159,16 +160,16 @@ export default function ShopScreen() {
   };
 
   const footerTitle = !ready ? (free ? 'Lengkapi toko & daftar belanja' : store ? (cart.length ? 'Menghitung…' : 'Pilih barang dulu') : 'Pilih toko dulu') : estimating ? 'Menghitung…' : `Pesan AntarShop · ${rupiah(total)}`;
-  const colW = gridW ? Math.floor((gridW - 16) / 3) : 100;
+  const colW = gridW ? Math.floor((gridW - 12) / 2) : 160;
 
   return (
     <Screen title="AntarShop" subtitle="Belanja dari toko terdekat · dibelikan driver" band={colors.shop} back ambient={false} bottomSpace={24}
-      footer={<Button title={footerTitle} size="lg" color={colors.shop} disabled={!ready || ordering} loading={ordering} onPress={order} />}>
+      footer={<Button title={footerTitle} size="lg" disabled={!ready || ordering} loading={ordering} onPress={order} />}>
       <View style={{ gap: 14 }}>
         <Entrance index={0}><Input icon="search" placeholder={store ? `Cari barang di ${store.name}` : 'Cari toko atau alamat'} value={q} onChangeText={setQ} /></Entrance>
         <Entrance index={1}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {FILTERS.map((f) => <Chip key={f.key} label={f.label} active={filter === f.key} onPress={() => { setFilter(f.key); setStore(null); setCart([]); setQ(''); if (f.key === 'free' && pickup?.name === 'Lokasi saya') setPickup(null); }} color={colors.shop} />)}
+            {FILTERS.map((f) => <Chip key={f.key} label={f.label} active={filter === f.key} onPress={() => { setFilter(f.key); setStore(null); setCart([]); setQ(''); if (f.key === 'free' && pickup?.name === 'Lokasi saya') setPickup(null); }} />)}
           </ScrollView>
         </Entrance>
 
@@ -177,18 +178,18 @@ export default function ShopScreen() {
           <Entrance index={2}>
             <View style={{ gap: 8 }}>
               <Row between><Text style={font.label}>Toko terdekat</Text><Text style={font.tiny}>{loadingStores ? 'Mencari…' : `${shownStores.length} toko`}</Text></Row>
-              {loadingStores ? [0, 1, 2].map((i) => <View key={i} style={s.storeCard}><Skeleton width={44} height={44} radius={12} /><View style={{ flex: 1, gap: 6 }}><Skeleton width="60%" height={14} /><Skeleton width="40%" height={12} /></View></View>)
-                : shownStores.length === 0 ? <Empty icon="storefront-outline" title="Belum ada toko di sekitar" subtitle="Coba filter lain, atau pesan barang bebas lewat Toko lain." action={<Button title="Toko lain" size="sm" variant="secondary" color={colors.shop} onPress={() => setFilter('free')} />} />
+              {loadingStores ? [0, 1, 2].map((i) => <View key={i} style={s.storeCard}><Skeleton width={64} height={64} radius={16} /><View style={{ flex: 1, gap: 6 }}><Skeleton width="60%" height={14} /><Skeleton width="40%" height={12} /></View></View>)
+                : shownStores.length === 0 ? <Empty icon="storefront-outline" title="Belum ada toko di sekitar" subtitle="Coba filter lain, atau pesan barang bebas lewat Toko lain." action={<Button title="Toko lain" size="sm" variant="secondary" onPress={() => setFilter('free')} />} />
                 : shownStores.map((st, i) => (
                   <Entrance key={st.id} index={i}>
                     <PressableScale onPress={() => selectStore(st)} scaleTo={0.985} haptic={false} style={s.storeCard}>
-                      {st.image_url ? <Image source={{ uri: st.image_url }} style={s.storeIcon} /> : <View style={[s.storeIcon, { backgroundColor: colors.shop + '1A', alignItems: 'center', justifyContent: 'center' }]}><Ionicons name={st.category === 'apotek' ? 'medkit' : 'storefront'} size={20} color={colors.shop} /></View>}
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{st.name}</Text>
-                        <Text style={font.tiny} numberOfLines={1}>{storeCategoryLabel[st.category] ?? st.category} · {km(st.distance_km)}{st.open_hours ? ` · ${st.open_hours}` : ''}</Text>
+                      {st.image_url ? <Image source={{ uri: st.image_url }} style={s.storeIcon} /> : <View style={[s.storeIcon, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name={st.category === 'apotek' ? 'medkit-outline' : 'storefront-outline'} size={26} color={colors.primary} /></View>}
+                      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                        <Row gap={6}><Text style={[font.body, { fontWeight: '700', flexShrink: 1 }]} numberOfLines={1}>{st.name}</Text><Badge text={st.is_open_now === false ? 'Tutup' : 'Buka'} color={st.is_open_now === false ? colors.danger : colors.success} /></Row>
+                        <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{storeCategoryLabel[st.category] ?? st.category} · {km(st.distance_km)}{st.open_hours ? ` · ${st.open_hours}` : ''}</Text></Row>
                         {st.product_count != null && <Text style={font.tiny}>{st.product_count} produk</Text>}
                       </View>
-                      <Badge text={st.is_open_now === false ? 'Tutup' : 'Buka'} color={st.is_open_now === false ? colors.danger : colors.success} />
+                      <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
                     </PressableScale>
                   </Entrance>
                 ))}
@@ -201,21 +202,21 @@ export default function ShopScreen() {
           <Entrance index={2}>
             <View style={{ gap: 10 }}>
               <View style={s.storeCard}>
-                <View style={[s.storeIcon, { backgroundColor: colors.shop + '1A', alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="storefront" size={20} color={colors.shop} /></View>
+                {store.image_url ? <Image source={{ uri: store.image_url }} style={s.storeIcon} /> : <View style={[s.storeIcon, { alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="storefront-outline" size={26} color={colors.primary} /></View>}
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{store.name}</Text>
                   <Text style={font.tiny} numberOfLines={1}>{km(store.distance_km)}{store.open_hours ? ` · ${store.open_hours}` : ''}{route ? ` · ${minutes(route.duration_min)} ke alamat` : ''}</Text>
                 </View>
-                <Button title="Ganti" size="sm" variant="outline" color={colors.shop} onPress={() => { setStore(null); setCart([]); setQ(''); }} />
+                <Button title="Ganti" size="sm" variant="secondary" onPress={() => { setStore(null); setCart([]); setQ(''); }} />
               </View>
               {categories.length > 1 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  <Chip label="Semua" active={cat === 'all'} onPress={() => setCat('all')} color={colors.shop} />
-                  {categories.map((c) => <Chip key={c} label={productCategoryLabel[c] ?? c} active={cat === c} onPress={() => setCat(c)} color={colors.shop} />)}
+                  <Chip label="Semua" active={cat === 'all'} onPress={() => setCat('all')} />
+                  {categories.map((c) => <Chip key={c} label={productCategoryLabel[c] ?? c} active={cat === c} onPress={() => setCat(c)} />)}
                 </ScrollView>
               )}
               <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={s.grid}>
-                {loadingProducts ? [0, 1, 2, 3, 4, 5].map((i) => <View key={i} style={[s.tile, { width: colW }]}><Skeleton width="100%" height={56} radius={12} /><Skeleton width="80%" height={12} /><Skeleton width="50%" height={12} /></View>)
+                {loadingProducts ? [0, 1, 2, 3].map((i) => <View key={i} style={[s.tile, { width: colW }]}><Skeleton width="100%" height={110} radius={18} /><Skeleton width="80%" height={12} /><Skeleton width="50%" height={12} /></View>)
                   : shownProducts.length === 0 ? <View style={{ width: '100%' }}><Empty icon="cube-outline" title="Barang tidak ditemukan" subtitle={ql ? `Tidak ada "${q}" di katalog toko ini.` : 'Katalog toko ini masih kosong.'} /></View>
                   : shownProducts.map((p) => <ProductTile key={p.id} p={p} width={colW} qty={qtyOf(p.id)} onChange={(n) => setQty(p, n)} />)}
               </View>
@@ -226,7 +227,7 @@ export default function ShopScreen() {
         {/* Keranjang */}
         {!free && cart.length > 0 && (
           <Card solid style={{ gap: 10 }}>
-            <Row between><Text style={font.h3}>Keranjang</Text><Badge text={`${cart.length} barang`} color={colors.shop} /></Row>
+            <Row between><Text style={font.h3}>Keranjang</Text><Badge text={`${cart.length} barang`} /></Row>
             {cart.map((l) => (
               <Row key={l.key} gap={8}>
                 <View style={{ flex: 1, minWidth: 0 }}>
@@ -249,7 +250,7 @@ export default function ShopScreen() {
               <Card solid style={{ gap: 10 }}>
                 <Text style={font.label}>Belanja di</Text>
                 <PressableScale onPress={() => router.push({ pathname: '/place-picker', params: { target: 'pickup', title: 'Pilih toko' } } as never)} scaleTo={0.98} haptic={false} style={s.addrRow}>
-                  <View style={[s.storeIcon, { width: 36, height: 36, backgroundColor: colors.shop + '1A', alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="storefront" size={18} color={colors.shop} /></View>
+                  <View style={s.iconTint}><Ionicons name="storefront-outline" size={20} color={colors.primary} /></View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={{ fontWeight: '700', color: colors.text }} numberOfLines={1}>{pickup?.name ?? 'Pilih toko'}</Text>
                     <Text style={font.tiny} numberOfLines={1}>{pickup?.address ?? 'Ketuk untuk cari toko atau pasar di peta'}</Text>
@@ -271,12 +272,12 @@ export default function ShopScreen() {
                     </Row>
                   </View>
                 ))}
-                <Button title="Tambah barang" size="sm" variant="ghost" icon="add" color={colors.shop} onPress={() => setFreeItems((arr) => (arr.length < 30 ? [...arr, { name: '', qty: 1, price: 0 }] : arr))} />
+                <Button title="Tambah barang" size="sm" variant="ghost" icon="add" onPress={() => setFreeItems((arr) => (arr.length < 30 ? [...arr, { name: '', qty: 1, price: 0 }] : arr))} />
               </Card>
               <Card solid style={{ gap: 10 }}>
                 <Text style={font.label}>Perkiraan anggaran belanja</Text>
                 <Text style={font.tiny}>Ditahan dari AntarPay saat pesan; selisih dikembalikan atau ditagih sesuai nota. Maks. Rp5.000.000.</Text>
-                <Row gap={8} style={{ flexWrap: 'wrap' }}>{BUDGETS.map((b) => <Chip key={b} label={rupiah(b)} active={budget === b} onPress={() => setBudget(b)} color={colors.shop} />)}</Row>
+                <Row gap={8} style={{ flexWrap: 'wrap' }}>{BUDGETS.map((b) => <Chip key={b} label={rupiah(b)} active={budget === b} onPress={() => setBudget(b)} />)}</Row>
                 <Input placeholder="Nominal lain" keyboardType="number-pad" icon="cash-outline" value={BUDGETS.includes(budget) ? '' : String(budget)} onChangeText={(v) => setBudget(Math.min(5000000, Number(v.replace(/\D/g, '')) || 0))} />
                 {freeSubtotal > budget && <Text style={[font.tiny, { color: colors.warning }]}>Perkiraan harga barang ({rupiah(freeSubtotal)}) lebih besar dari anggaran; anggaran yang ditahan mengikuti perkiraan barang.</Text>}
               </Card>
@@ -288,12 +289,12 @@ export default function ShopScreen() {
         <Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Antar ke</Text>
           <Row gap={10}>
-            <View style={[s.storeIcon, { width: 36, height: 36, backgroundColor: colors.danger + '1A', alignItems: 'center', justifyContent: 'center' }]}><Ionicons name="location" size={18} color={colors.danger} /></View>
+            <View style={[s.iconTint, { backgroundColor: colors.dangerLight }]}><Ionicons name="location-outline" size={20} color={colors.danger} /></View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={{ fontWeight: '700', color: colors.text }} numberOfLines={1}>{dropoff?.name ?? 'Alamat pengantaran'}</Text>
               <Text style={font.tiny} numberOfLines={2}>{dropoff?.address ?? 'Menentukan lokasi Anda…'}</Text>
             </View>
-            <Button title="Ganti" size="sm" variant="outline" color={colors.shop} onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} />
+            <Button title="Ganti" size="sm" variant="secondary" onPress={() => router.push({ pathname: '/place-picker', params: { target: 'dropoff', title: 'Alamat pengantaran' } } as never)} />
           </Row>
           {route && <Row gap={8}><Badge text={`${km(route.distance_km)} · ${minutes(route.duration_min)}`} color={colors.info} /></Row>}
         </Card>
@@ -302,8 +303,8 @@ export default function ShopScreen() {
         <Card solid style={{ gap: 10 }}>
           <Text style={font.label}>Kendaraan driver</Text>
           <Row gap={8}>
-            <Chip label={`Motor${est ? ` · ${rupiah(est.fare_motor)}` : ' · ≤10 kg'}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} color={colors.shop} />
-            <Chip label={`Mobil${est ? ` · ${rupiah(est.fare_car)}` : ' · belanja besar'}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} color={colors.car} />
+            <Chip label={`Motor${est ? ` · ${rupiah(est.fare_motor)}` : ' · ≤10 kg'}`} active={vehicle === 'motor'} onPress={() => pickVehicle('motor')} />
+            <Chip label={`Mobil${est ? ` · ${rupiah(est.fare_car)}` : ' · belanja besar'}`} active={vehicle === 'car'} onPress={() => pickVehicle('car')} />
           </Row>
           {est && subtotal >= est.car_min_budget && <Text style={[font.tiny, { color: vehicle === 'car' ? colors.textMuted : colors.warning }]}>Belanja di atas {rupiah(est.car_min_budget)} disarankan memakai mobil agar muat dan aman.</Text>}
         </Card>
@@ -328,32 +329,42 @@ function ProductTile({ p, width, qty, onChange }: { p: ShopProduct; width: numbe
   const out = !p.in_stock;
   return (
     <View style={[s.tile, { width }, out && { opacity: 0.55 }]}>
-      <View style={s.tileArt}>{p.image_url ? <Image source={{ uri: p.image_url }} style={{ width: '100%', height: '100%', borderRadius: 12 }} /> : <Ionicons name="cube-outline" size={22} color={colors.shop} />}</View>
-      <Text style={[font.small, { color: colors.text, fontWeight: '600', minHeight: 36 }]} numberOfLines={2}>{p.name}</Text>
-      <Text style={font.tiny} numberOfLines={1}>{p.unit}</Text>
-      <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{rupiah(p.price)}</Text>
-      {out ? <Badge text="Habis" color={colors.danger} /> : qty > 0 ? (
-        <Row gap={6} style={{ justifyContent: 'center' }}>
-          <PressableScale haptic={false} onPress={() => onChange(qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.shop} /></PressableScale>
-          <Text style={{ fontWeight: '800', color: colors.text, minWidth: 16, textAlign: 'center', fontSize: 13 }}>{qty}</Text>
-          <PressableScale haptic={false} onPress={() => onChange(Math.min(50, qty + 1))} style={s.miniBtn}><Ionicons name="add" size={14} color={colors.shop} /></PressableScale>
+      <View style={s.tileArt}>
+        {p.image_url ? <Image source={{ uri: p.image_url }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <ServiceIllustration kind="shop" size={56} />}
+        {out ? <View style={s.outPill}><Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>Habis</Text></View> : null}
+      </View>
+      <View style={{ paddingHorizontal: 4, gap: 2 }}>
+        <Text style={[font.small, { color: colors.text, fontWeight: '700', minHeight: 36 }]} numberOfLines={2}>{p.name}</Text>
+        <Row gap={4}><Ionicons name="cube-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{productCategoryLabel[p.category] ?? p.category} · {p.unit}</Text></Row>
+        <Row between style={{ marginTop: 4 }}>
+          <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{rupiah(p.price)}</Text>
+          {out ? null : qty > 0 ? (
+            <Row gap={6}>
+              <PressableScale haptic={false} onPress={() => onChange(qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.primary} /></PressableScale>
+              <Text style={{ fontWeight: '800', color: colors.text, minWidth: 16, textAlign: 'center', fontSize: 13 }}>{qty}</Text>
+              <PressableScale haptic={false} onPress={() => onChange(Math.min(50, qty + 1))} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}><Ionicons name="add" size={14} color="#fff" /></PressableScale>
+            </Row>
+          ) : (
+            <PressableScale haptic={false} onPress={() => onChange(1)} scaleTo={0.88} style={s.addBtn}><Ionicons name="add" size={20} color="#fff" /></PressableScale>
+          )}
         </Row>
-      ) : (
-        <PressableScale haptic={false} onPress={() => onChange(1)} style={s.addBtn}><Ionicons name="add" size={16} color="#fff" /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>Tambah</Text></PressableScale>
-      )}
+      </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  storeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  storeIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.border },
-  addrRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.sm, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { gap: 4, padding: 8, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  tileArt: { height: 56, borderRadius: 12, backgroundColor: colors.shop + '12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: 30, borderRadius: radius.full, backgroundColor: colors.shop, marginTop: 2 },
-  miniBtn: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.shop, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  input: { height: 44, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 12, color: colors.text },
+  storeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  storeIcon: { width: 64, height: 64, borderRadius: 16, backgroundColor: colors.tint },
+  iconTint: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  rowArrow: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
+  addrRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.md, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tile: { gap: 8, padding: 8, borderRadius: 22, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  tileArt: { height: 110, borderRadius: 18, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  outPill: { position: 'absolute', left: 8, top: 8, backgroundColor: 'rgba(16,31,33,0.72)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
+  addBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  miniBtn: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  input: { height: 46, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', paddingHorizontal: 12, color: colors.text },
   del: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

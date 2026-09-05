@@ -2,12 +2,11 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Screen, Row, Badge, Button, Empty } from '@/components/ui';
+import { Screen, Row, Badge, Button, Empty, IconCircle } from '@/components/ui';
 import { Entrance, PressableScale, Skeleton } from '@/components/motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/store/auth';
-import { colors, font, radius, glass } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
 import { timeAgo } from '@/lib/format';
 import { useT } from '@/lib/i18n';
 import { APP } from '@/lib/app';
@@ -33,22 +32,25 @@ export default function Inbox() {
                 else if (d.payment_id) router.push((APP === 'mitra' ? '/(driver)/earnings' : '/(customer)/pay') as never);
                 else if (n.merchant_id) router.push(`/food/${n.merchant_id}` as never);
                 else if (n.promo_code) router.push('/food' as never);
-              }} scaleTo={0.985} style={[s.card, !n.read_at && { borderColor: colors.primary + '66', backgroundColor: colors.primary + '08' }]}>
+              }} scaleTo={0.985} haptic={false} style={[s.card, !n.read_at && { borderColor: colors.primary }]}>
                 {n.image_url && <Image source={{ uri: n.image_url }} style={s.img} />}
-                <View style={{ padding: 12, gap: 4 }}>
+                <Row gap={12} style={{ padding: 12, alignItems: 'flex-start' }}>
+                  <IconCircle name={n.kind === 'promo' ? 'pricetag-outline' : n.kind === 'order' ? 'receipt-outline' : 'information-circle-outline'} size={42} bg={n.kind === 'promo' ? colors.accentLight : colors.tint} color={n.kind === 'promo' ? colors.warning : colors.primary} />
+                  <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
                   <Row between>
-                    <Row gap={6}><Ionicons name={n.kind === 'promo' ? 'pricetag' : n.kind === 'order' ? 'receipt' : 'information-circle'} size={14} color={n.kind === 'promo' ? colors.accent : colors.info} /><Text style={{ fontWeight: '800', color: colors.text, fontSize: 14.5, flex: 1 }} numberOfLines={2}>{n.title}</Text></Row>
+                    <Text style={{ fontWeight: '800', color: colors.text, fontSize: 15, flex: 1 }} numberOfLines={2}>{n.title}</Text>
                     {!n.read_at && <View style={s.dot} />}
                   </Row>
                   {n.body && <Text style={font.small}>{n.body}</Text>}
                   <Row gap={8} style={{ flexWrap: 'wrap' }}>
                     {n.promo_code && <Badge text={`Kode: ${n.promo_code}`} color={colors.accent} />}
-                    {n.merchant_id && <Badge text="Lihat merchant →" color={colors.food} />}
-                    {typeof n.data?.travel_request_id === 'string' && <Badge text="Lihat permintaan travel →" color={colors.travel} />}
-                    {!!n.data?.payment_id && !n.data?.travel_request_id && <Badge text="Lihat AntarPay →" color={colors.pay} />}
+                    {n.merchant_id && <Badge text="Lihat merchant" color={colors.primary} />}
+                    {typeof n.data?.travel_request_id === 'string' && <Badge text="Lihat permintaan travel" color={colors.primary} />}
+                    {!!n.data?.payment_id && !n.data?.travel_request_id && <Badge text="Lihat AntarPay" color={colors.primary} />}
                     <Text style={font.tiny}>{timeAgo(n.created_at)}</Text>
                   </Row>
-                </View>
+                  </View>
+                </Row>
               </PressableScale>
             </Entrance>
           ))}
@@ -58,7 +60,7 @@ export default function Inbox() {
   );
 }
 const s = StyleSheet.create({
-  card: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border },
-  img: { width: '100%', height: 120, backgroundColor: 'rgba(11,31,42,0.06)' },
-  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary },
+  card: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  img: { width: '100%', height: 130, backgroundColor: colors.bgSoft },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary, marginTop: 4 },
 });

@@ -3,19 +3,18 @@ import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import { MapView } from '@/components/map';
 import type { MapMarker } from '@/components/map';
 import { Row, Badge, Button, Empty, toast, Avatar } from '@/components/ui';
 import { MapScreen, FloatingButton } from '@/components/MapScreen';
 import { Entrance, LiveDot, PressableScale, Radar, AnimatedNumber } from '@/components/motion';
-import { AmbientBackground, BrandGradient } from '@/components/glass';
+import { ServiceIllustration } from '@/components/ServiceArt';
 import { TAB_BAR_SPACE } from '@/components/GlassTabBar';
 import { useDriverSession } from '@/hooks/useDriver';
 import { useCurrentLocation } from '@/hooks/useLocation';
 import { useAuth } from '@/store/auth';
-import { colors, font, radius, shadow, glass, motion } from '@/lib/theme';
+import { colors, font, radius, shadow, motion } from '@/lib/theme';
 import { rupiah, km, timeAgo, serviceLabel, statusLabel, vehicleClassLabel, formatSchedule } from '@/lib/format';
 import { serviceDef } from '@/lib/services';
 import type { AvailableOrder } from '@/lib/types';
@@ -63,7 +62,6 @@ export default function DriverHome() {
   if (driver && driver.status !== 'approved') {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <AmbientBackground tint="amber" />
         <SafeAreaView style={{ flex: 1 }}>
           <Empty icon="hourglass-outline" title={driver.status === 'pending' ? 'Menunggu verifikasi admin' : driver.status === 'suspended' ? 'Akun mitra ditangguhkan' : 'Pendaftaran ditolak'}
             subtitle={driver.status === 'pending' ? 'Data Anda sedang diperiksa. Biasanya kurang dari 1×24 jam.' : 'Hubungi CS AntarKita untuk informasi lebih lanjut.'}
@@ -73,27 +71,30 @@ export default function DriverHome() {
     );
   }
 
-  // Kartu profil + saklar online (kiri atas peta, kaca)
+  // Kartu status atas: putih radius 22 mengambang di atas peta (avatar, nama, saklar online)
   const topLeft = (
-    <View style={[s.profileCard, shadow.card]}>
-      {Platform.OS !== 'android' && <BlurView intensity={glass.blur} tint="light" style={StyleSheet.absoluteFill} />}
-      <Avatar name={profile?.full_name} url={profile?.avatar_url} size={36} />
+    <View style={s.profileCard}>
+      <Avatar name={profile?.full_name} url={profile?.avatar_url} size={38} />
       <View style={{ minWidth: 0, maxWidth: 150 }}>
         <Text style={{ fontWeight: '800', color: colors.text, fontSize: 13 }} numberOfLines={1}>{profile?.full_name}</Text>
         <Row gap={4}>
           <LiveDot color={online ? colors.success : colors.textMuted} size={6} />
-          <Text style={{ fontSize: 12, fontWeight: '700', color: online ? colors.success : colors.textMuted }}>{online ? 'ONLINE' : 'OFFLINE'}</Text>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: online ? colors.success : colors.textMuted }}>{online ? 'Online' : 'Offline'}</Text>
         </Row>
       </View>
-      <Switch value={online} onValueChange={toggle} disabled={busy} trackColor={{ true: colors.success, false: 'rgba(11,31,42,0.2)' }} thumbColor="#fff" style={Platform.OS === 'ios' ? { transform: [{ scale: 0.8 }] } : undefined} />
+      <Switch value={online} onValueChange={toggle} disabled={busy} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" style={Platform.OS === 'ios' ? { transform: [{ scale: 0.8 }] } : undefined} />
     </View>
   );
 
   const header = (
     <Row between>
-      <View>
-        <Text style={font.label}>{online ? (selected ? 'Detail order' : `${available.length} order tersedia`) : 'Anda offline'}</Text>
-        <Text style={font.tiny}>{driver?.vehicle_plate} · ⭐ {Number(driver?.rating_avg ?? 5).toFixed(1)} · {driver?.total_trips} trip</Text>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[font.h3, { fontSize: 16 }]}>{online ? (selected ? 'Detail order' : `${available.length} order tersedia`) : 'Anda offline'}</Text>
+        <Row gap={4}>
+          <Text style={font.tiny}>{driver?.vehicle_plate} · </Text>
+          <Ionicons name="star" size={11} color={colors.accent} />
+          <Text style={font.tiny}>{Number(driver?.rating_avg ?? 5).toFixed(1)} · {driver?.total_trips} trip</Text>
+        </Row>
       </View>
       {online && !selected && available.length > 0 && <Badge text="Baru" color={colors.success} />}
     </Row>
@@ -106,7 +107,7 @@ export default function DriverHome() {
       map={<MapView center={pos} zoom={14} markers={markers} fitTo={fitTo} paddingBottom={20} />}
       back={false}
       topLeft={topLeft}
-      floatingRight={<View style={{ gap: 8 }}><FloatingButton icon="shield-checkmark" color={colors.danger} onPress={() => router.push('/safety' as never)} /><FloatingButton icon="locate" color={colors.info} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} /></View>}
+      floatingRight={<View style={{ gap: 8 }}><FloatingButton icon="shield-checkmark" color={colors.danger} onPress={() => router.push('/safety' as never)} /><FloatingButton icon="locate" color={colors.primary} onPress={async () => { const fix = await refresh(); if (fix) setMyPos({ ...fix, heading: null }); }} /></View>}
       header={header}
       minHeight={170 + TAB_BAR_SPACE}
       maxRatio={0.58}
@@ -116,15 +117,13 @@ export default function DriverHome() {
       <Animated.View layout={LinearTransition.springify().stiffness(280).damping(18)} style={{ gap: 12 }}>
         {active && (
           <Entrance index={0}>
-            <PressableScale onPress={() => router.push(`/driver/order/${active.id}` as never)} scaleTo={0.97} style={[{ borderRadius: radius.lg, overflow: 'hidden' }, shadow.glow(colors.ride)]}>
-              <BrandGradient colors={[colors.ride, '#0F766E']} angle="horizontal" style={s.activeCard}>
-                <Ionicons name={serviceDef(active.service).icon as never} size={26} color="#fff" />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ color: '#fff', fontWeight: '800' }} numberOfLines={1}>Order aktif · {serviceLabel[active.service]}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12 }} numberOfLines={1}>{statusLabel(active.status, active.service)} · {active.code}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#fff" />
-              </BrandGradient>
+            <PressableScale onPress={() => router.push(`/driver/order/${active.id}` as never)} scaleTo={0.97} style={s.activeCard}>
+              <View style={s.activeIcon}><Ionicons name={serviceDef(active.service).icon as never} size={22} color={colors.primary} /></View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ color: '#fff', fontWeight: '800' }} numberOfLines={1}>Order aktif · {serviceLabel[active.service]}</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>{statusLabel(active.status, active.service)} · {active.code}</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
             </PressableScale>
           </Entrance>
         )}
@@ -133,47 +132,59 @@ export default function DriverHome() {
             <Empty icon="power-outline" title="Anda sedang offline" subtitle="Aktifkan saklar online di kiri atas untuk melihat order di sekitar Anda." />
           </Animated.View>
         ) : selected ? (
-          <Animated.View key={selected.id} entering={ZoomIn.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} style={[s.offer, shadow.glow(colors.success)]}>
-            <Row between>
-              <Row gap={6} style={{ flexWrap: 'wrap', flex: 1 }}>
-                <Badge text={serviceLabel[selected.service]} color={serviceDef(selected.service).color} />
-                {selected.vehicle_class && <Badge text={vehicleClassLabel[selected.vehicle_class] ?? selected.vehicle_class} color={colors.info} />}
-                {selected.scheduled_at && <Badge text={`📅 ${formatSchedule(selected.scheduled_at)}`} color="#8B5CF6" />}
-                {!!selected.helpers && <Badge text={`+${selected.helpers} pembantu angkat`} color={colors.box} />}
-                {selected.send_scope === 'intercity' && <Badge text="Antar kota → gudang" color={colors.send} />}
+          <Animated.View key={selected.id} entering={ZoomIn.duration(motion.base)} exiting={FadeOut.duration(motion.fast)} style={s.offer}>
+            <Row between style={{ alignItems: 'flex-start' }}>
+              <Row gap={12} style={{ flex: 1, minWidth: 0 }}>
+                <View style={[s.thumb, { backgroundColor: serviceDef(selected.service).color + '14' }]}><ServiceIllustration kind={serviceDef(selected.service).art} size={40} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[font.h3, { fontSize: 16 }]} numberOfLines={1}>{serviceLabel[selected.service]}</Text>
+                  <Text style={font.tiny}>{selected.code} · {selected.payment_method === 'cash' ? `Tunai, tagih ${rupiah(selected.total)}` : 'Dibayar AntarPay'}</Text>
+                </View>
               </Row>
-              <PressableScale onPress={() => setSelected(null)} scaleTo={0.9} style={s.closeBtn}><Ionicons name="close" size={20} color={colors.textSecondary} /></PressableScale>
+              <PressableScale onPress={() => setSelected(null)} scaleTo={0.9} style={s.closeBtn}><Ionicons name="close" size={18} color={colors.textSecondary} /></PressableScale>
             </Row>
-            <AnimatedNumber value={selected.driver_earning} format={rupiah} style={{ fontSize: 30, fontWeight: '800', color: colors.success, marginTop: 6, letterSpacing: -0.5 }} duration={500} />
-            <Text style={font.tiny}>Pendapatan bersih · {selected.payment_method === 'cash' ? `Tunai, tagih ${rupiah(selected.total)}` : 'Dibayar AntarPay'}</Text>
-            <View style={{ marginTop: 12, gap: 8 }}>
-              <Row gap={8}><View style={[s.dotIcon, { backgroundColor: colors.primary + '1A' }]}><Ionicons name="navigate" size={14} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>{km(selected.distance_to_pickup_km)} ke titik jemput · {selected.merchant_name ?? selected.pickup_address}</Text></Row>
-              <Row gap={8}><View style={[s.dotIcon, { backgroundColor: colors.danger + '1A' }]}><Ionicons name="flag" size={14} color={colors.danger} /></View><Text style={[font.small, { flex: 1 }]}>{km(selected.distance_km)} perjalanan · {selected.dropoff_address}</Text></Row>
-              {selected.service === 'shop' && <Row gap={8}><View style={[s.dotIcon, { backgroundColor: colors.shop + '1A' }]}><Ionicons name="basket" size={14} color={colors.shop} /></View><Text style={[font.small, { flex: 1 }]}>Belanjakan ±{rupiah(selected.items_subtotal)}{selected.payment_method === 'cash' ? ' (talangi tunai, tagih ke pelanggan)' : ' (diganti ke saldo Anda saat selesai)'}</Text></Row>}
-              {selected.service === 'food' && <Row gap={8}><View style={[s.dotIcon, { backgroundColor: colors.food + '1A' }]}><Ionicons name="restaurant" size={14} color={colors.food} /></View><Text style={[font.small, { flex: 1 }]}>Beli makanan {rupiah(selected.items_subtotal)}{selected.payment_method === 'cash' ? ' (talangi tunai)' : ' (dibayar AntarPay)'}</Text></Row>}
+            <Row gap={6} style={{ flexWrap: 'wrap', marginTop: 10 }}>
+              {selected.vehicle_class && <Badge text={vehicleClassLabel[selected.vehicle_class] ?? selected.vehicle_class} color={colors.info} />}
+              {selected.scheduled_at && <Badge text={`Jadwal ${formatSchedule(selected.scheduled_at)}`} color={colors.send} />}
+              {!!selected.helpers && <Badge text={`+${selected.helpers} pembantu angkat`} color={colors.box} />}
+              {selected.send_scope === 'intercity' && <Badge text="Antar kota → gudang" color={colors.send} />}
+            </Row>
+            <View style={s.earnBox}>
+              <Text style={font.tiny}>Pendapatan bersih</Text>
+              <AnimatedNumber value={selected.driver_earning} format={rupiah} style={{ fontSize: 28, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 }} duration={500} />
             </View>
-            <Button title="Terima Order" size="lg" color={colors.success} style={{ marginTop: 14 }} onPress={() => doAccept(selected)} />
+            <View style={{ marginTop: 12, gap: 8 }}>
+              <Row gap={10}><View style={s.dotIcon}><Ionicons name="navigate-outline" size={16} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>{km(selected.distance_to_pickup_km)} ke titik jemput · {selected.merchant_name ?? selected.pickup_address}</Text></Row>
+              <Row gap={10}><View style={s.dotIcon}><Ionicons name="location-outline" size={16} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>{km(selected.distance_km)} perjalanan · {selected.dropoff_address}</Text></Row>
+              {selected.service === 'shop' && <Row gap={10}><View style={s.dotIcon}><Ionicons name="basket-outline" size={16} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>Belanjakan ±{rupiah(selected.items_subtotal)}{selected.payment_method === 'cash' ? ' (talangi tunai, tagih ke pelanggan)' : ' (diganti ke saldo Anda saat selesai)'}</Text></Row>}
+              {selected.service === 'food' && <Row gap={10}><View style={s.dotIcon}><Ionicons name="restaurant-outline" size={16} color={colors.primary} /></View><Text style={[font.small, { flex: 1 }]}>Beli makanan {rupiah(selected.items_subtotal)}{selected.payment_method === 'cash' ? ' (talangi tunai)' : ' (dibayar AntarPay)'}</Text></Row>}
+            </View>
+            <Button title="Terima Order" size="lg" style={{ marginTop: 14 }} onPress={() => doAccept(selected)} />
           </Animated.View>
         ) : available.length === 0 ? (
           <Animated.View entering={FadeIn.duration(motion.slow)} exiting={FadeOut.duration(motion.fast)} style={s.radarBox}>
-            <Radar color={colors.ride} size={130}><Ionicons name="bicycle" size={24} color={colors.ride} /></Radar>
+            <Radar color={colors.primary} size={130}><Ionicons name="bicycle" size={24} color={colors.primary} /></Radar>
             <Text style={[font.h3, { marginTop: 4 }]}>Mencari order di sekitar…</Text>
             <Text style={[font.small, { textAlign: 'center' }]}>Order baru dalam radius 5 km akan muncul otomatis di sini.</Text>
           </Animated.View>
         ) : (
-          available.map((o, i) => (
-            <Animated.View key={o.id} entering={FadeInDown.delay(i * motion.stagger).duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)}>
-              <PressableScale onPress={() => setSelected(o)} scaleTo={0.98} style={s.orderRow}>
-                <BrandGradient colors={[serviceDef(o.service).color, serviceDef(o.service).color + 'BB']} style={s.svcIcon}><Ionicons name={serviceDef(o.service).icon as never} size={20} color="#fff" /></BrandGradient>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Row between><Text style={{ fontWeight: '700', color: colors.text }}>{serviceLabel[o.service]}</Text><Text style={{ fontWeight: '800', color: colors.success }}>{rupiah(o.driver_earning)}</Text></Row>
-                  <Text style={font.small} numberOfLines={1}>{o.merchant_name ?? o.pickup_address}</Text>
-                  <Text style={font.tiny} numberOfLines={1}>{km(o.distance_to_pickup_km)} dari Anda · {km(o.distance_km)} · {o.scheduled_at ? `📅 ${formatSchedule(o.scheduled_at)}` : timeAgo(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai' : 'AntarPay'}{o.vehicle_class ? ` · ${vehicleClassLabel[o.vehicle_class] ?? ''}` : ''}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </PressableScale>
-            </Animated.View>
-          ))
+          available.map((o, i) => {
+            const def = serviceDef(o.service);
+            return (
+              <Animated.View key={o.id} entering={FadeInDown.delay(i * motion.stagger).duration(motion.base)} exiting={FadeOut.duration(motion.fast)} layout={LinearTransition.springify().stiffness(280).damping(20)}>
+                <PressableScale onPress={() => setSelected(o)} scaleTo={0.98} haptic={false} style={s.orderRow}>
+                  <View style={[s.thumb, { backgroundColor: def.color + '14' }]}><ServiceIllustration kind={def.art} size={40} /></View>
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                    <Text style={[font.body, { fontWeight: '700' }]} numberOfLines={1}>{serviceLabel[o.service]}{o.vehicle_class ? ` · ${vehicleClassLabel[o.vehicle_class] ?? ''}` : ''}</Text>
+                    <Row gap={4}><Ionicons name="location-outline" size={12} color={colors.textMuted} /><Text style={font.tiny} numberOfLines={1}>{o.merchant_name ?? o.pickup_address}</Text></Row>
+                    <Text style={font.tiny} numberOfLines={1}>{km(o.distance_to_pickup_km)} dari Anda · {km(o.distance_km)} · {o.scheduled_at ? `Jadwal ${formatSchedule(o.scheduled_at)}` : timeAgo(o.created_at)} · {o.payment_method === 'cash' ? 'Tunai' : 'AntarPay'}</Text>
+                    <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{rupiah(o.driver_earning)}</Text>
+                  </View>
+                  <View style={s.rowArrow}><Ionicons name="arrow-forward" size={16} color={colors.primary} /></View>
+                </PressableScale>
+              </Animated.View>
+            );
+          })
         )}
       </Animated.View>
     </MapScreen>
@@ -182,12 +193,15 @@ export default function DriverHome() {
 }
 
 const s = StyleSheet.create({
-  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 6, paddingRight: 6, paddingVertical: 5, borderRadius: radius.full, backgroundColor: Platform.OS === 'android' ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, overflow: 'hidden' },
-  activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14 },
-  offer: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: radius.xl, padding: 16, borderWidth: 1.5, borderColor: colors.success + '66' },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(11,31,42,0.06)', alignItems: 'center', justifyContent: 'center' },
-  dotIcon: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  radarBox: { alignItems: 'center', gap: 4, padding: 14, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.xl, borderWidth: 1, borderColor: glass.border },
-  orderRow: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: glass.border },
-  svcIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 6, paddingRight: 8, paddingVertical: 6, borderRadius: 22, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  activeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.lg, padding: 14, backgroundColor: colors.primary, ...shadow.glow(colors.primary) },
+  activeIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  offer: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  earnBox: { marginTop: 12, padding: 12, borderRadius: radius.md, backgroundColor: colors.tint },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  dotIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  radarBox: { alignItems: 'center', gap: 4, padding: 14, backgroundColor: '#fff', borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  orderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
+  thumb: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
+  rowArrow: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.tint },
 });

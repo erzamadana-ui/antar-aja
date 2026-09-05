@@ -3,14 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Card, Row, Badge, Button, Empty, ListItem, Divider } from '@/components/ui';
+import { Screen, Card, Row, Badge, Button, Empty, ListItem, Divider, IconCircle } from '@/components/ui';
 import { Entrance, PressableScale, LiveDot, Skeleton } from '@/components/motion';
-import { BrandGradient } from '@/components/glass';
 import { useMyTickets } from '@/hooks/useTickets';
 import { useAuth } from '@/store/auth';
 import { useMode } from '@/store/mode';
 import { supabase } from '@/lib/supabase';
-import { colors, font, radius, shadow, glass } from '@/lib/theme';
+import { colors, font, radius, shadow } from '@/lib/theme';
 import { timeAgo, ticketStatusLabel, ticketStatusColor, ticketCategoryLabel, ticketPriorityColor } from '@/lib/format';
 
 const FAQ = [
@@ -35,15 +34,20 @@ export default function Support() {
     <Screen title="Pusat Bantuan" back>
       <View style={{ gap: 16 }}>
         <Entrance index={0}>
-          <BrandGradient colors={[colors.info, '#1D4ED8']} style={[s.hero, shadow.glow(colors.info)]}>
-            <Row gap={8}><LiveDot color={csOnline ? '#4ADE80' : '#FCD34D'} size={9} /><Text style={{ color: '#fff', fontWeight: '800', fontSize: 12, letterSpacing: 0.5 }}>{csOnline ? 'CS ONLINE · 07.00–22.00 WIB' : 'CS OFFLINE · buka 07.00 WIB'}</Text></Row>
-            <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 6 }}>Ada kendala? Kami bantu.</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 2 }}>Buat tiket aduan, CS online membalas langsung di aplikasi. Rata-rata balasan pertama &lt; 15 menit.</Text>
-            <Row gap={8} style={{ marginTop: 12, flexWrap: 'wrap' }}>
-              <Button title="Chat CS online" icon="chatbubbles" color="#0B1F2A" onPress={() => router.push({ pathname: '/support/new', params: { category: 'other', subject: 'Chat dengan CS' } } as never)} />
-              <Button title="Buat tiket aduan" icon="create-outline" variant="glass" color="#fff" onPress={() => router.push('/support/new' as never)} />
+          <View style={s.hero}>
+            <Row gap={12} style={{ alignItems: 'flex-start' }}>
+              <IconCircle name="headset-outline" size={52} bg={colors.tint} />
+              <View style={{ flex: 1 }}>
+                <Row gap={6}><LiveDot color={csOnline ? colors.success : colors.accent} size={9} /><Text style={{ color: csOnline ? colors.success : colors.warning, fontWeight: '800', fontSize: 12, letterSpacing: 0.5 }}>{csOnline ? 'CS ONLINE · 07.00–22.00 WIB' : 'CS OFFLINE · buka 07.00 WIB'}</Text></Row>
+                <Text style={[font.h2, { marginTop: 4 }]}>Ada kendala? Kami bantu.</Text>
+                <Text style={[font.small, { marginTop: 2 }]}>Buat tiket aduan, CS online membalas langsung di aplikasi. Rata-rata balasan pertama &lt; 15 menit.</Text>
+              </View>
             </Row>
-          </BrandGradient>
+            <Row gap={8} style={{ marginTop: 14 }}>
+              <Button title="Chat CS online" icon="chatbubbles-outline" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/support/new', params: { category: 'other', subject: 'Chat dengan CS' } } as never)} />
+              <Button title="Buat tiket" icon="create-outline" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/support/new' as never)} />
+            </Row>
+          </View>
         </Entrance>
 
         <Entrance index={1}>
@@ -52,11 +56,11 @@ export default function Support() {
             {waiting > 0 && <Badge text={`${waiting} menunggu balasan Anda`} color={colors.warning} />}
           </Row>
           {loading ? <Skeleton height={72} radius={radius.lg} /> : tickets.length === 0 ? (
-            <Card><Empty icon="checkmark-done-outline" title="Belum ada tiket" subtitle="Semua lancar. Bila ada kendala pesanan, saldo, atau akun — buat tiket, kami tangani." /></Card>
+            <Card solid><Empty icon="checkmark-done-outline" title="Belum ada tiket" subtitle="Semua lancar. Bila ada kendala pesanan, saldo, atau akun — buat tiket, kami tangani." /></Card>
           ) : tickets.map((t, i) => (
             <Entrance key={t.id} index={i} from="up">
               <PressableScale onPress={() => router.push(`/support/${t.id}` as never)} scaleTo={0.98} style={[s.ticket, t.status === 'waiting_user' && { borderColor: colors.warning + '88' }]}>
-                <View style={[s.catIcon, { backgroundColor: ticketPriorityColor(t.priority) + '1A' }]}><Ionicons name={t.category === 'safety' ? 'warning' : t.category === 'payment' ? 'wallet' : t.category === 'order' ? 'receipt' : 'help-buoy'} size={20} color={ticketPriorityColor(t.priority)} /></View>
+                <View style={[s.catIcon, { backgroundColor: ticketPriorityColor(t.priority) + '14' }]}><Ionicons name={t.category === 'safety' ? 'warning-outline' : t.category === 'payment' ? 'wallet-outline' : t.category === 'order' ? 'receipt-outline' : 'help-buoy-outline'} size={20} color={ticketPriorityColor(t.priority)} /></View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Row between><Text style={{ fontWeight: '800', color: colors.text, flex: 1 }} numberOfLines={1}>{t.subject}</Text><Badge text={ticketStatusLabel[t.status]} color={ticketStatusColor(t.status)} /></Row>
                   <Text style={font.tiny}>{t.code} · {ticketCategoryLabel[t.category]} · {timeAgo(t.last_message_at)}</Text>
@@ -68,7 +72,7 @@ export default function Support() {
         </Entrance>
 
         <Entrance index={3}>
-          <Card padded={false}>
+          <Card solid padded={false}>
             <View style={{ paddingHorizontal: 12 }}>
               {mode === 'driver' && <><ListItem icon="shield-checkmark-outline" iconColor={colors.danger} title="Pusat Keamanan" subtitle="SOS, kontak darurat, laporan insiden" onPress={() => router.push('/safety' as never)} /><Divider style={{ marginVertical: 0 }} /></>}
               {phone && <><ListItem icon="logo-whatsapp" iconColor="#25D366" title={`WhatsApp CS ${phone}`} subtitle="Untuk kendala mendesak di luar aplikasi" onPress={() => Linking.openURL(`https://wa.me/${phone.replace(/\D/g, '')}`)} /><Divider style={{ marginVertical: 0 }} /></>}
@@ -84,7 +88,7 @@ export default function Support() {
 }
 
 const s = StyleSheet.create({
-  hero: { borderRadius: radius.xl, padding: 18, overflow: 'hidden' },
-  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: glass.border, marginBottom: 8 },
-  catIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  hero: { borderRadius: radius.lg, padding: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  ticket: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, marginBottom: 8, ...shadow.soft },
+  catIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
 });
