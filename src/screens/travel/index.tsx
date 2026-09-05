@@ -89,17 +89,17 @@ export default function TravelScreen() {
     <Screen title="AntarTravel" subtitle="Antar kota · jemput di rumah" band={colors.travel} back maxWidth={640} footer={sharedFooter}>
       <View style={{ gap: 14 }}>
         <Entrance index={0}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
+          <View style={s.modeRow}>
             {MODES.map((m) => {
               const active = mode === m.key;
               return (
-                <PressableScale key={m.key} onPress={() => setMode(m.key)} scaleTo={0.94} style={[s.modeChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                <PressableScale key={m.key} onPress={() => setMode(m.key)} scaleTo={0.96} style={[s.modeChip, active && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                   <Ionicons name={m.icon} size={16} color={active ? '#fff' : colors.primary} />
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#fff' : colors.text }} numberOfLines={1}>{m.label}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#fff' : colors.text }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{m.label}</Text>
                 </PressableScale>
               );
             })}
-          </ScrollView>
+          </View>
         </Entrance>
 
         {mode !== 'shared' ? (
@@ -128,6 +128,7 @@ export default function TravelScreen() {
           {route && <Row gap={6} style={{ flexWrap: 'wrap' }}><Badge text={`${route.distance_km} km · ±${route.duration_h} jam`} color={colors.info} /><Badge text={`Kursi ${rupiah(route.seat_price)}/orang`} /><Badge text={`Private mulai ${rupiah(route.private_price)}`} color={colors.accent} /><Badge text={`Min. ${route.min_pax} penumpang berangkat`} color={colors.textMuted} /></Row>}
         </View>
 
+        {from && !to && <Text style={[font.small, { textAlign: 'center', paddingVertical: 6 }]}>Pilih kota tujuan untuk melihat jadwal keberangkatan.</Text>}
         {from && to && (loading ? <Skeleton height={90} radius={radius.lg} /> : !result?.route ? <Empty icon="bus-outline" title="Rute belum tersedia" subtitle="Belum ada mitra travel untuk rute ini. Coba rute lain atau ajukan carter privat." /> : result.trips.length === 0 ? (
           <Empty icon="calendar-outline" title="Belum ada jadwal" subtitle={`Belum ada keberangkatan ${fromCity?.name} → ${toCity?.name}${day ? ' pada tanggal ini' : ''}. Coba tanggal lain.`} />
         ) : (
@@ -452,7 +453,8 @@ function PartnerCard({ p, daily, active, onPick }: { p: TravelPartnerCard; daily
 }
 
 const s = StyleSheet.create({
-  modeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', ...shadow.soft },
+  modeRow: { flexDirection: 'row', gap: 8 },
+  modeChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 10, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: '#fff', ...shadow.soft },
   hero: { backgroundColor: '#fff', borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border, ...shadow.soft },
   heroArt: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center' },
   group: { gap: 10, backgroundColor: '#fff', borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border, ...shadow.soft },

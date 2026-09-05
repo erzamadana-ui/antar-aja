@@ -36,7 +36,7 @@ export default function PricingIntel() {
       rpc<PricingSession | null>('current_pricing_session').catch(() => null),
     ]);
     setComps((c as CompetitorPrice[]) ?? []); setSessions((s as PricingSession[]) ?? []); setCurrent(cur && (cur as PricingSession).id ? (cur as PricingSession) : null);
-    try { setSugg(await rpc<Suggestion[]>('pricing_suggestions', { p_km: Number(km) || 3 })); } catch (e) { toast.error((e as Error).message); }
+    try { const r = await rpc<Suggestion[]>('pricing_suggestions', { p_km: Number(km) || 3 }); setSugg(Array.isArray(r) ? r : []); } catch (e) { toast.error((e as Error).message); }
   }, [km]);
   useEffect(() => { load(); }, [load]);
 
@@ -115,7 +115,7 @@ export default function PricingIntel() {
           <Row key={sess.id} between style={s.sessRow}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Row gap={8}><Text style={{ fontWeight: '800', color: colors.text }}>{sess.name}</Text><Badge text={sess.level} color={sess.level === 'high' ? colors.danger : sess.level === 'low' ? colors.success : colors.info} />{current?.id === sess.id && <Badge text="AKTIF SEKARANG" color={colors.primary} />}</Row>
-              <Text style={font.tiny}>{sess.days.map((d) => DAYS[d]).join(', ')} · {sess.start_time.slice(0, 5)}–{sess.end_time.slice(0, 5)} · {sess.multiplier}× · bonus driver {sess.driver_bonus_pct}%{sess.note ? ` · ${sess.note}` : ''}</Text>
+              <Text style={font.tiny}>{(sess.days ?? []).map((d) => DAYS[d]).join(', ')} · {sess.start_time.slice(0, 5)}–{sess.end_time.slice(0, 5)} · {sess.multiplier}× · bonus driver {sess.driver_bonus_pct}%{sess.note ? ` · ${sess.note}` : ''}</Text>
             </View>
             <Row gap={8}>
               <Switch value={sess.active} onValueChange={() => toggleSession(sess)} trackColor={{ true: colors.success, false: colors.border }} thumbColor="#fff" />

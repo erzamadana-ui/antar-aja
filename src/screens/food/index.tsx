@@ -86,7 +86,7 @@ export default function FoodHome() {
                     <View style={[s.catCircle, on && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                       {c.label === 'Semua' ? <ServiceIllustration kind="food" size={36} /> : <Ionicons name={c.icon} size={26} color={on ? '#fff' : colors.primary} />}
                     </View>
-                    <Text style={[s.catLabel, on && { color: colors.primary }]} numberOfLines={1}>{c.label}</Text>
+                    <Text style={[s.catLabel, on && { color: colors.primary }]} numberOfLines={1} adjustsFontSizeToFit>{c.label}</Text>
                   </PressableScale>
                 );
               })}
@@ -142,8 +142,8 @@ const s = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, borderRadius: radius.full, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, ...shadow.soft },
   searchInput: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text, paddingVertical: 0 },
   filterBtn: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.tint, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.primaryLight },
-  catTile: { alignItems: 'center', gap: 8, width: '25%' },
+  catTile: { alignItems: 'center', gap: 6, flex: 1 },
   catCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, ...shadow.soft },
-  catLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
+  catLabel: { fontSize: 12, fontWeight: '700', color: colors.text, textAlign: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
 });

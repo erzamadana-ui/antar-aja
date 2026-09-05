@@ -20,19 +20,28 @@ export function Entrance({ children, index = 0, style, from = 'down', delay = 0 
 }
 
 /** Pressable dengan efek pegas (mengecil saat ditekan) + haptic ringan. */
+const OUTER_KEYS = new Set(['width', 'height', 'flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf', 'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'marginHorizontal', 'marginVertical', 'position', 'top', 'left', 'right', 'bottom', 'zIndex', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight']);
 export function PressableScale({ children, style, scaleTo = 0.96, haptic = true, disabled, onPress, ...rest }: PressableProps & { children: React.ReactNode; style?: StyleProp<ViewStyle>; scaleTo?: number; haptic?: boolean }) {
   const s = useSharedValue(1);
   const reduce = useReducedMotion();
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  // Properti tata letak (lebar/flex/margin/posisi) harus dipasang di Pressable luar agar berlaku terhadap induk (Row/grid);
+  // sisanya (warna, padding, radius) di View dalam yang dianimasikan.
+  const flat = (StyleSheet.flatten(style) ?? {}) as Record<string, unknown>;
+  const outer: Record<string, unknown> = {}; const innerStyle: Record<string, unknown> = {};
+  for (const k of Object.keys(flat)) { if (OUTER_KEYS.has(k)) outer[k] = flat[k]; else innerStyle[k] = flat[k]; }
+  if ('width' in outer || 'flex' in outer || 'flexGrow' in outer) innerStyle.width = '100%';
+  if ('height' in outer) innerStyle.height = '100%';
   return (
     <Pressable
+      style={outer as ViewStyle}
       disabled={disabled}
       onPressIn={() => { if (!reduce) s.value = withSpring(scaleTo, motion.spring); }}
       onPressOut={() => { s.value = withSpring(1, motion.springBouncy); }}
       onPress={(e) => { if (haptic && Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); onPress?.(e); }}
       {...rest}
     >
-      <Animated.View style={[a, style, disabled && { opacity: 0.5 }]}>{children}</Animated.View>
+      <Animated.View style={[a, innerStyle as ViewStyle, disabled && { opacity: 0.5 }]}>{children}</Animated.View>
     </Pressable>
   );
 }

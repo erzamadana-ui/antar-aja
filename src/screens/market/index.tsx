@@ -135,7 +135,7 @@ export default function MarketScreen() {
       <Row between>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={font.tiny}>Perkiraan total · disesuaikan nota</Text>
-          <Text style={[font.h1, { color: colors.primary }]}>{ready && !estimating ? rupiah(total) : chosen.length ? 'Menghitung…' : '—'}</Text>
+          <Text style={[font.h1, { color: colors.primary }]}>{ready && !estimating ? rupiah(total) : chosen.length ? 'Menghitung…' : rupiah(0)}</Text>
         </View>
         <Badge text="Dana ditahan · sisa dikembalikan" color={colors.primary} />
       </Row>
@@ -209,14 +209,14 @@ export default function MarketScreen() {
                       <Text style={font.tiny} numberOfLines={1}>per {it.unit} · {priceSourceLabel(it.price_source, it.samples)}</Text>
                       <Row between style={{ marginTop: 4 }}>
                         <Text style={{ fontWeight: '800', color: colors.primary, fontSize: 15, flexShrink: 1 }} numberOfLines={1}>±{rupiah(it.price)}</Text>
-                        {qty === 0 && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} scaleTo={0.88} style={s.addBtn}><Ionicons name="add" size={20} color="#fff" /></PressableScale>}
+                        {qty === 0 && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} scaleTo={0.88} style={s.addBtn} accessibilityRole="button" accessibilityLabel="Tambah"><Ionicons name="add" size={20} color="#fff" /></PressableScale>}
                       </Row>
                       {qty > 0 && (
                         <Row between style={{ marginTop: 6 }}>
                           <Row gap={6}>
                             <PressableScale haptic={false} onPress={() => setQty(it.id, qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.primary} /></PressableScale>
                             <Text style={{ fontWeight: '800', color: colors.text, minWidth: 24, textAlign: 'center', fontSize: 13 }}>{fmtQty(qty)}</Text>
-                            <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}><Ionicons name="add" size={14} color="#fff" /></PressableScale>
+                            <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 1)} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} accessibilityRole="button" accessibilityLabel="Tambah satu"><Ionicons name="add" size={14} color="#fff" /></PressableScale>
                             {isKg && <PressableScale haptic={false} onPress={() => setQty(it.id, qty + 0.5)} style={s.halfBtn}><Text style={{ fontWeight: '800', color: colors.primary, fontSize: 12 }}>+½</Text></PressableScale>}
                           </Row>
                           <PressableScale haptic={false} hitSlop={6} onPress={() => setNoteOpen((n) => (n === it.id ? null : it.id))}><Ionicons name={line?.note ? 'chatbox-ellipses' : 'chatbox-ellipses-outline'} size={18} color={line?.note ? colors.primary : colors.textMuted} /></PressableScale>

@@ -342,10 +342,10 @@ function ProductTile({ p, width, qty, onChange }: { p: ShopProduct; width: numbe
             <Row gap={6}>
               <PressableScale haptic={false} onPress={() => onChange(qty - 1)} style={s.miniBtn}><Ionicons name="remove" size={14} color={colors.primary} /></PressableScale>
               <Text style={{ fontWeight: '800', color: colors.text, minWidth: 16, textAlign: 'center', fontSize: 13 }}>{qty}</Text>
-              <PressableScale haptic={false} onPress={() => onChange(Math.min(50, qty + 1))} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}><Ionicons name="add" size={14} color="#fff" /></PressableScale>
+              <PressableScale haptic={false} onPress={() => onChange(Math.min(50, qty + 1))} style={[s.miniBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} accessibilityRole="button" accessibilityLabel="Tambah satu"><Ionicons name="add" size={14} color="#fff" /></PressableScale>
             </Row>
           ) : (
-            <PressableScale haptic={false} onPress={() => onChange(1)} scaleTo={0.88} style={s.addBtn}><Ionicons name="add" size={20} color="#fff" /></PressableScale>
+            <PressableScale haptic={false} onPress={() => onChange(1)} scaleTo={0.88} style={s.addBtn} accessibilityRole="button" accessibilityLabel="Tambah"><Ionicons name="add" size={20} color="#fff" /></PressableScale>
           )}
         </Row>
       </View>
